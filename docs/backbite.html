@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Укус назад (backbite)</title>
+<style>
+  body { margin: 0; background: #fafaf7; font-family: system-ui, sans-serif; color: #333; width: 780px; padding: 24px; box-sizing: border-box; }
+  .panel { display: flex; gap: 24px; align-items: center; margin-bottom: 26px; }
+  .panel svg { flex: none; }
+  .txt { font-size: 21px; line-height: 1.4; }
+  .txt b { font-size: 24px; display: block; margin-bottom: 6px; }
+  .red { color: #d9534f; font-weight: 600; }
+  .grn { color: #2e8b57; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="out"></div>
+<script>
+  // Cells of a 3x3 grid, numbered row by row:
+  //   0 1 2
+  //   3 4 5
+  //   6 7 8
+  const S = 80, PAD = 30;
+  const xy = (c) => [PAD + (c % 3) * S + S / 2, PAD + Math.floor(c / 3) * S + S / 2];
+  const panels = [
+    {
+      path: [0, 1, 2, 5, 4, 3, 6, 7, 8], head: 0,
+      title: '1. Змейка',
+      text: 'Змея проходит все 9 клеток по одному разу. Начало змеи — <b style="display:inline;font-size:21px">голова</b> (клетка с кружком).',
+    },
+    {
+      path: [0, 1, 2, 5, 4, 3, 6, 7, 8], head: 0, add: [0, 3], cut: [4, 3],
+      title: '2. Голова кусает соседа',
+      text: 'Голова тянется к соседней клетке (<span class="grn">зелёная линия</span>). Но к этой клетке уже подходит змея — получилось кольцо. Рвём <span class="red">старую связь</span> перед соседом.',
+    },
+    {
+      path: [4, 5, 2, 1, 0, 3, 6, 7, 8], head: 4,
+      title: '3. Снова одна змея',
+      text: 'Все клетки по-прежнему пройдены по разу, диагоналей нет. Изменился изгиб, и голова переехала в центр. Повторяем тысячи раз — змея становится запутанной.',
+    },
+  ];
+  function svg(p) {
+    const W = PAD * 2 + S * 3;
+    let s = `<svg width="${W}" height="${W}" xmlns="http://www.w3.org/2000/svg">`;
+    for (let c = 0; c < 9; c++) {
+      const x = PAD + (c % 3) * S, y = PAD + Math.floor(c / 3) * S;
+      s += `<rect x="${x + 3}" y="${y + 3}" width="${S - 6}" height="${S - 6}" rx="10" fill="#ecebe6"/>`;
+    }
+    for (let i = 1; i < p.path.length; i++) {
+      const a = p.path[i - 1], b = p.path[i];
+      const isCut = p.cut && ((a === p.cut[0] && b === p.cut[1]) || (a === p.cut[1] && b === p.cut[0]));
+      const [x1, y1] = xy(a), [x2, y2] = xy(b);
+      s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isCut ? '#d9534f' : '#555'}" stroke-width="7" stroke-linecap="round" ${isCut ? 'stroke-dasharray="4 12"' : ''}/>`;
+      if (isCut) {
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        s += `<text x="${mx}" y="${my + 12}" font-size="38" text-anchor="middle" fill="#d9534f" font-weight="700">✕</text>`;
+      }
+    }
+    if (p.add) {
+      const [x1, y1] = xy(p.add[0]), [x2, y2] = xy(p.add[1]);
+      s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2e8b57" stroke-width="9" stroke-linecap="round"/>`;
+    }
+    const [hx, hy] = xy(p.head);
+    s += `<circle cx="${hx}" cy="${hy}" r="17" fill="#333"/>`;
+    const [tx, ty] = xy(p.path[p.path.length - 1]);
+    s += `<rect x="${tx - 12}" y="${ty - 12}" width="24" height="24" fill="#333" rx="3"/>`;
+    return s + '</svg>';
+  }
+  document.getElementById('out').innerHTML = panels.map((p) =>
+    `<div class="panel">${svg(p)}<div class="txt"><b>${p.title}</b>${p.text}</div></div>`).join('');
+  document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
