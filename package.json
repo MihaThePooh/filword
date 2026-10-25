@@ -1,0 +1,9 @@
+{
+  "name": "filword",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "build:dict": "node scripts/build-dict.mjs"
+  }
+}
