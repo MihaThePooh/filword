@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Филворд — макет</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --cell: #ecebe6;
+    --text: #3a3a3a;
+    --muted: #8a8a85;
+    --line: #dcdbd5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 16px 8px;
+  }
+  .count { font-size: 18px; }
+  .count b { font-weight: 600; }
+  .new {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 15px;
+    color: var(--text);
+  }
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+  }
+  .grid {
+    width: 100%;
+    aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    user-select: none;
+  }
+  .cell {
+    background: var(--cell);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(18px, 6vw, 28px);
+    text-transform: uppercase;
+  }
+  .cell.found { color: #2f2f2f; }
+  .cell.picked { background: #3a3a3a; color: #fff; }
+  .sheet {
+    width: 100%;
+    max-width: 480px;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+    padding: 10px 20px 28px;
+  }
+  .grip {
+    width: 40px; height: 4px; border-radius: 2px;
+    background: var(--line); margin: 0 auto 14px;
+  }
+  .word {
+    font-size: 22px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px;
+  }
+  .dot { width: 14px; height: 14px; border-radius: 50%; }
+  ol { margin: 10px 0 0; padding-left: 20px; line-height: 1.45; font-size: 16px; }
+  li + li { margin-top: 6px; }
+  .src { margin-top: 14px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="count">Найдено <b>4</b> из 11</div>
+    <button class="new">Новое поле</button>
+  </header>
+  <main><div class="grid" id="grid"></div></main>
+  <section class="sheet">
+    <div class="grip"></div>
+    <div class="word"><span class="dot" id="dot"></span>коромысло</div>
+    <ol>
+      <li>приспособление для ручного ношения двух вёдер или других грузов в виде опираемого на плечи изогнутого шеста</li>
+      <li>семейство крупных стрекоз</li>
+    </ol>
+    <div class="src">Толкование: Викисловарь</div>
+  </section>
+<script>
+  // Static mockup: words laid along a simple snake path just to fill the grid.
+  // The real generator will twist words in all directions.
+  const words = ['коромысло', 'арбуз', 'ведро', 'самовар', 'кошка', 'прялка',
+    'тетрадь', 'медведь', 'ниша', 'смех', 'весть'];
+  const found = { коромысло: '#f6c8b8', арбуз: '#c9e4c5', ведро: '#bcd7ee', самовар: '#f3e2a9' };
+  const picking = 'кош'; // in-progress swipe over the first letters of "кошка"
+
+  const path = [];
+  for (let r = 0; r < 8; r++) {
+    for (let i = 0; i < 8; i++) path.push([r, r % 2 ? 7 - i : i]);
+  }
+  const cells = Array.from({ length: 64 }, () => ({ ch: '', bg: '', picked: false }));
+  let k = 0;
+  for (const w of words) {
+    [...w].forEach((ch, i) => {
+      const [r, c] = path[k++];
+      const cell = cells[r * 8 + c];
+      cell.ch = ch;
+      if (found[w]) cell.bg = found[w];
+      if (w === 'кошка' && i < picking.length) cell.picked = true;
+    });
+  }
+  const grid = document.getElementById('grid');
+  for (const cell of cells) {
+    const el = document.createElement('div');
+    el.className = 'cell' + (cell.bg ? ' found' : '') + (cell.picked ? ' picked' : '');
+    if (cell.bg) el.style.background = cell.bg;
+    el.textContent = cell.ch;
+    grid.appendChild(el);
+  }
+  document.getElementById('dot').style.background = found['коромысло'];
+</script>
+</body>
+</html>
