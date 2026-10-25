@@ -6,18 +6,21 @@ import { startSelection, extendSelection, matchWord } from './selection.js';
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
 const STORAGE_KEY = 'filword-state';
+const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
 const HIT_ZONE = 0.8;
 
 const gridEl = document.getElementById('grid');
 const countEl = document.getElementById('count');
+const solvedEl = document.getElementById('solved');
 
 let index;
 let board;
 let found = new Map(); // word index -> colour
 let selection = [];
 let cellEls = [];
+let stats = { solved: 0 };
 
 async function init() {
   try {
@@ -29,7 +32,8 @@ async function init() {
     console.error(err);
     return;
   }
-  const saved = loadState();
+  stats = { solved: 0, ...loadJson(STATS_KEY) };
+  const saved = loadJson(STORAGE_KEY);
   newBoard(saved?.seed, saved?.found);
   document.getElementById('new').addEventListener('click', () => newBoard());
   gridEl.addEventListener('pointerdown', onDown);
@@ -103,6 +107,11 @@ function onUp() {
   if (i >= 0) {
     found.set(i, PALETTE[found.size % PALETTE.length]);
     selection = [];
+    // A word can be found only once, so this fires once per board.
+    if (found.size === board.words.length) {
+      stats.solved++;
+      saveJson(STATS_KEY, stats);
+    }
     saveState();
     render();
   } else if (selection.length > 1) {
@@ -131,19 +140,24 @@ function render() {
   countEl.innerHTML = found.size === total
     ? '<b>Поле пройдено!</b>'
     : `Найдено <b>${found.size}</b> из ${total}`;
+  solvedEl.textContent = `Полей пройдено: ${stats.solved}`;
 }
 
 function saveState() {
+  saveJson(STORAGE_KEY, { seed: board.seed, found: [...found] });
+}
+
+function saveJson(key, value) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ seed: board.seed, found: [...found] }));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Private mode or full storage: the game still works, just without resume.
+    // Private mode or full storage: the game still works, just without saving.
   }
 }
 
-function loadState() {
+function loadJson(key) {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return JSON.parse(localStorage.getItem(key));
   } catch {
     return null;
   }

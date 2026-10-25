@@ -28,6 +28,7 @@ header {
 }
 .count { font-size: 18px; }
 .count b { font-weight: 600; }
+.solved { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .new {
   border: 1px solid var(--line);
   background: #fff;
