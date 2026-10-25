@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Филворд — генератор (ответ)</title>
+<style>
+  body { margin: 0; background: #fafaf7; font-family: system-ui, sans-serif; color: #3a3a3a; padding: 16px 12px; }
+  .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; max-width: 480px; aspect-ratio: 1; margin: 0 auto; }
+  .cell { border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 26px; text-transform: uppercase; }
+  ul { max-width: 480px; margin: 16px auto 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+  li { padding: 4px 10px; border-radius: 999px; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<ul id="list"></ul>
+<script type="module">
+  // Developer view: shows a generated board with every word already coloured.
+  import { indexDictionary, generateBoard } from '../src/board.js';
+  const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
+    '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
+  const seed = Number(new URLSearchParams(location.search).get('seed')) || Date.now();
+  const dict = await (await fetch('../data/words.json')).json();
+  const board = generateBoard(indexDictionary(dict), { seed });
+  const color = new Array(64);
+  board.words.forEach((w, i) => w.cells.forEach((c) => { color[c] = PALETTE[i % PALETTE.length]; }));
+  const grid = document.getElementById('grid');
+  board.letters.forEach((ch, c) => {
+    const el = document.createElement('div');
+    el.className = 'cell';
+    el.style.background = color[c];
+    el.textContent = ch;
+    grid.appendChild(el);
+  });
+  const list = document.getElementById('list');
+  board.words.forEach((w, i) => {
+    const li = document.createElement('li');
+    li.style.background = PALETTE[i % PALETTE.length];
+    li.textContent = w.word;
+    list.appendChild(li);
+  });
+  document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
