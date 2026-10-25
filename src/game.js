@@ -1,6 +1,8 @@
 // Game screen: draws the board, follows the finger, colours found words.
 
-import { indexDictionary, generateBoard } from './board.js';
+import {
+  indexDictionary, generateBoard, OutOfWordsError, totalWords,
+} from './board.js';
 import { startSelection, extendSelection, matchWord } from './selection.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
@@ -20,7 +22,8 @@ let board;
 let found = new Map(); // word index -> colour
 let selection = [];
 let cellEls = [];
-let stats = { solved: 0 };
+let stats = { solved: 0, used: [] };
+let used = new Set(); // every word ever found - never shown again
 
 async function init() {
   try {
@@ -32,9 +35,13 @@ async function init() {
     console.error(err);
     return;
   }
-  stats = { solved: 0, ...loadJson(STATS_KEY) };
+  stats = { solved: 0, used: [], ...loadJson(STATS_KEY) };
+  used = new Set(stats.used);
   const saved = loadJson(STORAGE_KEY);
-  newBoard(saved?.seed, saved?.found);
+  // The whole board is saved, not just its seed: the next board depends on
+  // which words are used up, so a seed alone would not rebuild the same one.
+  if (saved?.board?.letters) showBoard(saved.board, saved.found);
+  else newBoard();
   document.getElementById('new').addEventListener('click', () => newBoard());
   gridEl.addEventListener('pointerdown', onDown);
   gridEl.addEventListener('pointermove', onMove);
@@ -42,8 +49,23 @@ async function init() {
   gridEl.addEventListener('pointercancel', onUp);
 }
 
-function newBoard(seed = Date.now(), savedFound = []) {
-  board = generateBoard(index, { seed });
+function newBoard() {
+  let next;
+  try {
+    next = generateBoard(index, { seed: Date.now(), used });
+  } catch (err) {
+    if (!(err instanceof OutOfWordsError)) throw err;
+    // Every word has been played. Offer to start the dictionary over.
+    if (!confirm('Все слова словаря пройдены! Начать заново?')) return;
+    used = new Set();
+    saveStats();
+    next = generateBoard(index, { seed: Date.now(), used });
+  }
+  showBoard(next, []);
+}
+
+function showBoard(nextBoard, savedFound) {
+  board = nextBoard;
   found = new Map(savedFound);
   selection = [];
   gridEl.innerHTML = '';
@@ -106,12 +128,11 @@ function onUp() {
   const i = matchWord(selection, board.words, new Set(found.keys()));
   if (i >= 0) {
     found.set(i, PALETTE[found.size % PALETTE.length]);
+    used.add(board.words[i].word);
     selection = [];
     // A word can be found only once, so this fires once per board.
-    if (found.size === board.words.length) {
-      stats.solved++;
-      saveJson(STATS_KEY, stats);
-    }
+    if (found.size === board.words.length) stats.solved++;
+    saveStats();
     saveState();
     render();
   } else if (selection.length > 1) {
@@ -140,11 +161,16 @@ function render() {
   countEl.innerHTML = found.size === total
     ? '<b>Поле пройдено!</b>'
     : `Найдено <b>${found.size}</b> из ${total}`;
-  solvedEl.textContent = `Полей пройдено: ${stats.solved}`;
+  solvedEl.textContent = `Полей: ${stats.solved} · слов: ${used.size} из ${totalWords(index)}`;
 }
 
 function saveState() {
-  saveJson(STORAGE_KEY, { seed: board.seed, found: [...found] });
+  saveJson(STORAGE_KEY, { board, found: [...found] });
+}
+
+function saveStats() {
+  stats.used = [...used];
+  saveJson(STATS_KEY, stats);
 }
 
 function saveJson(key, value) {

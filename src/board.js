@@ -3,56 +3,75 @@
 //
 // Because every cell belongs to exactly one word, any words fit -
 // there are no shared letters to match, so generation never gets stuck.
+//
+// Words never repeat across boards: the caller passes the set of words
+// already found. Boards start with common words and slowly move to rarer
+// ones, because each pick comes from the most frequent words still left.
 
 import { createRng, pick } from './rng.js';
 import { randomPath } from './path.js';
-import { splitLengths } from './split.js';
+import { splitLengths, SplitError } from './split.js';
 
-export const COMMON_RANK = 60000; // words more frequent than this are "common"
-const RARE_CHANCE = 0.15; // sometimes take a rarer word like "коромысло"
+const TOP = 300; // pick among this many most frequent unused words of a length
+const SURPRISE_CHANCE = 0.1; // sometimes any unused word, e.g. an early "коромысло"
 
-// dict: [{ w, r, d }] -> { common: {len: [entry]}, all: {len: [entry]} }
+export class OutOfWordsError extends Error {}
+
+// dict: [{ w, r, d }] -> { length: [entry, ...] }, each list most frequent first.
 export function indexDictionary(dict) {
-  const index = { common: {}, all: {} };
+  const byLength = {};
   for (const entry of dict) {
-    const len = [...entry.w].length;
-    (index.all[len] ??= []).push(entry);
-    if (entry.r <= COMMON_RANK) (index.common[len] ??= []).push(entry);
+    (byLength[[...entry.w].length] ??= []).push(entry);
   }
-  return index;
+  for (const list of Object.values(byLength)) list.sort((a, b) => a.r - b.r);
+  return byLength;
 }
 
-function pickWord(index, len, used, rng) {
-  const pools = rng() < RARE_CHANCE
-    ? [index.all[len], index.common[len]]
-    : [index.common[len], index.all[len]];
-  for (const pool of pools) {
-    if (!pool?.length) continue;
-    // A few tries to avoid repeating a word on one board.
-    for (let t = 0; t < 20; t++) {
-      const entry = pick(rng, pool);
-      if (!used.has(entry.w)) return entry;
-    }
+function countAvailable(index, used) {
+  const counts = {};
+  for (const [len, list] of Object.entries(index)) {
+    counts[len] = list.reduce((n, e) => n + (used.has(e.w) ? 0 : 1), 0);
   }
-  throw new Error(`no free word of length ${len}`);
+  return counts;
 }
 
-export function generateBoard(index, { size = 8, seed = Date.now() } = {}) {
+function pickWord(list, used, rng) {
+  const free = [];
+  const surprise = rng() < SURPRISE_CHANCE;
+  for (const entry of list) {
+    if (used.has(entry.w)) continue;
+    free.push(entry);
+    if (!surprise && free.length >= TOP) break;
+  }
+  return pick(rng, free);
+}
+
+export function generateBoard(index, { size = 8, seed = Date.now(), used = new Set() } = {}) {
   const rng = createRng(seed);
   const path = randomPath(size, rng);
-  const lengths = splitLengths(size * size, rng);
+  let lengths;
+  try {
+    lengths = splitLengths(size * size, rng, { available: countAvailable(index, used) });
+  } catch (err) {
+    if (err instanceof SplitError) throw new OutOfWordsError('dictionary is used up');
+    throw err;
+  }
 
+  const taken = new Set(used); // also blocks repeats inside this board
   const letters = new Array(size * size);
   const words = [];
-  const used = new Set();
   let k = 0;
   for (const len of lengths) {
-    const entry = pickWord(index, len, used, rng);
-    used.add(entry.w);
+    const entry = pickWord(index[len], taken, rng);
+    taken.add(entry.w);
     const cells = path.slice(k, k + len);
     [...entry.w].forEach((ch, i) => { letters[cells[i]] = ch; });
     words.push({ word: entry.w, cells, defs: entry.d });
     k += len;
   }
   return { size, seed, letters, words };
+}
+
+export function totalWords(index) {
+  return Object.values(index).reduce((n, list) => n + list.length, 0);
 }

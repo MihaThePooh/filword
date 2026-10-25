@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRng } from '../src/rng.js';
 import { randomPath, neighbours } from '../src/path.js';
-import { splitLengths } from '../src/split.js';
-import { indexDictionary, generateBoard } from '../src/board.js';
+import { splitLengths, SplitError } from '../src/split.js';
+import {
+  indexDictionary, generateBoard, OutOfWordsError, totalWords,
+} from '../src/board.js';
 
 const dict = JSON.parse(readFileSync(new URL('../data/words.json', import.meta.url), 'utf8'));
 const index = indexDictionary(dict);
@@ -54,4 +56,52 @@ test('generateBoard: letters match words, cells are not shared', () => {
 test('generateBoard is reproducible by seed', () => {
   assert.deepEqual(generateBoard(index, { seed: 42 }), generateBoard(index, { seed: 42 }));
   assert.notDeepEqual(generateBoard(index, { seed: 42 }).letters, generateBoard(index, { seed: 43 }).letters);
+});
+
+test('splitLengths respects how many words of each length are left', () => {
+  const available = { 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 8, 9: 0, 10: 0 };
+  assert.deepEqual(splitLengths(64, createRng(1), { available }), [8, 8, 8, 8, 8, 8, 8, 8]);
+  assert.throws(() => splitLengths(64, createRng(1), { available: { 8: 7 } }), SplitError);
+});
+
+// Play a small dictionary to the end: no word may ever appear twice.
+test('words never repeat across boards until the dictionary is used up', () => {
+  const small = indexDictionary(dict.slice(0, 1500));
+  const used = new Set();
+  let boards = 0;
+  for (;;) {
+    let board;
+    try {
+      board = generateBoard(small, { seed: boards + 1, used });
+    } catch (err) {
+      assert.ok(err instanceof OutOfWordsError, err.message);
+      break;
+    }
+    for (const { word } of board.words) {
+      assert.ok(!used.has(word), `repeat: ${word}`);
+      used.add(word);
+    }
+    boards++;
+  }
+  assert.ok(boards > 100, `only ${boards} boards`);
+  // Almost the whole dictionary gets played; a few odd lengths may stay.
+  assert.ok(used.size / totalWords(small) > 0.9, `used ${used.size} of ${totalWords(small)}`);
+});
+
+test('boards move from common words to rarer ones', () => {
+  const used = new Set();
+  const rankOf = new Map(dict.map((e) => [e.w, e.r]));
+  // Median, not mean: rare "surprise" words would swamp an average.
+  const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+  const early = [];
+  const late = [];
+  for (let i = 0; i < 200; i++) {
+    const board = generateBoard(index, { seed: i + 1, used });
+    board.words.forEach((w) => used.add(w.word));
+    if (i < 20) early.push(...board.words.map((w) => rankOf.get(w.word)));
+    if (i >= 180) late.push(...board.words.map((w) => rankOf.get(w.word)));
+  }
+  const first = median(early);
+  const last = median(late);
+  assert.ok(last > first, `first ${first}, last ${last}`);
 });
