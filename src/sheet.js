@@ -20,9 +20,9 @@ export function createSheet() {
   const defs = sheet.querySelector('.defs');
   const src = sheet.querySelector('.src');
 
-  function open(word, colour, definitions) {
+  function open(word, colour, definitions, stressed) {
     dot.style.background = colour;
-    title.textContent = word;
+    title.textContent = stressed ?? word; // with the stress mark when known
     // The source article of this very word.
     src.href = `https://ru.wiktionary.org/wiki/${encodeURIComponent(word)}`;
     defs.innerHTML = '';

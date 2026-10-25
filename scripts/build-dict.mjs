@@ -63,12 +63,25 @@ export function cleanSense(gloss) {
 // When the definition is only such a pointer, append the target's own meaning.
 const SAME_AS_RE = /^то же,? что\s+([^;,()]+?)\s*$/;
 
+// A one-word definition ("помочь: подтяжки") is a synonym - same problem.
+const SYNONYM_RE = /^([а-яё-]+)$/;
+
 export function expandSameAs(def, lookup) {
-  const m = def.match(SAME_AS_RE);
+  const m = def.match(SAME_AS_RE) ?? def.match(SYNONYM_RE);
   if (!m) return def;
   const target = lookup(m[1].trim());
-  if (!target || SAME_AS_RE.test(target)) return def;
+  if (!target || SAME_AS_RE.test(target) || SYNONYM_RE.test(target)) return def;
   return `${def} — ${target}`;
+}
+
+// The nominative singular as written in the dictionary, with the stress mark:
+// "по́мочь", "коромы́сло". Only kept when it really carries a stress mark.
+export function stressedForm(entry) {
+  const f = (entry.forms ?? []).find((x) => x.tags?.includes('nominative')
+    && (x.tags.includes('singular') || !entry.forms.some((y) => y.tags?.includes('singular'))));
+  const form = f?.form?.trim();
+  if (!form || !form.includes('\u0301')) return null;
+  return form.replace(/\u0301/g, '') === entry.word ? form : null;
 }
 
 // Parts of speech that make a noun reading misleading in the frequency list:
@@ -174,6 +187,8 @@ async function main() {
   const forms = new Map(); // noun -> its oblique case forms
   const indeclinable = new Set(); // "кофе", "такси": no forms to cross-check
   const bonus = new Set(); // every clean noun, any frequency: bonus words in the game
+  const stress = new Map(); // word -> Set of spellings with a stress mark ("му́ка", "мука́")
+  const formOf = new Map(); // "ягодицы" -> "ягодица": forms point to their dictionary word
   const lines = createInterface({
     input: createReadStream(`${root}raw/ru.jsonl.gz`).pipe(createGunzip()),
     crlfDelay: Infinity,
@@ -202,6 +217,8 @@ async function main() {
     // frequency mostly comes from the adjective itself.
     if (entry.pos === 'noun' && isAdjectival(word, entry.forms)) otherPos.add(word);
     if (entry.pos === 'name') names.add(word.toLowerCase());
+    const target = entry.senses?.[0]?.form_of?.[0]?.word;
+    if (target && !formOf.has(word)) formOf.set(word, target);
     if (!firstSense.has(word) && !entry.senses?.[0]?.tags?.includes('form-of')) {
       const def = cleanSense(entry.senses?.[0]?.glosses?.[0]);
       if (def) firstSense.set(word, def);
@@ -216,6 +233,7 @@ async function main() {
     if (!r || r > maxRank) continue;
 
     forms.set(word, [...new Set([...(forms.get(word) ?? []), ...obliqueForms(entry)])]);
+    if (stressedForm(entry)) stress.set(word, (stress.get(word) ?? new Set()).add(stressedForm(entry)));
     if (entry.categories?.some((c) => c.startsWith('Несклоняемые существительные'))) indeclinable.add(word);
     const list = senses.get(word) ?? [];
     for (const s of entry.senses ?? []) {
@@ -237,16 +255,21 @@ async function main() {
     const byForms = rankForCount(sortedCounts, formScore(w, f, counts));
     return Math.min(maxRank, Math.max(rank.get(w), byForms));
   };
-  const lookup = (w) => firstSense.get(w);
+  // A synonym may be a form ("ягодицы"): then explain its dictionary word.
+  const lookup = (w) => firstSense.get(w) ?? firstSense.get(formOf.get(w));
   // Most frequent words first - handy for picking easier words later.
   const words = [...senses.keys()].sort((a, b) => rankOf(a) - rankOf(b));
   // r = frequency rank (smaller = more common), d = definitions.
+  // s = the word with a stress mark, when the dictionary has it.
   const out = words.map((w) => ({
     w, r: rankOf(w), d: senses.get(w).map((d) => expandSameAs(d, lookup)),
+    // Homonyms may differ only by stress: "му́ка · мука́".
+    ...(stress.has(w) ? { s: [...stress.get(w)].join(' · ') } : {}),
   }));
   const homographs = words.filter((w) => otherPos.has(w) || names.has(w)).length;
   writeFileSync(`${root}data/words.json`, JSON.stringify(out));
   writeFileSync(`${root}data/bonus.json`, JSON.stringify([...bonus].sort()));
+  console.log(`with stress: ${words.filter((w) => stress.has(w)).length}`);
   console.log(`words: ${words.length}, bonus words: ${bonus.size}, homographs moved to rare: ${homographs}, broken lines skipped: ${broken}`);
 }
 

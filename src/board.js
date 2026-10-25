@@ -66,7 +66,7 @@ export function generateBoard(index, { size = 8, seed = Date.now(), used = new S
     taken.add(entry.w);
     const cells = path.slice(k, k + len);
     [...entry.w].forEach((ch, i) => { letters[cells[i]] = ch; });
-    words.push({ word: entry.w, cells, defs: entry.d });
+    words.push({ word: entry.w, cells, defs: entry.d, stress: entry.s });
     k += len;
   }
   return { size, seed, letters, words };

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   splitLabels, cleanSense, isGoodWord, isBadEntry, parseFrequency, expandSameAs,
-  obliqueForms, formScore, rankForCount, parseCounts, isAdjectival,
+  obliqueForms, formScore, rankForCount, parseCounts, isAdjectival, stressedForm,
 } from '../scripts/build-dict.mjs';
 
 test('splitLabels strips leading abbreviations', () => {
@@ -62,6 +62,7 @@ test('expandSameAs appends the meaning of the referenced word', () => {
   assert.equal(expandSameAs('то же, что неведомо', lookup), 'то же, что неведомо', 'unknown target');
   assert.equal(expandSameAs('то же, что сутки', lookup), 'то же, что сутки', 'target is a pointer too');
   assert.equal(expandSameAs('сосуд для воды', lookup), 'сосуд для воды');
+  assert.equal(expandSameAs('врач', lookup), 'врач — специалист, занимающийся лечением', 'one-word synonym');
 });
 
 test('obliqueForms takes genitive/dative/instrumental without stress marks', () => {
@@ -95,4 +96,17 @@ test('isAdjectival spots nouns that decline like adjectives', () => {
   assert.ok(isAdjectival('ванная', [{ form: 'ванной', tags: ['singular', 'genitive'] }]));
   assert.ok(!isAdjectival('герой', [{ form: 'героя', tags: ['singular', 'genitive'] }]));
   assert.ok(!isAdjectival('стол', [{ form: 'стола', tags: ['singular', 'genitive'] }]));
+});
+
+test('stressedForm returns the nominative with a stress mark', () => {
+  const entry = { word: 'помочь', forms: [
+    { form: 'по\u0301мочь I', tags: ['stressed'] },
+    { form: 'по\u0301мочь', tags: ['singular', 'nominative'] },
+    { form: 'по\u0301мочи', tags: ['plural', 'nominative'] },
+  ] };
+  assert.equal(stressedForm(entry), 'по\u0301мочь');
+  assert.equal(stressedForm({ word: 'ёж', forms: [{ form: 'ёж', tags: ['singular', 'nominative'] }] }), null);
+  assert.equal(stressedForm({ word: 'кофе' }), null);
+  const plural = { word: 'ножницы', forms: [{ form: 'но\u0301жницы', tags: ['plural', 'nominative'] }] };
+  assert.equal(stressedForm(plural), 'но\u0301жницы', 'pluralia tantum');
 });

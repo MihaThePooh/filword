@@ -193,7 +193,7 @@ function openDefinition(cell) {
   const i = board.words.findIndex((w, k) => found.has(k) && w.cells.includes(cell));
   if (i < 0) return;
   const w = board.words[i];
-  sheet.open(w.word, found.get(i), w.defs);
+  sheet.open(w.word, found.get(i), w.defs, w.stress);
 }
 
 function markFound(i) {
