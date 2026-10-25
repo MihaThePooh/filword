@@ -5,6 +5,7 @@ import {
 } from './board.js';
 import { startSelection, extendSelection, matchWord } from './selection.js';
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
+import { createSheet } from './sheet.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
@@ -13,6 +14,8 @@ const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
 const HIT_ZONE = 0.8;
+// A finger that moved less than this is a tap, not a swipe.
+const TAP_SLOP = 10;
 
 const gridEl = document.getElementById('grid');
 const countEl = document.getElementById('count');
@@ -25,6 +28,8 @@ let found = new Map(); // word index -> colour
 let selection = [];
 let hint = emptyHint();
 let cellEls = [];
+let tap = null; // { cell, x, y } when a press starts on a found word
+const sheet = createSheet();
 let stats = { solved: 0, used: [] };
 let used = new Set(); // every word ever found - never shown again
 
@@ -68,6 +73,7 @@ function newBoard() {
 }
 
 function showBoard(nextBoard, savedFound, savedHint) {
+  sheet.close();
   board = nextBoard;
   found = new Map(savedFound);
   hint = savedHint?.words ? savedHint : emptyHint();
@@ -112,7 +118,10 @@ function onDown(e) {
   if (cell < 0) return;
   // Keep receiving moves even if the finger leaves the grid.
   gridEl.setPointerCapture(e.pointerId);
-  selection = startSelection(cell, takenCells());
+  const taken = takenCells();
+  // A press on a found word may be a tap that opens its definition.
+  tap = taken.has(cell) ? { cell, x: e.clientX, y: e.clientY } : null;
+  selection = startSelection(cell, taken);
   render();
 }
 
@@ -127,7 +136,14 @@ function onMove(e) {
   }
 }
 
-function onUp() {
+function onUp(e) {
+  if (tap) {
+    const moved = Math.hypot(e.clientX - tap.x, e.clientY - tap.y);
+    const cell = tap.cell;
+    tap = null;
+    if (moved < TAP_SLOP) openDefinition(cell);
+    return;
+  }
   if (!selection.length) return;
   const i = matchWord(selection, board.words, new Set(found.keys()));
   if (i >= 0) {
@@ -145,6 +161,13 @@ function onUp() {
     selection = [];
     render();
   }
+}
+
+function openDefinition(cell) {
+  const i = board.words.findIndex((w, k) => found.has(k) && w.cells.includes(cell));
+  if (i < 0) return;
+  const w = board.words[i];
+  sheet.open(w.word, found.get(i), w.defs);
 }
 
 function markFound(i) {

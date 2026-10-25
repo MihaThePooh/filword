@@ -78,3 +78,43 @@ main {
   75% { transform: translateX(3px); }
 }
 footer { padding: 12px 0 18px; font-size: 12px; color: var(--muted); }
+
+/* Definition card */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+}
+.sheet-open .backdrop { display: block; }
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 480px;
+  max-height: 60dvh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  padding: 10px 20px calc(28px + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.25s ease-out;
+  touch-action: none;
+}
+.sheet-open .sheet { transform: translateY(0); }
+.sheet.dragging { transition: none; }
+.grip {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--line); margin: 0 auto 14px;
+}
+.word {
+  font-size: 22px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px;
+}
+.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.defs { margin: 10px 0 0; padding-left: 20px; line-height: 1.45; font-size: 16px; }
+.defs li + li { margin-top: 6px; }
+.src { margin-top: 14px; font-size: 12px; color: var(--muted); }
