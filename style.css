@@ -29,7 +29,7 @@ header {
 .count { font-size: 18px; }
 .count b { font-weight: 600; }
 .solved { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.new {
+.action {
   border: 1px solid var(--line);
   background: #fff;
   border-radius: 999px;
@@ -38,6 +38,7 @@ header {
   color: var(--text);
   cursor: pointer;
 }
+.action:disabled { color: var(--muted); cursor: default; }
 main {
   flex: 1;
   width: 100%;
@@ -67,6 +68,9 @@ main {
   text-transform: uppercase;
   transition: background-color 0.25s;
 }
+.cell.hinted { box-shadow: inset 0 0 0 3px #e0a040; font-weight: 700; }
+/* The word starts here: filled, so the reading direction is obvious. */
+.cell.hint-start { background: #f5d9a8; }
 .cell.picked { background: var(--picked); color: #fff; transition: none; }
 .grid.miss .cell.picked { animation: shake 0.3s; }
 @keyframes shake {

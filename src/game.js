@@ -4,6 +4,7 @@ import {
   indexDictionary, generateBoard, OutOfWordsError, totalWords,
 } from './board.js';
 import { startSelection, extendSelection, matchWord } from './selection.js';
+import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
@@ -16,11 +17,13 @@ const HIT_ZONE = 0.8;
 const gridEl = document.getElementById('grid');
 const countEl = document.getElementById('count');
 const solvedEl = document.getElementById('solved');
+const actionEl = document.getElementById('action');
 
 let index;
 let board;
 let found = new Map(); // word index -> colour
 let selection = [];
+let hint = emptyHint();
 let cellEls = [];
 let stats = { solved: 0, used: [] };
 let used = new Set(); // every word ever found - never shown again
@@ -40,9 +43,9 @@ async function init() {
   const saved = loadJson(STORAGE_KEY);
   // The whole board is saved, not just its seed: the next board depends on
   // which words are used up, so a seed alone would not rebuild the same one.
-  if (saved?.board?.letters) showBoard(saved.board, saved.found);
+  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint);
   else newBoard();
-  document.getElementById('new').addEventListener('click', () => newBoard());
+  actionEl.addEventListener('click', onAction);
   gridEl.addEventListener('pointerdown', onDown);
   gridEl.addEventListener('pointermove', onMove);
   gridEl.addEventListener('pointerup', onUp);
@@ -64,9 +67,10 @@ function newBoard() {
   showBoard(next, []);
 }
 
-function showBoard(nextBoard, savedFound) {
+function showBoard(nextBoard, savedFound, savedHint) {
   board = nextBoard;
   found = new Map(savedFound);
+  hint = savedHint?.words ? savedHint : emptyHint();
   selection = [];
   gridEl.innerHTML = '';
   cellEls = board.letters.map((ch) => {
@@ -127,14 +131,8 @@ function onUp() {
   if (!selection.length) return;
   const i = matchWord(selection, board.words, new Set(found.keys()));
   if (i >= 0) {
-    found.set(i, PALETTE[found.size % PALETTE.length]);
-    used.add(board.words[i].word);
     selection = [];
-    // A word can be found only once, so this fires once per board.
-    if (found.size === board.words.length) stats.solved++;
-    saveStats();
-    saveState();
-    render();
+    markFound(i);
   } else if (selection.length > 1) {
     // Wrong word: shake the picked cells, then clear.
     gridEl.classList.add('miss');
@@ -149,23 +147,62 @@ function onUp() {
   }
 }
 
+function markFound(i) {
+  found.set(i, PALETTE[found.size % PALETTE.length]);
+  used.add(board.words[i].word);
+  // A word can be found only once, so this fires once per board.
+  if (found.size === board.words.length) stats.solved++;
+  saveStats();
+  saveState();
+  render();
+}
+
+// One button, two jobs: a hint while the board is in play,
+// "next board" once every word is found.
+function onAction() {
+  if (found.size === board.words.length) {
+    newBoard();
+    return;
+  }
+  const res = nextHint(hint, board.words, new Set(found.keys()));
+  hint = res.hint;
+  if (res.completed >= 0) markFound(res.completed);
+  else {
+    saveState();
+    render();
+  }
+}
+
 function render() {
   const colour = new Array(board.letters.length);
   for (const [i, c] of found) board.words[i].cells.forEach((cell) => { colour[cell] = c; });
   const picked = new Set(selection);
+  const foundSet = new Set(found.keys());
+  const hintList = hintedCells(hint, board.words, foundSet);
+  const hinted = new Set(hintList);
   cellEls.forEach((el, cell) => {
     el.classList.toggle('picked', picked.has(cell));
+    el.classList.toggle('hinted', hinted.has(cell));
+    el.classList.toggle('hint-start', cell === hintList[0]);
     el.style.background = picked.has(cell) ? '' : (colour[cell] ?? '');
   });
   const total = board.words.length;
   countEl.innerHTML = found.size === total
     ? '<b>Поле пройдено!</b>'
     : `Найдено <b>${found.size}</b> из ${total}`;
+  if (found.size === total) {
+    actionEl.textContent = 'Следующее поле';
+    actionEl.disabled = false;
+  } else {
+    const left = hintsLeft(hint, foundSet);
+    actionEl.textContent = left > 0 ? `Подсказка · ${left}` : 'Подсказок нет';
+    actionEl.disabled = left === 0;
+  }
   solvedEl.textContent = `Полей: ${stats.solved} · слов: ${used.size} из ${totalWords(index)}`;
 }
 
 function saveState() {
-  saveJson(STORAGE_KEY, { board, found: [...found] });
+  saveJson(STORAGE_KEY, { board, found: [...found], hint });
 }
 
 function saveStats() {
