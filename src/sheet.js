@@ -12,16 +12,19 @@ export function createSheet() {
     <div class="grip"></div>
     <div class="word"><span class="dot"></span><span class="title"></span></div>
     <ol class="defs"></ol>
-    <div class="src">Толкование: Викисловарь</div>`;
+    <a class="src" target="_blank" rel="noopener">Толкование: Викисловарь</a>`;
   document.body.append(backdrop, sheet);
 
   const dot = sheet.querySelector('.dot');
   const title = sheet.querySelector('.title');
   const defs = sheet.querySelector('.defs');
+  const src = sheet.querySelector('.src');
 
   function open(word, colour, definitions) {
     dot.style.background = colour;
     title.textContent = word;
+    // The source article of this very word.
+    src.href = `https://ru.wiktionary.org/wiki/${encodeURIComponent(word)}`;
     defs.innerHTML = '';
     for (const d of definitions ?? []) {
       const li = document.createElement('li');
@@ -47,6 +50,7 @@ export function createSheet() {
   // not far enough - it springs back.
   let startY = null;
   sheet.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('a')) return; // a tap on the source link opens it
     // Let long text scroll; drag only when the card is scrolled to the top.
     if (sheet.scrollTop > 0) return;
     startY = e.clientY;

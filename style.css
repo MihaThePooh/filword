@@ -117,4 +117,30 @@ footer { padding: 12px 0 18px; font-size: 12px; color: var(--muted); }
 .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
 .defs { margin: 10px 0 0; padding-left: 20px; line-height: 1.45; font-size: 16px; }
 .defs li + li { margin-top: 6px; }
-.src { margin-top: 14px; font-size: 12px; color: var(--muted); }
+.src { display: block; margin-top: 14px; font-size: 12px; color: var(--muted); }
+/* Source links look like plain text, as before - they are just clickable now. */
+.src, footer a { color: inherit; text-decoration: none; }
+
+/* Celebration */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+.win {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(250, 250, 247, 0);
+  transition: background 0.25s;
+}
+.win.show { background: rgba(250, 250, 247, 0.6); }
+.win-card {
+  background: #fff; border-radius: 24px; padding: 28px 28px 20px; width: min(86%, 360px);
+  text-align: center; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  transform: scale(0.6); opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.2, 1.6, 0.4, 1), opacity 0.2s;
+}
+.win.show .win-card { transform: scale(1); opacity: 1; }
+.win-title { font-size: 30px; font-weight: 700; }
+.win-stats { margin-top: 8px; color: var(--muted); font-size: 15px; }
+.win-next {
+  margin-top: 22px; width: 100%; padding: 14px; border: 0; border-radius: 14px;
+  background: var(--picked); color: #fff; font-size: 17px; cursor: pointer;
+}
+.win-hint { margin-top: 12px; font-size: 12px; color: var(--muted); }

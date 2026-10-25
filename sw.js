@@ -4,13 +4,13 @@
 // server and put a copy into the cache; when offline, answer from the cache.
 // So updates arrive by themselves, and the last version works offline.
 
-const CACHE = 'filword-v1';
+const CACHE = 'filword-v2';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
 const CORE = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
   'icons/icon-192.png', 'icons/icon-512.png',
   'src/game.js', 'src/board.js', 'src/rng.js', 'src/path.js', 'src/split.js',
-  'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js'];
+  'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js'];
 
 self.addEventListener('install', (event) => {
   // Pre-cache the essentials so offline works right after the first visit.

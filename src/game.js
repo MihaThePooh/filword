@@ -7,6 +7,7 @@ import { startSelection, extendSelection, matchWord } from './selection.js';
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary } from './dict-loader.js';
+import { ripple, confetti, showWinCard } from './celebrate.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
@@ -173,10 +174,21 @@ function markFound(i) {
   found.set(i, PALETTE[found.size % PALETTE.length]);
   used.add(board.words[i].word);
   // A word can be found only once, so this fires once per board.
-  if (found.size === board.words.length) stats.solved++;
+  const solvedNow = found.size === board.words.length;
+  if (solvedNow) stats.solved++;
   saveStats();
   saveState();
   render();
+  if (solvedNow) celebrate(board.words[i].cells.at(-1));
+}
+
+function celebrate(lastCell) {
+  ripple(cellEls, board.size, lastCell);
+  // Let the colour of the last word settle before the fireworks.
+  setTimeout(() => {
+    confetti();
+    showWinCard({ solved: stats.solved, words: board.words.length }, () => newBoard());
+  }, 350);
 }
 
 // One button, two jobs: a hint while the board is in play,
