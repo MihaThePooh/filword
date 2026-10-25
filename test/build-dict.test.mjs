@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  splitLabels, cleanSense, isGoodWord, isBadEntry, parseFrequency,
+  splitLabels, cleanSense, isGoodWord, isBadEntry, parseFrequency, expandSameAs,
+  obliqueForms, formScore, rankForCount, parseCounts, isAdjectival,
 } from '../scripts/build-dict.mjs';
 
 test('splitLabels strips leading abbreviations', () => {
@@ -26,6 +27,7 @@ test('cleanSense drops grammar forms, letter names and sense refs', () => {
   assert.equal(cleanSense('количество, вмещающееся в ведро [1]'), 'количество, вмещающееся в ведро');
   assert.equal(cleanSense('сленг что-либо приятное'), null);
   assert.equal(cleanSense('к банкир'), null);
+  assert.equal(cleanSense('; калька с англ. they'), 'калька с англ. they');
   assert.equal(cleanSense('сельско\u00adхозяйственный'), 'сельскохозяйственный');
 });
 
@@ -42,10 +44,55 @@ test('isBadEntry skips names and swear words', () => {
   assert.ok(isBadEntry(['Мужские имена', 'Имена собственные/ru']));
   assert.ok(!isBadEntry(['Русские существительные']));
   assert.ok(!isBadEntry(undefined));
+  assert.ok(isBadEntry(['Русские личные местоимения']));
+  assert.ok(isBadEntry(['Местоимения в винительном падеже/ru']));
 });
 
 test('parseFrequency keeps the first rank of a word', () => {
   const rank = parseFrequency('я 10\nкот 5\nкот 3\n');
   assert.equal(rank.get('я'), 1);
   assert.equal(rank.get('кот'), 2);
+});
+
+test('expandSameAs appends the meaning of the referenced word', () => {
+  const dict = { врач: 'специалист, занимающийся лечением', сутки: 'то же, что день' };
+  const lookup = (w) => dict[w];
+  assert.equal(expandSameAs('то же, что врач', lookup), 'то же, что врач — специалист, занимающийся лечением');
+  assert.equal(expandSameAs('то же, что шелковица; дерево', lookup), 'то же, что шелковица; дерево', 'already explained');
+  assert.equal(expandSameAs('то же, что неведомо', lookup), 'то же, что неведомо', 'unknown target');
+  assert.equal(expandSameAs('то же, что сутки', lookup), 'то же, что сутки', 'target is a pointer too');
+  assert.equal(expandSameAs('сосуд для воды', lookup), 'сосуд для воды');
+});
+
+test('obliqueForms takes genitive/dative/instrumental without stress marks', () => {
+  const entry = { word: 'день', forms: [
+    { form: 'де\u0301нь', tags: ['singular', 'nominative'] },
+    { form: 'дня\u0301', tags: ['singular', 'genitive'] },
+    { form: 'днём', tags: ['singular', 'instrumental'] },
+    { form: 'дне', tags: ['singular', 'prepositional'] },
+  ] };
+  assert.deepEqual(obliqueForms(entry), ['дня', 'днём']);
+  assert.deepEqual(obliqueForms({ word: 'кофе' }), []);
+});
+
+test('formScore takes the rarest form, ё may be written as е', () => {
+  const counts = parseCounts('дал 9000\nдня 5000\nдень 8000\nдала 4000\nднем 3000\nдалу 2\n');
+  assert.equal(formScore('день', ['дня', 'днём'], counts), 5000, 'second smallest');
+  assert.equal(formScore('дал', ['далу', 'далом'], counts), 2);
+  assert.equal(formScore('кофе', [], parseCounts('кофе 700\n')), 700);
+});
+
+test('rankForCount maps a count to a position in the frequency list', () => {
+  const sorted = [100, 50, 50, 10];
+  assert.equal(rankForCount(sorted, 100), 1);
+  assert.equal(rankForCount(sorted, 50), 2);
+  assert.equal(rankForCount(sorted, 20), 4);
+  assert.equal(rankForCount(sorted, 1), 5);
+});
+
+test('isAdjectival spots nouns that decline like adjectives', () => {
+  assert.ok(isAdjectival('хорошее', [{ form: 'хоро\u0301шего', tags: ['singular', 'genitive'] }]));
+  assert.ok(isAdjectival('ванная', [{ form: 'ванной', tags: ['singular', 'genitive'] }]));
+  assert.ok(!isAdjectival('герой', [{ form: 'героя', tags: ['singular', 'genitive'] }]));
+  assert.ok(!isAdjectival('стол', [{ form: 'стола', tags: ['singular', 'genitive'] }]));
 });
