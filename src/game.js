@@ -6,6 +6,7 @@ import {
 import { startSelection, extendSelection, matchWord } from './selection.js';
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
+import { loadDictionary } from './dict-loader.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
@@ -35,9 +36,7 @@ let used = new Set(); // every word ever found - never shown again
 
 async function init() {
   try {
-    const res = await fetch('data/words.json');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    index = indexDictionary(await res.json());
+    index = indexDictionary(await loadDictionary());
   } catch (err) {
     countEl.textContent = 'Не удалось загрузить словарь';
     console.error(err);
@@ -250,3 +249,8 @@ function loadJson(key) {
 }
 
 init();
+
+// Offline support: the service worker keeps a copy of the game and dictionary.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch((err) => console.warn('no offline mode', err));
+}
