@@ -3,6 +3,15 @@
 // Old browsers without it get the plain JSON.
 
 export async function loadDictionary(base = 'data/words.json') {
+  return loadJson(base);
+}
+
+// Every noun, frequent or not: used to recognise bonus words.
+export async function loadBonusWords() {
+  return new Set(await loadJson('data/bonus.json'));
+}
+
+async function loadJson(base) {
   if ('DecompressionStream' in window) {
     try {
       const res = await fetch(`${base}.gz`);

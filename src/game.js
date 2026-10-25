@@ -8,7 +8,8 @@ import {
 } from './selection.js';
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
-import { loadDictionary } from './dict-loader.js';
+import { loadDictionary, loadBonusWords } from './dict-loader.js';
+import { REWARD, isBonusWord } from './rewards.js';
 import { ripple, confetti, showWinCard } from './celebrate.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
@@ -25,6 +26,7 @@ const gridEl = document.getElementById('grid');
 const countEl = document.getElementById('count');
 const solvedEl = document.getElementById('solved');
 const actionEl = document.getElementById('action');
+const coinEl = document.getElementById('coin-count');
 
 let index;
 let board;
@@ -34,7 +36,10 @@ let hint = emptyHint();
 let cellEls = [];
 let tap = null; // { cell, x, y } when a press starts on a found word
 const sheet = createSheet();
-let stats = { solved: 0, used: [] };
+let stats = { solved: 0, used: [], coins: 0 };
+let bonusWords = new Set(); // filled in the background, the game starts without it
+let bonusFound = []; // bonus words already counted on this board
+let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
@@ -45,12 +50,14 @@ async function init() {
     console.error(err);
     return;
   }
-  stats = { solved: 0, used: [], ...loadJson(STATS_KEY) };
+  stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
+  shownCoins = stats.coins;
+  loadBonusWords().then((set) => { bonusWords = set; }).catch((err) => console.warn('no bonus words', err));
   used = new Set(stats.used);
   const saved = loadJson(STORAGE_KEY);
   // The whole board is saved, not just its seed: the next board depends on
   // which words are used up, so a seed alone would not rebuild the same one.
-  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint);
+  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus);
   else newBoard();
   actionEl.addEventListener('click', onAction);
   gridEl.addEventListener('pointerdown', onDown);
@@ -74,8 +81,9 @@ function newBoard() {
   showBoard(next, []);
 }
 
-function showBoard(nextBoard, savedFound, savedHint) {
+function showBoard(nextBoard, savedFound, savedHint, savedBonus) {
   sheet.close();
+  bonusFound = savedBonus ?? [];
   board = nextBoard;
   found = new Map(savedFound);
   hint = savedHint?.words ? savedHint : emptyHint();
@@ -151,6 +159,17 @@ function onUp(e) {
   if (i >= 0) {
     selection = [];
     markFound(i);
+  } else if (isBonusWord(selection.map((c) => board.letters[c]).join(''), bonusWords,
+    board.words.map((w) => w.word), bonusFound)) {
+    // A real word that is not hidden here: reward it.
+    const word = selection.map((c) => board.letters[c]).join('');
+    const lastCell = selection.at(-1);
+    bonusFound.push(word);
+    selection = [];
+    addCoins(REWARD.bonus, cellEls[lastCell]);
+    toast(`Бонусное слово «${word}» +${REWARD.bonus}`);
+    saveState();
+    render();
   } else if (rightWordWrongPath(selection, board.letters, board.words, new Set(found.keys())) >= 0) {
     // The word is right, but it hides in other cells.
     toast('Собери слово по-другому');
@@ -183,6 +202,7 @@ function markFound(i) {
   // A word can be found only once, so this fires once per board.
   const solvedNow = found.size === board.words.length;
   if (solvedNow) stats.solved++;
+  addCoins(REWARD.word + (solvedNow ? REWARD.board : 0), cellEls[board.words[i].cells.at(-1)]);
   saveStats();
   saveState();
   render();
@@ -212,6 +232,46 @@ function onAction() {
     saveState();
     render();
   }
+}
+
+// Coins fly from the cell to the counter in the header.
+function addCoins(amount, fromEl) {
+  stats.coins += amount;
+  saveStats();
+  const counter = document.getElementById('coins');
+  const target = counter.getBoundingClientRect();
+  const from = fromEl?.getBoundingClientRect();
+  const sync = () => {
+    shownCoins = stats.coins;
+    coinEl.textContent = shownCoins;
+  };
+  if (!from || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    sync();
+    return;
+  }
+  const flights = Math.min(amount, 8);
+  for (let k = 0; k < flights; k++) {
+    const coin = document.createElement('span');
+    coin.className = 'coin flying';
+    document.body.appendChild(coin);
+    const x0 = from.left + from.width / 2;
+    const y0 = from.top + from.height / 2;
+    const x1 = target.left + 10;
+    const y1 = target.top + target.height / 2;
+    coin.animate([
+      { transform: `translate(${x0}px, ${y0}px) scale(0.6)`, opacity: 0 },
+      { transform: `translate(${x0 + (Math.random() - 0.5) * 60}px, ${y0 - 40}px) scale(1.2)`, opacity: 1, offset: 0.3 },
+      { transform: `translate(${x1}px, ${y1}px) scale(0.8)`, opacity: 1 },
+    ], { duration: 700, delay: k * 70, easing: 'ease-in' }).finished.then(() => {
+      coin.remove();
+      // Each landed coin ticks the counter; the last tick lands on the exact total.
+      shownCoins = k === flights - 1 ? stats.coins : Math.min(stats.coins, shownCoins + 1);
+      coinEl.textContent = shownCoins;
+      counter.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], 200);
+    });
+  }
+  // Safety net: even if an animation is interrupted, end with the exact number.
+  setTimeout(sync, 700 + flights * 70 + 100);
 }
 
 let toastTimer;
@@ -254,11 +314,12 @@ function render() {
     actionEl.textContent = left > 0 ? `Подсказка · ${left}` : 'Подсказок нет';
     actionEl.disabled = left === 0;
   }
-  solvedEl.textContent = `Полей: ${stats.solved} · слов: ${used.size} из ${totalWords(index)}`;
+  coinEl.textContent = shownCoins;
+  solvedEl.textContent = `Полей ${stats.solved} · слов ${used.size}/${totalWords(index)}`;
 }
 
 function saveState() {
-  saveJson(STORAGE_KEY, { board, found: [...found], hint });
+  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound });
 }
 
 function saveStats() {

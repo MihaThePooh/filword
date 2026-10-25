@@ -173,6 +173,7 @@ async function main() {
   const names = new Set(); // "джек", "крис": frequent only as first names
   const forms = new Map(); // noun -> its oblique case forms
   const indeclinable = new Set(); // "кофе", "такси": no forms to cross-check
+  const bonus = new Set(); // every clean noun, any frequency: bonus words in the game
   const lines = createInterface({
     input: createReadStream(`${root}raw/ru.jsonl.gz`).pipe(createGunzip()),
     crlfDelay: Infinity,
@@ -207,6 +208,10 @@ async function main() {
     }
     if (entry.pos !== 'noun') continue;
     if (!isGoodWord(word) || isBadEntry(entry.categories)) continue;
+    // Any real noun counts as a bonus word, even "просадка" seen 3 times in subtitles.
+    if ((entry.senses ?? []).some((x) => !x.tags?.includes('form-of') && cleanSense(x.glosses?.[0]))) {
+      bonus.add(word);
+    }
     const r = rank.get(word);
     if (!r || r > maxRank) continue;
 
@@ -241,7 +246,8 @@ async function main() {
   }));
   const homographs = words.filter((w) => otherPos.has(w) || names.has(w)).length;
   writeFileSync(`${root}data/words.json`, JSON.stringify(out));
-  console.log(`words: ${words.length}, homographs moved to rare: ${homographs}, broken lines skipped: ${broken}`);
+  writeFileSync(`${root}data/bonus.json`, JSON.stringify([...bonus].sort()));
+  console.log(`words: ${words.length}, bonus words: ${bonus.size}, homographs moved to rare: ${homographs}, broken lines skipped: ${broken}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
