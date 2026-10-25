@@ -10,7 +10,8 @@ import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary, loadBonusWords } from './dict-loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
-import { ripple, confetti, showWinCard } from './celebrate.js';
+import { shuffle } from './progress.js';
+import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
@@ -52,6 +53,8 @@ async function init() {
   }
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
   shownCoins = stats.coins;
+  coinEl.textContent = shownCoins;
+  countEl.textContent = '';
   loadBonusWords().then((set) => { bonusWords = set; }).catch((err) => console.warn('no bonus words', err));
   used = new Set(stats.used);
   const saved = loadJson(STORAGE_KEY);
@@ -72,13 +75,19 @@ function newBoard() {
     next = generateBoard(index, { seed: Date.now(), used });
   } catch (err) {
     if (!(err instanceof OutOfWordsError)) throw err;
-    // Every word has been played. Offer to start the dictionary over.
-    if (!confirm('Все слова словаря пройдены! Начать заново?')) return;
-    used = new Set();
-    saveStats();
-    next = generateBoard(index, { seed: Date.now(), used });
+    // Every word has been played: time for a shuffle.
+    showShuffleCard(stats, doShuffle);
+    return;
   }
   showBoard(next, []);
+}
+
+function doShuffle() {
+  stats = shuffle({ ...stats, used: [...used] });
+  used = new Set();
+  saveStats();
+  confetti();
+  showBoard(generateBoard(index, { seed: Date.now(), used }), []);
 }
 
 function showBoard(nextBoard, savedFound, savedHint, savedBonus) {
@@ -315,7 +324,8 @@ function render() {
     actionEl.disabled = left === 0;
   }
   coinEl.textContent = shownCoins;
-  solvedEl.textContent = `Полей ${stats.solved} · слов ${used.size}/${totalWords(index)}`;
+  const rank = stats.shuffles ? ` · шафл ${stats.shuffles}` : '';
+  solvedEl.textContent = `Полей ${stats.solved} · слов ${used.size}/${totalWords(index)}${rank}`;
 }
 
 function saveState() {
