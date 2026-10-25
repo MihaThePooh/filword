@@ -1,7 +1,7 @@
 // Game screen: draws the board, follows the finger, colours found words.
 
 import {
-  indexDictionary, generateBoard, OutOfWordsError, totalWords,
+  indexDictionary, generateBoard, OutOfWordsError,
 } from './board.js';
 import {
   startSelection, extendSelection, matchWord, rightWordWrongPath,
@@ -10,7 +10,7 @@ import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary, loadBonusWords } from './dict-loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
-import { shuffle } from './progress.js';
+import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 
 const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
@@ -70,12 +70,16 @@ async function init() {
 }
 
 function newBoard() {
+  if (cycleDone(stats)) {
+    showShuffleCard(stats, doShuffle);
+    return;
+  }
   let next;
   try {
     next = generateBoard(index, { seed: Date.now(), used });
   } catch (err) {
     if (!(err instanceof OutOfWordsError)) throw err;
-    // Every word has been played: time for a shuffle.
+    // Should not happen with CYCLE_BOARDS below the dictionary size, but just in case.
     showShuffleCard(stats, doShuffle);
     return;
   }
@@ -325,7 +329,7 @@ function render() {
   }
   coinEl.textContent = shownCoins;
   const rank = stats.shuffles ? ` · шафл ${stats.shuffles}` : '';
-  solvedEl.textContent = `Полей ${stats.solved} · слов ${used.size}/${totalWords(index)}${rank}`;
+  solvedEl.textContent = `Полей ${stats.solved}/${CYCLE_BOARDS}${rank}`;
 }
 
 function saveState() {

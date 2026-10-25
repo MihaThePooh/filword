@@ -1,8 +1,16 @@
 // Progress through the dictionary and the "шафл" (shuffle) prestige.
 //
-// When every word has been played, the player shuffles: the dictionary starts
-// over, the board counter goes back to 1, and the shuffle rank grows by one.
+// One cycle is CYCLE_BOARDS boards. Then the player shuffles: the dictionary
+// starts over, the board counter goes back to 1, and the shuffle rank grows by one.
 // Coins are kept - they are the reward for everything done so far.
+
+// The dictionary is built with a small margin, so words never run out first
+// (see scripts/simulate.mjs).
+export const CYCLE_BOARDS = 2000;
+
+export function cycleDone(stats) {
+  return (stats.solved ?? 0) >= CYCLE_BOARDS;
+}
 
 export function shuffle(stats) {
   return {

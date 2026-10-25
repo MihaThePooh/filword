@@ -3,8 +3,10 @@
 // Inputs (downloaded into raw/, not committed):
 //   raw/ru.jsonl.gz  - Russian Wiktionary extracted by wiktextract (kaikki.org)
 //   raw/ru_full.txt   - word frequency list (hermitdave/FrequencyWords, OpenSubtitles 2018)
+//   raw/wordfreq_ru.txt - wordfreq list (books, Wikipedia, news, subtitles), see README
 //
-// Usage: node scripts/build-dict.mjs [maxRank]
+// Usage: node scripts/build-dict.mjs [boards]
+// Takes the most common nouns, just enough for `boards` boards without repeats.
 
 import { createReadStream, readFileSync, writeFileSync } from 'node:fs';
 import { createGunzip } from 'node:zlib';
@@ -101,7 +103,14 @@ export function isBadEntry(categories = []) {
 
 // Case forms used to double-check a noun's frequency.
 const OBLIQUE = ['genitive', 'dative', 'instrumental'];
-const INDECLINABLE_RANK = 60000;
+
+// Indeclinable words are trusted no higher than this (zipf, see scoreOf).
+const INDECLINABLE_ZIPF = 3;
+// Below this a word is exotic, however many boards we need: ~1 use per 100M words.
+const MIN_ZIPF = 1;
+// 64 letters per 8x8 board plus ~8% margin: the last boards cannot use every word.
+const LETTERS_PER_BOARD = 69;
+const DEFAULT_BOARDS = 2000;
 
 // Genitive/dative/instrumental forms of a noun entry, without stress marks.
 export function obliqueForms(entry) {
@@ -114,30 +123,41 @@ export function obliqueForms(entry) {
     const form = f.form?.replace(/\u0301/g, '');
     if (form && form !== entry.word && /^[а-яё]+$/.test(form)) out.add(form);
   }
-  return [...out];
+  // "водою" is an old variant of "водой": rare by nature, it must not sink the word.
+  return [...out].filter((f) => !/[ое]ю$/.test(f) || !out.has(f.slice(0, -1) + 'й'));
+}
+
+// Texts often write "е" for "ё", so "ёлка" also counts "елка". But not when the
+// "е" spelling is a word of its own: "лёт" must not count "лет", nor "падёж" "падеж".
+// Values are zipf. The "е" spelling may add at most YO_BOOST to what the "ё"
+// spelling shows by itself: "отёл" (4 times) must not borrow "отел" (74 times,
+// a misspelt "отель").
+const YO_BOOST = 1;
+function yoCounter(counts, canFold = () => true) {
+  return (f) => {
+    const own = counts.get(f) ?? 0;
+    const plain = f.replace(/ё/g, 'е');
+    if (plain === f || !own || !canFold(plain)) return own;
+    return Math.max(own, Math.min(counts.get(plain) ?? 0, own + YO_BOOST));
+  };
 }
 
 // A noun is about as frequent as its rare forms. "день" is frequent: "дня",
 // "дню", "днём" are frequent too. "дал" (an Indian dish) only looks frequent
 // because of the verb "дал"; its "далу", "далом" are rare and expose it.
 // Second-smallest, not the smallest: one odd form should not sink a word.
-export function formScore(word, forms, counts) {
-  const countOf = (f) => Math.max(counts.get(f) ?? 0, counts.get(f.replace(/ё/g, 'е')) ?? 0);
+export function formScore(word, forms, counts, canFold) {
+  const countOf = yoCounter(counts, canFold);
   const values = [word, ...forms].map(countOf).sort((a, b) => a - b);
   return values.length > 2 ? values[1] : values[0];
 }
 
-// Map "how many times seen" back to a rank comparable with the frequency list.
-export function rankForCount(sortedCounts, count) {
-  // sortedCounts is descending; rank = how many words are more frequent, + 1.
-  let lo = 0;
-  let hi = sortedCounts.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (sortedCounts[mid] > count) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo + 1;
+// For words with no other reading the strict check is too strict: "тушканчик"
+// is a normal word, but "тушканчику" is rare in any text. One frequent form is
+// enough to show the word is really used as this noun.
+export function looseScore(word, forms, counts, canFold) {
+  const countOf = yoCounter(counts, canFold);
+  return Math.min(countOf(word), Math.max(0, ...forms.map(countOf)));
 }
 
 export function isAdjectival(word, forms = []) {
@@ -166,7 +186,7 @@ export function parseFrequency(text) {
 }
 
 async function main() {
-  const maxRank = Number(process.argv[2] ?? 300000);
+  const boards = Number(process.argv[2] ?? DEFAULT_BOARDS);
   const root = fileURLToPath(new URL('..', import.meta.url));
 
   let rank;
@@ -179,10 +199,21 @@ async function main() {
     console.error('Cannot read raw/ru_full.txt - download it first:', err.message);
     process.exit(1);
   }
+  const lookalikes = new Set(readFileSync(`${root}scripts/proper-lookalikes.txt`, 'utf8')
+    .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#')));
+  let zipf;
+  try {
+    zipf = parseCounts(readFileSync(`${root}raw/wordfreq_ru.txt`, 'utf8'));
+  } catch (err) {
+    console.error('Cannot read raw/wordfreq_ru.txt - see README:', err.message);
+    process.exit(1);
+  }
 
   const senses = new Map(); // word -> [definition, ...]
   const firstSense = new Map(); // any Russian entry -> its first clean definition
   const otherPos = new Set(); // words that are also particles, verbs, adverbs...
+  const ownWords = new Set(); // every spelling that is a word or a form in its own right
+  const verbForms = new Set(); // "дал", "день" (of "деть"): checked strictly, not demoted
   const names = new Set(); // "джек", "крис": frequent only as first names
   const forms = new Map(); // noun -> its oblique case forms
   const indeclinable = new Set(); // "кофе", "такси": no forms to cross-check
@@ -207,16 +238,20 @@ async function main() {
     }
     const word = entry.word;
     if (entry.lang_code !== 'ru') continue;
+    // "елка" is only a pointer to "ёлка"; "лет" is also a form of "лето".
+    if (!entry.senses?.every((s) => s.glosses?.[0]?.startsWith('неёфицированн'))) ownWords.add(word);
     // Verb forms do not count: "день" is also an imperative of "деть", a rare word.
     // Pronoun forms do: "том", "ним" are counted as forms of "тот", "он".
     const isForm = entry.senses?.every((s) => s.tags?.includes('form-of'));
     if (OTHER_POS.has(entry.pos) && !(isForm && entry.pos === 'verb')) otherPos.add(word);
+    if (isForm && entry.pos === 'verb') verbForms.add(word);
     // "новая" (a star) is counted as the adjective; "стен" as the genitive of "стена".
     if (entry.pos === 'adj' || (entry.pos === 'noun' && isForm)) otherPos.add(word);
     // Nouns that decline like adjectives ("хорошее" -> "хорошего"): their
     // frequency mostly comes from the adjective itself.
     if (entry.pos === 'noun' && isAdjectival(word, entry.forms)) otherPos.add(word);
     if (entry.pos === 'name') names.add(word.toLowerCase());
+    // Frequency lists are lower-cased: "пермь" counts the city "Пермь".
     const target = entry.senses?.[0]?.form_of?.[0]?.word;
     if (target && !formOf.has(word)) formOf.set(word, target);
     if (!firstSense.has(word) && !entry.senses?.[0]?.tags?.includes('form-of')) {
@@ -225,12 +260,11 @@ async function main() {
     }
     if (entry.pos !== 'noun') continue;
     if (!isGoodWord(word) || isBadEntry(entry.categories)) continue;
+    if (lookalikes.has(word)) continue;
     // Any real noun counts as a bonus word, even "просадка" seen 3 times in subtitles.
     if ((entry.senses ?? []).some((x) => !x.tags?.includes('form-of') && cleanSense(x.glosses?.[0]))) {
       bonus.add(word);
     }
-    const r = rank.get(word);
-    if (!r || r > maxRank) continue;
 
     forms.set(word, [...new Set([...(forms.get(word) ?? []), ...obliqueForms(entry)])]);
     if (stressedForm(entry)) stress.set(word, (stress.get(word) ?? new Set()).add(stressedForm(entry)));
@@ -244,31 +278,62 @@ async function main() {
     if (list.length) senses.set(word, list);
   }
 
-  // Homographs get the rarest rank: their frequency belongs to the other word.
-  const sortedCounts = [...counts.values()].sort((a, b) => b - a);
-  const rankOf = (w) => {
-    if (otherPos.has(w) || names.has(w)) return maxRank;
+  const canFold = (plain) => !ownWords.has(plain);
+  // Homographs go last: their frequency partly belongs to the other word.
+  const isHomograph = (w) => otherPos.has(w) || names.has(w);
+  // Both lists on one scale: zipf = log10 of uses per billion words.
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  const subZipf = (n) => (n > 0 ? Math.log10((n * 1e9) / total) : 0);
+  const sub = new Map([...counts].map(([w, n]) => [w, subZipf(n)]));
+  const scoreIn = (list, w, sparse = false) => {
     const f = forms.get(w) ?? [];
     // Nothing to cross-check. Indeclinable words ("кофе", but also "томми")
-    // go to the middle of the queue; words with unknown declension to the end.
-    if (!f.length) return indeclinable.has(w) ? Math.max(rank.get(w), INDECLINABLE_RANK) : maxRank;
-    const byForms = rankForCount(sortedCounts, formScore(w, f, counts));
-    return Math.min(maxRank, Math.max(rank.get(w), byForms));
+    // are trusted a bit less, words with unknown declension much less.
+    if (!f.length) {
+      const bare = yoCounter(list, canFold)(w);
+      return indeclinable.has(w) ? Math.min(bare, INDECLINABLE_ZIPF) : bare - 1;
+    }
+    // Verb forms ("дал") and other homographs need the strict check.
+    if (isHomograph(w) || verbForms.has(w)) return formScore(w, f, list, canFold);
+    // Subtitles are a small corpus: "торшер" is there, "торшера" is not.
+    // A word with no other reading may go on its own count there.
+    if (sparse) return yoCounter(list, canFold)(w);
+    return Math.max(formScore(w, f, list, canFold), looseScore(w, f, list, canFold));
   };
+  // Average of both lists: subtitles know everyday words ("зевок"), wordfreq
+  // knows book words ("коромысло"); a word only Wikipedia knows ("менархе")
+  // gets half the score.
+  const scoreOf = (w) => (scoreIn(sub, w, true) + scoreIn(zipf, w)) / 2;
+  const score = new Map([...senses.keys()].map((w) => [w, scoreOf(w)]));
+  const byScore = [...senses.keys()].filter((w) => score.get(w) >= MIN_ZIPF)
+    .sort((a, b) => score.get(b) - score.get(a));
+  const words = [];
+  let letters = 0;
+  for (const w of byScore) {
+    if (letters >= boards * LETTERS_PER_BOARD) break;
+    words.push(w);
+    letters += w.length;
+  }
+  if (letters < boards * LETTERS_PER_BOARD) {
+    console.error(`Only ${letters} letters above zipf ${MIN_ZIPF}: not enough for ${boards} boards`);
+  }
+  // Most frequent words first - the game picks easier words first.
+  words.sort((a, b) => isHomograph(a) - isHomograph(b) || score.get(b) - score.get(a));
+  const rankOf = new Map(words.map((w, i) => [w, i + 1]));
   // A synonym may be a form ("ягодицы"): then explain its dictionary word.
   const lookup = (w) => firstSense.get(w) ?? firstSense.get(formOf.get(w));
-  // Most frequent words first - handy for picking easier words later.
-  const words = [...senses.keys()].sort((a, b) => rankOf(a) - rankOf(b));
-  // r = frequency rank (smaller = more common), d = definitions.
+  // r = place in the queue (smaller = more common), d = definitions.
   // s = the word with a stress mark, when the dictionary has it.
   const out = words.map((w) => ({
-    w, r: rankOf(w), d: senses.get(w).map((d) => expandSameAs(d, lookup)),
+    w, r: rankOf.get(w), d: senses.get(w).map((d) => expandSameAs(d, lookup)),
     // Homonyms may differ only by stress: "му́ка · мука́".
     ...(stress.has(w) ? { s: [...stress.get(w)].join(' · ') } : {}),
   }));
-  const homographs = words.filter((w) => otherPos.has(w) || names.has(w)).length;
+  const homographs = words.filter(isHomograph).length;
   writeFileSync(`${root}data/words.json`, JSON.stringify(out));
   writeFileSync(`${root}data/bonus.json`, JSON.stringify([...bonus].sort()));
+  const last = words.reduce((a, w) => (score.get(w) < score.get(a) ? w : a));
+  console.log(`letters: ${letters}, rarest word: ${last} (zipf ${score.get(last).toFixed(2)})`);
   console.log(`with stress: ${words.filter((w) => stress.has(w)).length}`);
   console.log(`words: ${words.length}, bonus words: ${bonus.size}, homographs moved to rare: ${homographs}, broken lines skipped: ${broken}`);
 }

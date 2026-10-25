@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   splitLabels, cleanSense, isGoodWord, isBadEntry, parseFrequency, expandSameAs,
-  obliqueForms, formScore, rankForCount, parseCounts, isAdjectival, stressedForm,
+  obliqueForms, formScore, looseScore, parseCounts, isAdjectival, stressedForm,
 } from '../scripts/build-dict.mjs';
 
 test('splitLabels strips leading abbreviations', () => {
@@ -76,19 +76,37 @@ test('obliqueForms takes genitive/dative/instrumental without stress marks', () 
   assert.deepEqual(obliqueForms({ word: 'кофе' }), []);
 });
 
-test('formScore takes the rarest form, ё may be written as е', () => {
-  const counts = parseCounts('дал 9000\nдня 5000\nдень 8000\nдала 4000\nднем 3000\nдалу 2\n');
-  assert.equal(formScore('день', ['дня', 'днём'], counts), 5000, 'second smallest');
+test('obliqueForms drops old "-ою" variants', () => {
+  const entry = { word: 'вода', forms: [
+    { form: 'воды\u0301', tags: ['singular', 'genitive'] },
+    { form: 'водо\u0301й', tags: ['singular', 'instrumental'] },
+    { form: 'водо\u0301ю', tags: ['singular', 'instrumental'] },
+  ] };
+  assert.deepEqual(obliqueForms(entry), ['воды', 'водой']);
+});
+
+test('formScore takes the second rarest form', () => {
+  const counts = parseCounts('дал 9000\nдня 5000\nдень 8000\nдала 4000\nдалу 2\n');
+  assert.equal(formScore('день', ['дня', 'дню'], counts), 5000, 'second smallest');
   assert.equal(formScore('дал', ['далу', 'далом'], counts), 2);
   assert.equal(formScore('кофе', [], parseCounts('кофе 700\n')), 700);
 });
 
-test('rankForCount maps a count to a position in the frequency list', () => {
-  const sorted = [100, 50, 50, 10];
-  assert.equal(rankForCount(sorted, 100), 1);
-  assert.equal(rankForCount(sorted, 50), 2);
-  assert.equal(rankForCount(sorted, 20), 4);
-  assert.equal(rankForCount(sorted, 1), 5);
+test('ё may be written as е, but only within limits', () => {
+  // Values are zipf here, as in the build.
+  const zipf = parseCounts('ёлка 3.0\nелка 3.4\nотёл 1.2\nотел 2.7\nлет 5.5\n');
+  assert.equal(formScore('ёлка', [], zipf), 3.4, 'the е spelling counts too');
+  assert.equal(formScore('отёл', [], zipf), 2.2, 'borrows at most +1');
+  assert.equal(formScore('лёт', [], zipf), 0, 'no own uses - nothing to borrow');
+  const notLet = (plain) => plain !== 'лет';
+  assert.equal(formScore('лёт', [], parseCounts('лёт 1.5\nлет 5.5\n'), notLet), 1.5, '"лет" is a word of its own');
+});
+
+test('looseScore needs just one frequent form', () => {
+  const counts = parseCounts('тушканчик 300\nтушканчика 40\n');
+  assert.equal(looseScore('тушканчик', ['тушканчика', 'тушканчику'], counts), 40);
+  assert.equal(formScore('тушканчик', ['тушканчика', 'тушканчику'], counts), 40);
+  assert.equal(looseScore('кисет', ['кисета'], parseCounts('кисет 50\n')), 0, 'never declined - no proof');
 });
 
 test('isAdjectival spots nouns that decline like adjectives', () => {

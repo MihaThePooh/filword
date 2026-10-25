@@ -155,20 +155,20 @@ export function showWinCard({ solved, words }, onNext) {
   });
 }
 
-// The whole dictionary is played. One button: shuffle and start over.
+// The cycle is played. One button: shuffle and start over.
 export function showShuffleCard(stats, onShuffle) {
   const overlay = document.createElement('div');
   overlay.className = 'win';
   const next = (stats.shuffles ?? 0) + 1;
   overlay.innerHTML = `
     <div class="win-card">
-      <div class="win-title">Словарь пройден!</div>
+      <div class="win-title">Круг пройден!</div>
       <div class="win-stats"></div>
       <button class="win-next" type="button">Шафл!</button>
       <div class="win-hint">Слова перемешаются, поля начнутся с первого.<br>Монеты останутся.</div>
     </div>`;
   overlay.querySelector('.win-stats').textContent =
-    `Все ${stats.used.length} слов найдены. Ты получишь ранг «шафл ${next}».`;
+    `Все ${stats.solved} ${plural(stats.solved, 'поле', 'поля', 'полей')} пройдены. Ты получишь ранг «шафл ${next}».`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('show'));
   overlay.querySelector('.win-next').addEventListener('click', () => {
