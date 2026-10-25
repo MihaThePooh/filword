@@ -9,6 +9,7 @@ import {
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary, loadBonusWords } from './dict-loader.js';
+import { showLoader } from './loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
@@ -44,13 +45,16 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
+  const loader = showLoader();
   try {
-    index = indexDictionary(await loadDictionary());
+    index = indexDictionary(await loadDictionary((f) => loader.progress(f)));
   } catch (err) {
+    await loader.done();
     countEl.textContent = 'Не удалось загрузить словарь';
     console.error(err);
     return;
   }
+  loader.done();
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
