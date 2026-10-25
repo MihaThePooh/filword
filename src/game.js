@@ -3,7 +3,9 @@
 import {
   indexDictionary, generateBoard, OutOfWordsError, totalWords,
 } from './board.js';
-import { startSelection, extendSelection, matchWord } from './selection.js';
+import {
+  startSelection, extendSelection, matchWord, rightWordWrongPath,
+} from './selection.js';
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary } from './dict-loader.js';
@@ -149,6 +151,11 @@ function onUp(e) {
   if (i >= 0) {
     selection = [];
     markFound(i);
+  } else if (rightWordWrongPath(selection, board.letters, board.words, new Set(found.keys())) >= 0) {
+    // The word is right, but it hides in other cells.
+    toast('Собери слово по-другому');
+    selection = [];
+    render();
   } else if (selection.length > 1) {
     // Wrong word: shake the picked cells, then clear.
     gridEl.classList.add('miss');
@@ -205,6 +212,21 @@ function onAction() {
     saveState();
     render();
   }
+}
+
+let toastTimer;
+function toast(text) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
 function render() {

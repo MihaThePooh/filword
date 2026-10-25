@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { startSelection, extendSelection, matchWord } from '../src/selection.js';
+import {
+  startSelection, extendSelection, matchWord, rightWordWrongPath,
+} from '../src/selection.js';
 
 // 3x3 grid:
 // 0 1 2
@@ -34,4 +36,16 @@ test('matchWord: exact cells in order, skips found words', () => {
   assert.equal(matchWord([0, 1, 2], words, none), 0);
   assert.equal(matchWord([3, 4, 5], words, none), -1, 'reversed');
   assert.equal(matchWord([5, 4, 3], words, new Set([1])), -1, 'already found');
+});
+
+test('rightWordWrongPath: same letters through other cells', () => {
+  // к о т
+  // о т к
+  const letters = ['к', 'о', 'т', 'о', 'т', 'к'];
+  const words = [{ word: 'кот', cells: [0, 1, 2] }, { word: 'ток', cells: [4, 3, 5] }];
+  const none = new Set();
+  assert.equal(rightWordWrongPath([0, 3, 4], letters, words, none), 0, 'к-о-т down and right');
+  assert.equal(rightWordWrongPath([0, 1, 4], letters, words, none), 0);
+  assert.equal(rightWordWrongPath([0, 1, 4], letters, words, new Set([0])), -1, 'already found');
+  assert.equal(rightWordWrongPath([1, 2], letters, words, none), -1, 'not a word');
 });

@@ -32,3 +32,11 @@ export function matchWord(selection, words, found) {
     && w.cells.length === selection.length
     && w.cells.every((c, k) => c === selection[k]));
 }
+
+// The swipe spells a hidden word, but through other cells. The word is right,
+// the path is not - the player deserves a hint, not a silent "wrong".
+// Returns the index of that word, or -1.
+export function rightWordWrongPath(selection, letters, words, found) {
+  const traced = selection.map((c) => letters[c]).join('');
+  return words.findIndex((w, i) => !found.has(i) && w.word === traced);
+}
