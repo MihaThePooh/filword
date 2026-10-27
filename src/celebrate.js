@@ -11,19 +11,37 @@ const COLOURS = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0
 // People who turned animations off in the phone settings get a calm version.
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Cells pop one after another, like a wave spreading from the last found cell.
-export function ripple(cellEls, size, fromCell) {
-  if (reducedMotion()) return;
-  const r0 = Math.floor(fromCell / size);
-  const c0 = fromCell % size;
+// Water ripple: a stone drops on a random cell and a ring runs outwards.
+// Each cell swells, dips a little below its size and settles - like water.
+const WAVE_STEP_MS = 75; // the ring moves one cell further
+const WAVE_CELL_MS = 700; // one cell's swell-dip-settle
+
+// When the ring reaches a cell: proportional to the distance from the drop.
+export function waveDelay(cell, size, fromCell) {
+  const dist = Math.hypot(Math.floor(cell / size) - Math.floor(fromCell / size),
+    (cell % size) - (fromCell % size));
+  return Math.round(dist * WAVE_STEP_MS);
+}
+
+// Returns how long the wave lasts, in ms (0 if animations are off).
+export function ripple(cellEls, size, fromCell = Math.floor(Math.random() * cellEls.length)) {
+  if (reducedMotion()) return 0;
+  let last = 0;
   cellEls.forEach((el, cell) => {
-    const dist = Math.hypot(Math.floor(cell / size) - r0, (cell % size) - c0);
+    const delay = waveDelay(cell, size, fromCell);
+    last = Math.max(last, delay);
     el.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(1.18)', filter: 'brightness(1.12)' },
-        { transform: 'scale(1)' }],
-      { duration: 450, delay: dist * 55, easing: 'ease-out' },
+      [
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.22)', filter: 'brightness(1.15)', offset: 0.3 },
+        { transform: 'scale(0.9)', offset: 0.6 },
+        { transform: 'scale(1.04)', offset: 0.82 },
+        { transform: 'scale(1)' },
+      ],
+      { duration: WAVE_CELL_MS, delay, easing: 'ease-in-out' },
     );
   });
+  return last + WAVE_CELL_MS;
 }
 
 // Confetti on a full-screen canvas: two cannons from the lower corners,

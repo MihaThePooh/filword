@@ -227,16 +227,22 @@ function markFound(i) {
   saveStats();
   saveState();
   render();
-  if (solvedNow) celebrate(board.words[i].cells.at(-1));
+  if (solvedNow) celebrate();
 }
 
-function celebrate(lastCell) {
-  ripple(cellEls, board.size, lastCell);
-  // Let the colour of the last word settle before the fireworks.
+// The last word settles, a ripple runs over the board from a random cell,
+// half a second of quiet - and then the fireworks.
+function celebrate() {
+  const solvedBoard = board;
   setTimeout(() => {
-    confetti();
-    showWinCard({ solved: stats.solved, words: board.words.length }, () => newBoard());
-  }, 350);
+    if (board !== solvedBoard) return; // "next board" was pressed meanwhile
+    const wave = ripple(cellEls, board.size);
+    setTimeout(() => {
+      if (board !== solvedBoard) return;
+      confetti();
+      showWinCard({ solved: stats.solved, words: board.words.length }, () => newBoard());
+    }, wave + 500);
+  }, 250); // the colour of the last word settles first
 }
 
 // One button, two jobs: a hint while the board is in play,
