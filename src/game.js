@@ -29,6 +29,8 @@ const countEl = document.getElementById('count');
 const solvedEl = document.getElementById('solved');
 const actionEl = document.getElementById('action');
 const coinEl = document.getElementById('coin-count');
+// Space between the header and the board: the loader and short messages live here.
+const slotEl = document.getElementById('slot');
 
 let index;
 let board;
@@ -45,7 +47,9 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
-  const loader = showLoader();
+  // Empty cells hold the board's place while the dictionary loads.
+  gridEl.innerHTML = '<div class="cell"></div>'.repeat(64);
+  const loader = showLoader(slotEl);
   try {
     index = indexDictionary(await loadDictionary((f) => loader.progress(f)));
   } catch (err) {
@@ -54,7 +58,7 @@ async function init() {
     console.error(err);
     return;
   }
-  loader.done();
+  await loader.done();
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
@@ -298,12 +302,12 @@ function toast(text) {
     el = document.createElement('div');
     el.id = 'toast';
     el.className = 'toast';
-    document.body.appendChild(el);
+    slotEl.appendChild(el);
   }
   el.textContent = text;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
 }
 
 function render() {

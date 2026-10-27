@@ -1,6 +1,6 @@
 :root {
   --bg: #fafaf7;
-  --cell: #ecebe6;
+  --cell: #dedcd4;
   --text: #3a3a3a;
   --muted: #8a8a85;
   --line: #dcdbd5;
@@ -45,10 +45,21 @@ main {
   width: 100%;
   max-width: 480px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   padding: 0 12px;
 }
+/* Equal free space above and below keeps the board centred.
+   The upper one shows the loader and short messages. */
+.slot {
+  flex: 1;
+  min-height: 56px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .grid {
+  flex: none;
   width: 100%;
   aspect-ratio: 1;
   display: grid;
@@ -147,15 +158,15 @@ footer a { color: inherit; text-decoration: none; }
 }
 .win-hint { margin-top: 12px; font-size: 12px; color: var(--muted); }
 
-/* Short message over the grid, e.g. "Собери слово по-другому" */
+/* Short message above the grid, e.g. "Собери слово по-другому" */
 .toast {
-  position: fixed; left: 50%; top: 22%; z-index: 15;
-  transform: translate(-50%, -10px); opacity: 0; pointer-events: none;
+  position: absolute; left: 50%; top: 50%; z-index: 15;
+  transform: translate(-50%, calc(-50% - 10px)); opacity: 0; pointer-events: none;
   background: var(--picked); color: #fff; padding: 12px 20px; border-radius: 14px;
   font-size: 16px; white-space: nowrap; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   transition: opacity 0.2s, transform 0.2s;
 }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.show { opacity: 1; transform: translate(-50%, -50%); }
 
 /* Coins */
 .coins { display: flex; align-items: center; gap: 5px; font-size: 17px; font-weight: 600; margin-left: auto; margin-right: 10px; }
@@ -166,24 +177,20 @@ footer a { color: inherit; text-decoration: none; }
 }
 .coin.flying { position: fixed; left: 0; top: 0; margin: -9px 0 0 -9px; z-index: 30; pointer-events: none; }
 
-/* Loading screen: a tiny self-solving filword over the page */
+/* Loading screen: a tiny self-solving filword above the board */
 .loader {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: var(--bg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 22px;
+  gap: 10px;
+  padding: 8px 0;
   transition: opacity 0.35s;
 }
 .loader.hide { opacity: 0; pointer-events: none; }
 .loader-grid {
   display: grid;
-  grid-template-columns: repeat(6, 44px);
-  grid-auto-rows: 44px;
+  grid-template-columns: repeat(6, 40px);
+  grid-auto-rows: 40px;
   gap: 4px;
 }
 .loader-cell {

@@ -1,6 +1,8 @@
 // Loading screen: while the dictionary downloads, a tiny filword solves itself.
 // An invisible finger runs along a snake path, each finished word gets its
 // colour - the same thing the player will do in a moment.
+// It sits in the slot between the header and the board and always plays
+// at least one full round, even when the dictionary comes from the cache.
 
 // Snake through a 6x3 grid: ФИЛВОРД · БЕЗ · РЕКЛАМЫ, and a "!" at the end.
 export const LETTERS = 'ФИЛВОРДБЕЗРЕКЛАМЫ!';
@@ -27,7 +29,7 @@ export function cellPosition(i) {
   return { row, col };
 }
 
-export function showLoader(root = document.body) {
+export function showLoader(root) {
   const el = document.createElement('div');
   el.className = 'loader';
   el.innerHTML = `
@@ -50,6 +52,15 @@ export function showLoader(root = document.body) {
   root.appendChild(el);
   const shownAt = performance.now();
 
+  // Small screens leave little room above the board: shrink to fit the slot.
+  function fit() {
+    el.style.transform = '';
+    const scale = Math.min(1, root.clientHeight / el.offsetHeight, root.clientWidth / el.offsetWidth);
+    el.style.transform = `scale(${Math.max(0.4, scale)})`;
+  }
+  fit();
+  addEventListener('resize', fit);
+
   let quipIndex = Math.floor(Math.random() * QUIPS.length);
   quip.textContent = QUIPS[quipIndex];
   const quipTimer = setInterval(() => {
@@ -60,6 +71,8 @@ export function showLoader(root = document.body) {
   // One finger step per tick. A word is coloured when the finger leaves its last letter.
   let step = 0;
   let timer = null;
+  let roundDone;
+  const firstRound = new Promise((resolve) => { roundDone = resolve; });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function paintWord(w) {
     const [from, to] = WORDS[w];
@@ -70,6 +83,7 @@ export function showLoader(root = document.body) {
   }
   function tick() {
     if (step === LETTERS.length) {
+      roundDone();
       timer = setTimeout(() => {
         for (const c of cells) { c.style.background = ''; c.classList.remove('picked'); }
         step = 0;
@@ -85,8 +99,10 @@ export function showLoader(root = document.body) {
       tick();
     }, STEP_MS);
   }
-  if (reduced) WORDS.forEach((_, w) => paintWord(w));
-  else tick();
+  if (reduced) {
+    WORDS.forEach((_, w) => paintWord(w));
+    setTimeout(roundDone, 1500); // nothing moves - just let it be read
+  } else tick();
 
   return {
     // fraction 0..1, or null when the size is unknown (stripes instead of a bar)
@@ -94,9 +110,11 @@ export function showLoader(root = document.body) {
       el.classList.toggle('unknown', fraction == null);
       if (fraction != null) fill.style.width = `${Math.round(Math.min(1, fraction) * 100)}%`;
     },
-    // Fades out. "?loader" in the address keeps it for a while - to look at it.
-    done() {
+    // Fades out after the first round. "?loader" in the address keeps it
+    // for a while - to look at it.
+    async done() {
       fill.style.width = '100%';
+      await firstRound;
       const hold = new URLSearchParams(location.search).has('loader') ? 8000 : 0;
       const wait = Math.max(0, shownAt + hold - performance.now());
       return new Promise((resolve) => setTimeout(() => {
@@ -104,6 +122,7 @@ export function showLoader(root = document.body) {
         setTimeout(() => {
           clearTimeout(timer);
           clearInterval(quipTimer);
+          removeEventListener('resize', fit);
           el.remove();
           resolve();
         }, 350);
