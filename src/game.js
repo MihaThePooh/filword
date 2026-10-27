@@ -14,8 +14,14 @@ import { REWARD, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 
-const PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
+// Bright, so found words stand out from the grey cells still in play.
+// Dark letters stay readable on each of them (contrast 3.8+ for large text).
+const PALETTE = ['#ff8a65', '#5cc461', '#4fa8e8', '#f7c51e', '#b98ae6', '#f377a6',
+  '#2fc7b8', '#ffa53a', '#8494f5', '#a9d63f', '#f26b6b', '#45d095'];
+// The old pastel palette, same order: boards saved before the change get repainted.
+const OLD_PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
+const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 const STORAGE_KEY = 'filword-state';
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -106,7 +112,7 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus) {
   sheet.close();
   bonusFound = savedBonus ?? [];
   board = nextBoard;
-  found = new Map(savedFound);
+  found = new Map([...(savedFound ?? [])].map(([i, c]) => [i, brighter(c)]));
   hint = savedHint?.words ? savedHint : emptyHint();
   selection = [];
   gridEl.innerHTML = '';

@@ -8,7 +8,7 @@
 export const LETTERS = 'ФИЛВОРДБЕЗРЕКЛАМЫ!';
 export const WORDS = [[0, 7], [7, 10], [10, 17]]; // [start, end) in LETTERS
 const COLS = 6;
-const COLOURS = ['#f6c8b8', '#c9e4c5', '#bcd7ee'];
+const COLOURS = ['#ff8a65', '#5cc461', '#4fa8e8']; // the game's first three
 const STEP_MS = 150; // finger moves one cell
 const PAUSE_MS = 900; // the solved board stays a moment before the next round
 
