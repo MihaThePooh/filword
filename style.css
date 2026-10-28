@@ -83,7 +83,16 @@ main {
   margin-top: 12px;
   padding-bottom: 12px;
   overscroll-behavior: contain;
+  /* Soft edges where more words hide: a hint that the list scrolls. */
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  --fade: linear-gradient(to bottom, transparent 0, #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)), transparent 100%);
+  -webkit-mask-image: var(--fade);
+  mask-image: var(--fade);
 }
+.words.more-above { --fade-top: 26px; }
+.words.more-below { --fade-bottom: 26px; }
 .chip {
   border: 0;
   border-radius: 999px;

@@ -28,7 +28,7 @@ const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
 // Shown in the footer, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 18;
+export const VERSION = 19;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -294,7 +294,17 @@ function renderWords(fresh = false) {
     wordsEl.appendChild(chip);
   });
   if (fresh) wordsEl.scrollTop = wordsEl.scrollHeight;
+  updateFades();
 }
+
+// Fade the list's top or bottom edge when words hide beyond it.
+function updateFades() {
+  const { scrollTop, clientHeight, scrollHeight } = wordsEl;
+  wordsEl.classList.toggle('more-above', scrollTop > 1);
+  wordsEl.classList.toggle('more-below', scrollTop + clientHeight < scrollHeight - 1);
+}
+wordsEl.addEventListener('scroll', updateFades, { passive: true });
+addEventListener('resize', updateFades);
 
 function markFound(i) {
   found.set(i, PALETTE[found.size % PALETTE.length]);
