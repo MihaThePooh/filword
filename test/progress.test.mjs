@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { shuffle, cycleDone, CYCLE_BOARDS } from '../src/progress.js';
 
@@ -27,4 +28,16 @@ test('the dictionary has letters for a whole cycle with a margin', async () => {
   const letters = dict.reduce((n, e) => n + [...e.w].length, 0);
   // Simulated playthroughs give ~2060-2110 boards from 69 letters per board.
   assert.ok(letters >= CYCLE_BOARDS * 66, `${letters} letters`);
+});
+
+test('bonus definitions cover rare bonus words, not the main list', () => {
+  const read = (f) => JSON.parse(readFileSync(new URL(`../data/${f}`, import.meta.url), 'utf8'));
+  const main = new Set(read('words.json').map((e) => e.w));
+  const bonus = new Set(read('bonus.json'));
+  const defs = read('bonus-defs.json');
+  assert.ok(defs['манилла']?.d.length > 0, 'манилла has a definition');
+  for (const [w, e] of Object.entries(defs)) {
+    assert.ok(bonus.has(w) && !main.has(w), w);
+    assert.ok(e.d.length > 0, w);
+  }
 });

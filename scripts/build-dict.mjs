@@ -332,9 +332,22 @@ async function main() {
   const homographs = words.filter(isHomograph).length;
   writeFileSync(`${root}data/words.json`, JSON.stringify(out));
   writeFileSync(`${root}data/bonus.json`, JSON.stringify([...bonus].sort()));
+  // Definitions of bonus words that are not in the main list: a separate file,
+  // loaded only when the player opens such a word.
+  const inMain = new Set(words);
+  const bonusDefs = {};
+  for (const w of [...bonus].sort()) {
+    if (inMain.has(w) || !senses.has(w)) continue;
+    bonusDefs[w] = {
+      d: senses.get(w).map((d) => expandSameAs(d, lookup)),
+      ...(stress.has(w) ? { s: [...stress.get(w)].join(' · ') } : {}),
+    };
+  }
+  writeFileSync(`${root}data/bonus-defs.json`, JSON.stringify(bonusDefs));
   const last = words.reduce((a, w) => (score.get(w) < score.get(a) ? w : a));
   console.log(`letters: ${letters}, rarest word: ${last} (zipf ${score.get(last).toFixed(2)})`);
   console.log(`with stress: ${words.filter((w) => stress.has(w)).length}`);
+  console.log(`bonus definitions: ${Object.keys(bonusDefs).length}`);
   console.log(`words: ${words.length}, bonus words: ${bonus.size}, homographs moved to rare: ${homographs}, broken lines skipped: ${broken}`);
 }
 

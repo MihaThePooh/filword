@@ -4,7 +4,7 @@
 // server and put a copy into the cache; when offline, answer from the cache.
 // So updates arrive by themselves, and the last version works offline.
 
-const CACHE = 'filword-v11';
+const CACHE = 'filword-v12';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
 const CORE = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',

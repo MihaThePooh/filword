@@ -12,6 +12,17 @@ export async function loadBonusWords() {
   return new Set(await loadJson('data/bonus.json'));
 }
 
+// Definitions of bonus words outside the main list (~2 MB packed): fetched
+// only when the player first opens such a word, then kept for the session.
+let bonusDefs;
+export function loadBonusDefs() {
+  bonusDefs ??= loadJson('data/bonus-defs.json').catch((err) => {
+    bonusDefs = undefined; // let the next tap try again
+    throw err;
+  });
+  return bonusDefs;
+}
+
 async function loadJson(base, onProgress) {
   if ('DecompressionStream' in window) {
     try {

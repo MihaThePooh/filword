@@ -8,7 +8,7 @@ import {
 } from './selection.js';
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
-import { loadDictionary, loadBonusWords } from './dict-loader.js';
+import { loadDictionary, loadBonusWords, loadBonusDefs } from './dict-loader.js';
 import { showLoader } from './loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
@@ -255,10 +255,20 @@ function showWord(entry) {
     sheet.open(w.word, found.get(entry.i), w.defs, w.stress);
     return;
   }
-  // Bonus words from the main dictionary have definitions; rare ones do not.
+  // Bonus words from the main dictionary are at hand; the rest come from
+  // a separate file, loaded on the first such tap.
   const known = dictByWord.get(entry.b);
-  sheet.open(entry.b, BONUS_GREY, known?.d, known?.s,
-    known ? '' : 'Бонусное слово: толкования в игре нет, оно есть в Викисловаре.');
+  if (known) {
+    sheet.open(entry.b, BONUS_GREY, known.d, known.s);
+    return;
+  }
+  sheet.open(entry.b, BONUS_GREY, [], undefined, 'Загружаю толкование…');
+  loadBonusDefs().then((defs) => {
+    const e = defs[entry.b];
+    if (sheet.isOpen()) sheet.open(entry.b, BONUS_GREY, e?.d, e?.s, e ? '' : 'Толкования нет, загляни в Викисловарь.');
+  }).catch(() => {
+    if (sheet.isOpen()) sheet.open(entry.b, BONUS_GREY, [], undefined, 'Не удалось загрузить толкование: нет связи?');
+  });
 }
 
 // Found words under the board, each on the colour it has on the board.
