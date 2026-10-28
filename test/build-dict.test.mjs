@@ -13,6 +13,17 @@ test('splitLabels strips leading abbreviations', () => {
   assert.deepEqual(splitLabels('сосуд для воды').labels, []);
 });
 
+test('cleanSense peels grammar notes off the definition', () => {
+  assert.equal(cleanSense('преимущ. мн., ед. в том же знач., что мн. состояние, в котором человек'),
+    'состояние, в котором человек');
+  assert.equal(cleanSense('чего, книжн. самый процесс ощущения'), 'самый процесс ощущения');
+  assert.equal(cleanSense('кому-чему, поступок, оцениваемый как вызов'), 'поступок, оцениваемый как вызов');
+  assert.equal(cleanSense('книжн. или поэт. о том, что мало известно'), 'о том, что мало известно');
+  assert.equal(cleanSense('разг.; шутл. или пренебр. о пёстро одетой женщине'), null, 'пренебр. is dropped');
+  assert.equal(cleanSense('архео\u00adл. археологическая культура'), 'археологическая культура', 'soft hyphen in a label');
+  assert.equal(cleanSense('что-либо приятное и полезное'), 'что-либо приятное и полезное', 'not a case word');
+});
+
 test('cleanSense drops obsolete and slang senses', () => {
   assert.equal(cleanSense('устар. старая мера длины'), null);
   assert.equal(cleanSense('жарг. деньги'), null);

@@ -32,7 +32,15 @@ const BAD_CATEGORY_PARTS = [
 ];
 
 // Leading run of abbreviations like "зоол.", "рег. и спец.", "мн. ч. собир.".
-const LABELS_RE = /^[\s,;]*((?:[а-яё-]+\.[\s,]*(?:и\s+)?)+)/;
+// Joined by "и", "или", "либо" or ";": "книжн. или поэт.", "разг.; шутл.".
+const LABELS_RE = /^[\s,;]*((?:[а-яё-]+\.[\s,;]*(?:(?:и|или|либо)\s+)?)+)/;
+
+// Government: which case the word takes - "чего, ...", "кому-чему, ...".
+const CASE_WORD = '(?:(?:с|со|о|об|на|в|во|к|ко|от|до|за|по|из|у|для|про|над|под|при|перед|без|через)\\s+)?'
+  + '(?:кого|чего|кому|чему|кем|чем|ком|чём|что|какой|какая|какое|какие)';
+const GOVERNMENT_RE = new RegExp(`^${CASE_WORD}(?:(?:\\s*-\\s*|\\s+(?:и|или)\\s+|,\\s*)${CASE_WORD})*,\\s*`);
+// Number note: "ед. в том же знач., что мн." - the singular means the same.
+const NUMBER_NOTE_RE = /^(?:ед\.\s*(?:ч\.\s*)?)?в том же знач(?:\.|ении),?\s*что\s+(?:и\s+)?мн\.(?:\s*ч\.)?[\s,]*/;
 
 export function splitLabels(gloss) {
   const m = gloss.match(LABELS_RE);
@@ -46,8 +54,17 @@ export function splitLabels(gloss) {
 // Returns a clean definition, or null if the sense should not be shown.
 export function cleanSense(gloss) {
   if (typeof gloss !== 'string') return null;
-  const { labels, text } = splitLabels(gloss);
-  if (labels.some((l) => BAD_LABELS.has(l))) return null;
+  // Grammar notes and labels may alternate: "преимущ. мн., ед. в том же знач.,
+  // что мн. ...", "чего, книжн. ...". Peel them off until the text itself.
+  // Soft hyphens hide inside labels too ("архео\u00adл."), so they go first.
+  let text = gloss.replace(/\u00ad/g, '');
+  for (let round = 0; round < 4; round++) {
+    const split = splitLabels(text);
+    if (split.labels.some((l) => BAD_LABELS.has(l))) return null;
+    const next = split.text.replace(NUMBER_NOTE_RE, '').replace(GOVERNMENT_RE, '');
+    if (next === text) break;
+    text = next;
+  }
   // Grammar forms ("форма винительного падежа...") and letter names are not game words.
   if (/^форма\s/.test(text) || /^название .*буквы/.test(text)) return null;
   // Labels sometimes come without a dot ("сленг что-либо приятное").
