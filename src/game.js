@@ -22,6 +22,8 @@ const PALETTE = ['#ff8a65', '#5cc461', '#4fa8e8', '#f7c51e', '#b98ae6', '#f377a6
 const OLD_PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7d1e0',
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
 const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
+// Bonus words in the list under the board: grey, as dark as the colours above.
+const BONUS_GREY = '#b5b3ab';
 const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
 const STATS_KEY = 'filword-stats';
@@ -38,6 +40,7 @@ const actionEl = document.getElementById('action');
 const coinEl = document.getElementById('coin-count');
 // Space between the header and the board: short messages live here.
 const slotEl = document.getElementById('slot');
+const wordsEl = document.getElementById('words');
 
 let index;
 let board;
@@ -50,6 +53,10 @@ const sheet = createSheet();
 let stats = { solved: 0, used: [], coins: 0 };
 let bonusWords = new Set(); // filled in the background, the game starts without it
 let bonusFound = []; // bonus words already counted on this board
+// Found words of this board in the order they were found: { i } for a hidden
+// word (index in board.words), { b } for a bonus word. Shown under the board.
+let wordLog = [];
+let dictByWord = new Map(); // word -> dictionary entry, for bonus definitions
 let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
@@ -63,7 +70,9 @@ async function init() {
   });
   const loader = showLoader(cellEls, BOARD_SIZE);
   try {
-    index = indexDictionary(await loadDictionary((f) => loader.progress(f)));
+    const dict = await loadDictionary((f) => loader.progress(f));
+    index = indexDictionary(dict);
+    dictByWord = new Map(dict.map((e) => [e.w, e]));
   } catch (err) {
     await loader.done();
     countEl.textContent = 'Не удалось загрузить словарь';
@@ -80,7 +89,7 @@ async function init() {
   const saved = loadJson(STORAGE_KEY);
   // The whole board is saved, not just its seed: the next board depends on
   // which words are used up, so a seed alone would not rebuild the same one.
-  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus);
+  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus, saved.log);
   else newBoard();
   actionEl.addEventListener('click', onAction);
   gridEl.addEventListener('pointerdown', onDown);
@@ -119,11 +128,14 @@ function doShuffle() {
 // Taps wait until the wave has passed.
 let busy = false;
 let busyTimer;
-function showBoard(nextBoard, savedFound, savedHint, savedBonus) {
+function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog) {
   sheet.close();
   bonusFound = savedBonus ?? [];
   board = nextBoard;
   found = new Map([...(savedFound ?? [])].map(([i, c]) => [i, brighter(c)]));
+  // Boards saved before the list existed: hidden words first, then bonus ones.
+  wordLog = savedLog ?? [...found.keys()].map((i) => ({ i })).concat(bonusFound.map((b) => ({ b })));
+  renderWords();
   hint = savedHint?.words ? savedHint : emptyHint();
   selection = [];
   saveState();
@@ -205,6 +217,8 @@ function onUp(e) {
     const word = selection.map((c) => board.letters[c]).join('');
     const lastCell = selection.at(-1);
     bonusFound.push(word);
+    wordLog.push({ b: word });
+    renderWords(true);
     selection = [];
     addCoins(REWARD.bonus, cellEls[lastCell]);
     toast(`Бонусное слово «${word}» +${REWARD.bonus}`);
@@ -231,13 +245,43 @@ function onUp(e) {
 
 function openDefinition(cell) {
   const i = board.words.findIndex((w, k) => found.has(k) && w.cells.includes(cell));
-  if (i < 0) return;
-  const w = board.words[i];
-  sheet.open(w.word, found.get(i), w.defs, w.stress);
+  if (i >= 0) showWord({ i });
+}
+
+// Definition card for a hidden word or a bonus word from the list.
+function showWord(entry) {
+  if (entry.b === undefined) {
+    const w = board.words[entry.i];
+    sheet.open(w.word, found.get(entry.i), w.defs, w.stress);
+    return;
+  }
+  // Bonus words from the main dictionary have definitions; rare ones do not.
+  const known = dictByWord.get(entry.b);
+  sheet.open(entry.b, BONUS_GREY, known?.d, known?.s,
+    known ? '' : 'Бонусное слово: толкования в игре нет, оно есть в Викисловаре.');
+}
+
+// Found words under the board, each on the colour it has on the board.
+// fresh: the last one has just been found - it pops in.
+function renderWords(fresh = false) {
+  wordsEl.innerHTML = '';
+  wordLog.forEach((entry, k) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip';
+    chip.textContent = entry.b ?? board.words[entry.i].word;
+    chip.style.background = entry.b === undefined ? found.get(entry.i) : BONUS_GREY;
+    if (fresh && k === wordLog.length - 1) chip.classList.add('new');
+    chip.addEventListener('click', () => showWord(entry));
+    wordsEl.appendChild(chip);
+  });
+  if (fresh) wordsEl.scrollTop = wordsEl.scrollHeight;
 }
 
 function markFound(i) {
   found.set(i, PALETTE[found.size % PALETTE.length]);
+  wordLog.push({ i });
+  renderWords(true);
   used.add(board.words[i].word);
   // A word can be found only once, so this fires once per board.
   const solvedNow = found.size === board.words.length;
@@ -379,7 +423,7 @@ function renderHeader() {
 }
 
 function saveState() {
-  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound });
+  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound, log: wordLog });
 }
 
 function saveStats() {
