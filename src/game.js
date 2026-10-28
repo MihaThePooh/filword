@@ -26,6 +26,9 @@ const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 const BONUS_GREY = '#b5b3ab';
 const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
+// Shown in the footer, so it is easy to tell which version a phone runs.
+// Must match CACHE in sw.js (a test checks it).
+export const VERSION = 16;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -61,6 +64,7 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
+  document.getElementById('version').textContent = ` · v${VERSION}`;
   // Ask the browser not to evict the offline copy when the phone runs low on space.
   navigator.storage?.persist?.().catch(() => {});
   // The cells live for the whole session: boards change only their letters.
@@ -177,7 +181,7 @@ function cellAt(x, y) {
 }
 
 function onDown(e) {
-  if (busy) return;
+  if (busy || sheet.justClosed()) return;
   const cell = cellAt(e.clientX, e.clientY);
   if (cell < 0) return;
   // Keep receiving moves even if the finger leaves the grid.
@@ -284,7 +288,9 @@ function renderWords(fresh = false) {
     chip.textContent = entry.b ?? board.words[entry.i].word;
     chip.style.background = entry.b === undefined ? found.get(entry.i) : BONUS_GREY;
     if (fresh && k === wordLog.length - 1) chip.classList.add('new');
-    chip.addEventListener('click', () => showWord(entry));
+    chip.addEventListener('click', () => {
+      if (!sheet.justClosed()) showWord(entry); // a tap that closed the card opens nothing
+    });
     wordsEl.appendChild(chip);
   });
   if (fresh) wordsEl.scrollTop = wordsEl.scrollHeight;

@@ -2,6 +2,8 @@
 // Opens by tap on a found word (on the board or in the list under it);
 // closes by tap anywhere outside the card or by Escape.
 
+const GHOST_CLICK_MS = 400;
+
 export function createSheet() {
   const backdrop = document.createElement('div');
   backdrop.className = 'backdrop';
@@ -38,9 +40,14 @@ export function createSheet() {
     document.body.classList.add('sheet-open');
   }
 
+  let closedAt = -Infinity;
   function close() {
+    if (document.body.classList.contains('sheet-open')) closedAt = performance.now();
     document.body.classList.remove('sheet-open');
   }
+  // Some phones deliver a late "ghost" click after the card has gone.
+  // Taps right after closing are ignored by the game.
+  const justClosed = () => performance.now() - closedAt < GHOST_CLICK_MS;
 
   // Close on click, not on pointerdown: closing at the touch would hide the
   // backdrop before the finger lifts, and the click would land on whatever is
@@ -51,5 +58,5 @@ export function createSheet() {
     if (e.key === 'Escape') close();
   });
 
-  return { open, close, isOpen: () => document.body.classList.contains('sheet-open') };
+  return { open, close, justClosed, isOpen: () => document.body.classList.contains('sheet-open') };
 }
