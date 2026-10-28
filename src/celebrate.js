@@ -23,13 +23,19 @@ export function waveDelay(cell, size, fromCell) {
   return Math.round(dist * WAVE_STEP_MS);
 }
 
+// onCell(cell), if given, is called when the ring lifts that cell to its top:
+// that is the moment to swap what the cell shows (one board -> the next).
 // Returns how long the wave lasts, in ms (0 if animations are off).
-export function ripple(cellEls, size, fromCell = Math.floor(Math.random() * cellEls.length)) {
-  if (reducedMotion()) return 0;
+export function ripple(cellEls, size, fromCell = Math.floor(Math.random() * cellEls.length), onCell = null) {
+  if (reducedMotion()) {
+    if (onCell) cellEls.forEach((_, cell) => onCell(cell));
+    return 0;
+  }
   let last = 0;
   cellEls.forEach((el, cell) => {
     const delay = waveDelay(cell, size, fromCell);
     last = Math.max(last, delay);
+    if (onCell) setTimeout(() => onCell(cell), delay + WAVE_CELL_MS * 0.3);
     el.animate(
       [
         { transform: 'scale(1)' },

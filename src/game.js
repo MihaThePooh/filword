@@ -23,6 +23,7 @@ const OLD_PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7
   '#cfe8e6', '#f9dcb6', '#d6dcf3', '#e3ecc0', '#f2c9c9', '#d3e9d8'];
 const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 const STORAGE_KEY = 'filword-state';
+const BOARD_SIZE = 8;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -35,7 +36,7 @@ const countEl = document.getElementById('count');
 const solvedEl = document.getElementById('solved');
 const actionEl = document.getElementById('action');
 const coinEl = document.getElementById('coin-count');
-// Space between the header and the board: the loader and short messages live here.
+// Space between the header and the board: short messages live here.
 const slotEl = document.getElementById('slot');
 
 let index;
@@ -53,9 +54,14 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
-  // Empty cells hold the board's place while the dictionary loads.
-  gridEl.innerHTML = '<div class="cell"></div>'.repeat(64);
-  const loader = showLoader(slotEl);
+  // The cells live for the whole session: boards change only their letters.
+  cellEls = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => {
+    const el = document.createElement('div');
+    el.className = 'cell';
+    gridEl.appendChild(el);
+    return el;
+  });
+  const loader = showLoader(cellEls, BOARD_SIZE);
   try {
     index = indexDictionary(await loadDictionary((f) => loader.progress(f)));
   } catch (err) {
@@ -90,7 +96,7 @@ function newBoard() {
   }
   let next;
   try {
-    next = generateBoard(index, { seed: Date.now(), used });
+    next = generateBoard(index, { size: BOARD_SIZE, seed: Date.now(), used });
   } catch (err) {
     if (!(err instanceof OutOfWordsError)) throw err;
     // Should not happen with CYCLE_BOARDS below the dictionary size, but just in case.
@@ -105,9 +111,14 @@ function doShuffle() {
   used = new Set();
   saveStats();
   confetti();
-  showBoard(generateBoard(index, { seed: Date.now(), used }), []);
+  showBoard(generateBoard(index, { size: BOARD_SIZE, seed: Date.now(), used }), []);
 }
 
+// The new board arrives with a wave from a random cell: each cell swaps its
+// letter as the ring lifts it, so the old board leaves the same way.
+// Taps wait until the wave has passed.
+let busy = false;
+let busyTimer;
 function showBoard(nextBoard, savedFound, savedHint, savedBonus) {
   sheet.close();
   bonusFound = savedBonus ?? [];
@@ -115,16 +126,17 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus) {
   found = new Map([...(savedFound ?? [])].map(([i, c]) => [i, brighter(c)]));
   hint = savedHint?.words ? savedHint : emptyHint();
   selection = [];
-  gridEl.innerHTML = '';
-  cellEls = board.letters.map((ch) => {
-    const el = document.createElement('div');
-    el.className = 'cell';
-    el.textContent = ch;
-    gridEl.appendChild(el);
-    return el;
-  });
-  render();
   saveState();
+  renderHeader();
+  const shown = board;
+  const paint = cellPainter();
+  busy = true;
+  const wave = ripple(cellEls, board.size, undefined, (cell) => { if (board === shown) paint(cell); });
+  clearTimeout(busyTimer);
+  busyTimer = setTimeout(() => {
+    busy = false;
+    render();
+  }, wave);
 }
 
 // Cells that already belong to found words cannot be picked again.
@@ -151,6 +163,7 @@ function cellAt(x, y) {
 }
 
 function onDown(e) {
+  if (busy) return;
   const cell = cellAt(e.clientX, e.clientY);
   if (cell < 0) return;
   // Keep receiving moves even if the finger leaves the grid.
@@ -254,6 +267,7 @@ function celebrate() {
 // One button, two jobs: a hint while the board is in play,
 // "next board" once every word is found.
 function onAction() {
+  if (busy) return;
   if (found.size === board.words.length) {
     newBoard();
     return;
@@ -323,18 +337,30 @@ function toast(text) {
 }
 
 function render() {
+  const paint = cellPainter();
+  cellEls.forEach((_, cell) => paint(cell));
+  renderHeader();
+}
+
+// Returns a function that draws one cell from the current state.
+function cellPainter() {
   const colour = new Array(board.letters.length);
   for (const [i, c] of found) board.words[i].cells.forEach((cell) => { colour[cell] = c; });
   const picked = new Set(selection);
-  const foundSet = new Set(found.keys());
-  const hintList = hintedCells(hint, board.words, foundSet);
+  const hintList = hintedCells(hint, board.words, new Set(found.keys()));
   const hinted = new Set(hintList);
-  cellEls.forEach((el, cell) => {
+  return (cell) => {
+    const el = cellEls[cell];
+    if (el.textContent !== board.letters[cell]) el.textContent = board.letters[cell];
+    el.classList.remove('dim');
     el.classList.toggle('picked', picked.has(cell));
     el.classList.toggle('hinted', hinted.has(cell));
     el.classList.toggle('hint-start', cell === hintList[0]);
     el.style.background = picked.has(cell) ? '' : (colour[cell] ?? '');
-  });
+  };
+}
+
+function renderHeader() {
   const total = board.words.length;
   countEl.innerHTML = found.size === total
     ? '<b>Поле пройдено!</b>'
@@ -343,7 +369,7 @@ function render() {
     actionEl.textContent = 'Следующее поле';
     actionEl.disabled = false;
   } else {
-    const left = hintsLeft(hint, foundSet);
+    const left = hintsLeft(hint, new Set(found.keys()));
     actionEl.textContent = left > 0 ? `Подсказка · ${left}` : 'Подсказок нет';
     actionEl.disabled = left === 0;
   }

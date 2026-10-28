@@ -1,132 +1,71 @@
-// Loading screen: while the dictionary downloads, a tiny filword solves itself.
-// An invisible finger runs along a snake path, each finished word gets its
-// colour - the same thing the player will do in a moment.
-// It sits in the slot between the header and the board and always plays
-// at least one full round, even when the dictionary comes from the cache.
+// Loading screen inside the board itself: ФИЛВОРД / БЕЗ / РЕКЛАМЫ! is written
+// in the empty cells, dim at first. Letters light up one by one as the
+// dictionary downloads; when it is all here the game swaps them for the real
+// board with a wave.
 
-// Snake through a 6x3 grid: ФИЛВОРД · БЕЗ · РЕКЛАМЫ, and a "!" at the end.
-export const LETTERS = 'ФИЛВОРДБЕЗРЕКЛАМЫ!';
-export const WORDS = [[0, 7], [7, 10], [10, 17]]; // [start, end) in LETTERS
-const COLS = 6;
+// [row, first column, text] on the 8x8 board, left-aligned like a poster.
+export const LINES = [[2, 0, 'ФИЛВОРД'], [3, 0, 'БЕЗ'], [4, 0, 'РЕКЛАМЫ!']];
 const COLOURS = ['#ff8a65', '#5cc461', '#4fa8e8']; // the game's first three
-const STEP_MS = 150; // finger moves one cell
-const PAUSE_MS = 900; // the solved board stays a moment before the next round
+const LIGHT_MS = 70; // the fastest a letter lights up, so it never just blinks
+const CREEP_MS = 250; // size unknown: one letter per this, leaving the last few
 
-const QUIPS = [
-  'Завариваю буквы…',
-  'Пересчитываю 20 тысяч слов…',
-  'Прячу коромысло…',
-  'Выгоняю рекламу…',
-  'Расставляю ударения…',
-  'Бужу Викисловарь…',
-  'Перемешиваю гласные…',
-];
-
-// Snake order: rows go left to right, then right to left.
-export function cellPosition(i) {
-  const row = Math.floor(i / COLS);
-  const col = row % 2 ? COLS - 1 - (i % COLS) : i % COLS;
-  return { row, col };
+// Every letter of the phrase: its cell, the letter and the line it belongs to.
+export function phraseCells(size) {
+  return LINES.flatMap(([row, col, text], line) =>
+    [...text].map((ch, i) => ({ cell: row * size + col + i, ch, line })));
 }
 
-export function showLoader(root) {
-  const el = document.createElement('div');
-  el.className = 'loader';
-  el.innerHTML = `
-    <div class="loader-grid"></div>
-    <div class="loader-bar"><div class="loader-fill"></div></div>
-    <div class="loader-quip"></div>`;
-  const grid = el.querySelector('.loader-grid');
-  const fill = el.querySelector('.loader-fill');
-  const quip = el.querySelector('.loader-quip');
-  const cells = [...LETTERS].map((ch, i) => {
-    const cell = document.createElement('div');
-    cell.className = 'loader-cell';
-    cell.textContent = ch;
-    const { row, col } = cellPosition(i);
-    cell.style.gridRow = row + 1;
-    cell.style.gridColumn = col + 1;
-    grid.appendChild(cell);
-    return cell;
-  });
-  root.appendChild(el);
-  const shownAt = performance.now();
+// How many letters to light for a download fraction (0..1).
+export function litCount(fraction, total) {
+  return Math.max(0, Math.min(total, Math.round(fraction * total)));
+}
 
-  // Small screens leave little room above the board: shrink to fit the slot.
-  function fit() {
-    el.style.transform = '';
-    const scale = Math.min(1, root.clientHeight / el.offsetHeight, root.clientWidth / el.offsetWidth);
-    el.style.transform = `scale(${Math.max(0.4, scale)})`;
+export function showLoader(cellEls, size) {
+  const letters = phraseCells(size);
+  for (const { cell, ch } of letters) {
+    cellEls[cell].textContent = ch;
+    cellEls[cell].classList.add('dim');
   }
-  fit();
-  addEventListener('resize', fit);
+  const startedAt = performance.now();
+  let target = 0;
+  let unknown = false;
+  let lit = 0;
+  let finished;
+  const allLit = new Promise((resolve) => { finished = resolve; });
 
-  let quipIndex = Math.floor(Math.random() * QUIPS.length);
-  quip.textContent = QUIPS[quipIndex];
-  const quipTimer = setInterval(() => {
-    quipIndex = (quipIndex + 1) % QUIPS.length;
-    quip.textContent = QUIPS[quipIndex];
-  }, 1600);
-
-  // One finger step per tick. A word is coloured when the finger leaves its last letter.
-  let step = 0;
-  let timer = null;
-  let roundDone;
-  const firstRound = new Promise((resolve) => { roundDone = resolve; });
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function paintWord(w) {
-    const [from, to] = WORDS[w];
-    for (let i = from; i < to; i++) {
-      cells[i].classList.remove('picked');
-      cells[i].style.background = COLOURS[w];
+  function light({ cell, line }) {
+    const el = cellEls[cell];
+    el.classList.remove('dim');
+    el.classList.add('lit');
+    el.style.background = COLOURS[line];
+  }
+  const timer = setInterval(() => {
+    if (unknown) {
+      const crept = Math.floor((performance.now() - startedAt) / CREEP_MS);
+      target = Math.max(target, Math.min(letters.length - 3, crept));
     }
-  }
-  function tick() {
-    if (step === LETTERS.length) {
-      roundDone();
-      timer = setTimeout(() => {
-        for (const c of cells) { c.style.background = ''; c.classList.remove('picked'); }
-        step = 0;
-        tick();
-      }, PAUSE_MS);
-      return;
+    if (lit < target) light(letters[lit++]);
+    if (lit === letters.length) {
+      clearInterval(timer);
+      finished();
     }
-    cells[step].classList.add('picked');
-    const w = WORDS.findIndex(([, to]) => to === step + 1);
-    step++;
-    timer = setTimeout(() => {
-      if (w >= 0) paintWord(w);
-      tick();
-    }, STEP_MS);
-  }
-  if (reduced) {
-    WORDS.forEach((_, w) => paintWord(w));
-    setTimeout(roundDone, 1500); // nothing moves - just let it be read
-  } else tick();
+  }, LIGHT_MS);
 
   return {
-    // fraction 0..1, or null when the size is unknown (stripes instead of a bar)
+    // fraction 0..1, or null when the size is unknown
     progress(fraction) {
-      el.classList.toggle('unknown', fraction == null);
-      if (fraction != null) fill.style.width = `${Math.round(Math.min(1, fraction) * 100)}%`;
+      unknown = fraction == null;
+      if (!unknown) target = Math.max(target, litCount(fraction, letters.length));
     },
-    // Fades out after the first round. "?loader" in the address keeps it
-    // for a while - to look at it.
+    // Resolves once every letter is lit. "?loader" in the address keeps the
+    // phrase for a while - to look at it.
     async done() {
-      fill.style.width = '100%';
-      await firstRound;
-      const hold = new URLSearchParams(location.search).has('loader') ? 8000 : 0;
-      const wait = Math.max(0, shownAt + hold - performance.now());
-      return new Promise((resolve) => setTimeout(() => {
-        el.classList.add('hide');
-        setTimeout(() => {
-          clearTimeout(timer);
-          clearInterval(quipTimer);
-          removeEventListener('resize', fit);
-          el.remove();
-          resolve();
-        }, 350);
-      }, wait));
+      unknown = false;
+      target = letters.length;
+      await allLit;
+      const hold = new URLSearchParams(location.search).has('loader') ? 8000 : 300;
+      await new Promise((resolve) => setTimeout(resolve, hold));
+      for (const { cell } of letters) cellEls[cell].classList.remove('lit');
     },
   };
 }
