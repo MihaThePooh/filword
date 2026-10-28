@@ -61,6 +61,8 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
+  // Ask the browser not to evict the offline copy when the phone runs low on space.
+  navigator.storage?.persist?.().catch(() => {});
   // The cells live for the whole session: boards change only their letters.
   cellEls = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => {
     const el = document.createElement('div');
