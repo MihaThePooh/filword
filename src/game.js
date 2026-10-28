@@ -28,7 +28,7 @@ const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
 // Shown in the footer, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 22;
+export const VERSION = 23;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
