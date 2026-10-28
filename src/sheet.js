@@ -38,9 +38,11 @@ export function createSheet() {
     note.textContent = noteText;
     sheet.scrollTop = 0;
     document.body.classList.add('sheet-open');
+    openedAt = performance.now();
   }
 
   let closedAt = -Infinity;
+  let openedAt = -Infinity;
   function close() {
     if (document.body.classList.contains('sheet-open')) closedAt = performance.now();
     document.body.classList.remove('sheet-open');
@@ -53,7 +55,12 @@ export function createSheet() {
   // backdrop before the finger lifts, and the click would land on whatever is
   // under it - another word would open instead of the card just closing.
   backdrop.addEventListener('pointerdown', (e) => e.preventDefault());
-  backdrop.addEventListener('click', close);
+  // A tap on the board opens the card when the finger lifts; the browser's
+  // click for that same tap follows and would land on the fresh backdrop,
+  // closing the card at once. Clicks right after opening are not closes.
+  backdrop.addEventListener('click', () => {
+    if (performance.now() - openedAt >= GHOST_CLICK_MS) close();
+  });
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') close();
   });

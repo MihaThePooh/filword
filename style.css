@@ -20,6 +20,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* A game, not a text: no selection, no callout, no "tap to search" popups. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   /* The page itself never scrolls - only the word list under the board does. */
   height: 100dvh;
   overflow: hidden;

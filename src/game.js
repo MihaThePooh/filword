@@ -28,7 +28,7 @@ const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
 // Shown in the footer, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 19;
+export const VERSION = 21;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -165,7 +165,9 @@ function takenCells() {
 }
 
 // Finger position -> cell number, or -1 if outside the hit zone.
-function cellAt(x, y) {
+// zone: the share of a cell that reacts. Moves use HIT_ZONE; the first touch
+// takes the whole cell, so a tap near a cell's edge is not lost.
+function cellAt(x, y, zone = HIT_ZONE) {
   const rect = gridEl.getBoundingClientRect();
   const size = board.size;
   const fx = ((x - rect.left) / rect.width) * size;
@@ -173,7 +175,7 @@ function cellAt(x, y) {
   const col = Math.floor(fx);
   const row = Math.floor(fy);
   if (col < 0 || row < 0 || col >= size || row >= size) return -1;
-  const margin = (1 - HIT_ZONE) / 2;
+  const margin = (1 - zone) / 2;
   const dx = fx - col;
   const dy = fy - row;
   if (dx < margin || dx > 1 - margin || dy < margin || dy > 1 - margin) return -1;
@@ -181,8 +183,10 @@ function cellAt(x, y) {
 }
 
 function onDown(e) {
+  // No text selection, no "tap to search" from the browser: the board is a game, not text.
+  e.preventDefault();
   if (busy || sheet.justClosed()) return;
-  const cell = cellAt(e.clientX, e.clientY);
+  const cell = cellAt(e.clientX, e.clientY, 1);
   if (cell < 0) return;
   // Keep receiving moves even if the finger leaves the grid.
   gridEl.setPointerCapture(e.pointerId);
