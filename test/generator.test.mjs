@@ -7,6 +7,7 @@ import { splitLengths, SplitError } from '../src/split.js';
 import {
   indexDictionary, generateBoard, OutOfWordsError, totalWords,
 } from '../src/board.js';
+import { CYCLE_BOARDS } from '../src/progress.js';
 
 const dict = JSON.parse(readFileSync(new URL('../data/words.json', import.meta.url), 'utf8'));
 const index = indexDictionary(dict);
@@ -108,9 +109,9 @@ test('boards move from common words to rarer ones', () => {
 
 test('every board has exactly one rare word, all the way through a cycle', () => {
   const rare = new Set(dict.filter((e) => e.x === 1).map((e) => e.w));
-  assert.ok(rare.size >= 2000, 'a rare word for every board of the cycle');
+  assert.ok(rare.size >= CYCLE_BOARDS, 'a rare word for every board of the cycle');
   const used = new Set();
-  for (let i = 0; i < 2000; i++) {
+  for (let i = 0; i < CYCLE_BOARDS; i++) {
     const board = generateBoard(index, { seed: 777 + i, used });
     const count = board.words.filter((w) => rare.has(w.word)).length;
     assert.equal(count, 1, `board ${i + 1}: ${count} rare words`);

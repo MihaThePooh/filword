@@ -4,9 +4,9 @@
 // starts over, the board counter goes back to 1, and the shuffle rank grows by one.
 // Coins are kept - they are the reward for everything done so far.
 
-// The dictionary is built with a small margin, so words never run out first
-// (see scripts/simulate.mjs).
-export const CYCLE_BOARDS = 2000;
+// As many boards as the dictionary gives for sure: 30 simulated playthroughs
+// gave 2116-2122 boards (scripts/simulate.mjs), a few spare for unlucky splits.
+export const CYCLE_BOARDS = 2110;
 
 export function cycleDone(stats) {
   return (stats.solved ?? 0) >= CYCLE_BOARDS;

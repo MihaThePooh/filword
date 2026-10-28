@@ -15,19 +15,20 @@ test('shuffle restarts the dictionary and raises the rank', () => {
 });
 
 test('a cycle ends after CYCLE_BOARDS boards', () => {
-  assert.equal(CYCLE_BOARDS, 2000);
-  assert.ok(!cycleDone({ solved: 1999 }));
-  assert.ok(cycleDone({ solved: 2000 }));
+  assert.ok(!cycleDone({ solved: CYCLE_BOARDS - 1 }));
+  assert.ok(cycleDone({ solved: CYCLE_BOARDS }));
   assert.ok(!cycleDone({}));
-  assert.ok(!cycleDone(shuffle({ solved: 2000 })), 'a shuffle starts a new cycle');
+  assert.ok(!cycleDone(shuffle({ solved: CYCLE_BOARDS })), 'a shuffle starts a new cycle');
 });
 
-test('the dictionary has letters for a whole cycle with a margin', async () => {
+test('the dictionary has words for a whole cycle', async () => {
   const { readFileSync } = await import('node:fs');
   const dict = JSON.parse(readFileSync(new URL('../data/words.json', import.meta.url), 'utf8'));
-  const letters = dict.reduce((n, e) => n + [...e.w].length, 0);
-  // Simulated playthroughs give ~2060-2110 boards from 69 letters per board.
-  assert.ok(letters >= CYCLE_BOARDS * 66, `${letters} letters`);
+  // One rare word per board, the rest of the 64 cells - common words.
+  const rare = dict.filter((e) => e.x === 1);
+  const common = dict.filter((e) => e.x !== 1).reduce((n, e) => n + [...e.w].length, 0);
+  assert.ok(rare.length >= CYCLE_BOARDS, `${rare.length} rare words`);
+  assert.ok(common >= CYCLE_BOARDS * 56, `${common} common letters`);
 });
 
 test('bonus definitions cover rare bonus words, not the main list', () => {
