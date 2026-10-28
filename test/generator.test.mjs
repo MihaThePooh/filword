@@ -105,3 +105,21 @@ test('boards move from common words to rarer ones', () => {
   const last = median(late);
   assert.ok(last > first, `first ${first}, last ${last}`);
 });
+
+test('every board has exactly one rare word, all the way through a cycle', () => {
+  const rare = new Set(dict.filter((e) => e.x === 1).map((e) => e.w));
+  assert.ok(rare.size >= 2000, 'a rare word for every board of the cycle');
+  const used = new Set();
+  for (let i = 0; i < 2000; i++) {
+    const board = generateBoard(index, { seed: 777 + i, used });
+    const count = board.words.filter((w) => rare.has(w.word)).length;
+    assert.equal(count, 1, `board ${i + 1}: ${count} rare words`);
+    for (const w of board.words) used.add(w.word);
+  }
+});
+
+test('a dictionary without a rare tier still builds boards', () => {
+  const plain = indexDictionary(dict.filter((e) => e.x !== 1).map(({ x, ...e }) => e));
+  const board = generateBoard(plain, { seed: 5 });
+  assert.equal(board.letters.filter(Boolean).length, 64);
+});

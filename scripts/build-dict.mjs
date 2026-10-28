@@ -108,8 +108,13 @@ const OBLIQUE = ['genitive', 'dative', 'instrumental'];
 const INDECLINABLE_ZIPF = 3;
 // Below this a word is exotic, however many boards we need: ~1 use per 100M words.
 const MIN_ZIPF = 1;
-// 64 letters per 8x8 board plus ~8% margin: the last boards cannot use every word.
-const LETTERS_PER_BOARD = 69;
+// Two tiers: every board is common words plus exactly one rare word.
+// Common letters per board: 64 cells minus one rare word (~7.5 letters), plus
+// a margin - the last boards cannot use every word.
+export const COMMON_LETTERS_PER_BOARD = 60;
+// Rare words per board, with a reserve: a board needs a rare word of a length
+// that fits, and near the end some lengths run out.
+const RARE_PER_BOARD = 1.3;
 const DEFAULT_BOARDS = 2000;
 
 // Genitive/dative/instrumental forms of a noun entry, without stress marks.
@@ -307,25 +312,33 @@ async function main() {
   const score = new Map([...senses.keys()].map((w) => [w, scoreOf(w)]));
   const byScore = [...senses.keys()].filter((w) => score.get(w) >= MIN_ZIPF)
     .sort((a, b) => score.get(b) - score.get(a));
-  const words = [];
+  // Common tier: the most frequent words, enough letters for every board.
+  const common = [];
   let letters = 0;
-  for (const w of byScore) {
-    if (letters >= boards * LETTERS_PER_BOARD) break;
-    words.push(w);
-    letters += w.length;
+  let k = 0;
+  for (; k < byScore.length && letters < boards * COMMON_LETTERS_PER_BOARD; k++) {
+    common.push(byScore[k]);
+    letters += byScore[k].length;
   }
-  if (letters < boards * LETTERS_PER_BOARD) {
-    console.error(`Only ${letters} letters above zipf ${MIN_ZIPF}: not enough for ${boards} boards`);
+  // Rare tier: the next words down the list, one per board.
+  const rare = byScore.slice(k, k + Math.ceil(boards * RARE_PER_BOARD));
+  if (letters < boards * COMMON_LETTERS_PER_BOARD || rare.length < boards) {
+    console.error(`Not enough words above zipf ${MIN_ZIPF} for ${boards} boards`);
   }
+  const rareSet = new Set(rare);
   // Most frequent words first - the game picks easier words first.
-  words.sort((a, b) => isHomograph(a) - isHomograph(b) || score.get(b) - score.get(a));
+  // Common before rare; inside a tier homographs go last.
+  const words = [...common, ...rare].sort((a, b) => rareSet.has(a) - rareSet.has(b)
+    || isHomograph(a) - isHomograph(b) || score.get(b) - score.get(a));
   const rankOf = new Map(words.map((w, i) => [w, i + 1]));
   // A synonym may be a form ("ягодицы"): then explain its dictionary word.
   const lookup = (w) => firstSense.get(w) ?? firstSense.get(formOf.get(w));
   // r = place in the queue (smaller = more common), d = definitions.
   // s = the word with a stress mark, when the dictionary has it.
+  // x = rare tier: the generator puts exactly one such word on every board.
   const out = words.map((w) => ({
     w, r: rankOf.get(w), d: senses.get(w).map((d) => expandSameAs(d, lookup)),
+    ...(rareSet.has(w) ? { x: 1 } : {}),
     // Homonyms may differ only by stress: "му́ка · мука́".
     ...(stress.has(w) ? { s: [...stress.get(w)].join(' · ') } : {}),
   }));
@@ -344,8 +357,9 @@ async function main() {
     };
   }
   writeFileSync(`${root}data/bonus-defs.json`, JSON.stringify(bonusDefs));
-  const last = words.reduce((a, w) => (score.get(w) < score.get(a) ? w : a));
-  console.log(`letters: ${letters}, rarest word: ${last} (zipf ${score.get(last).toFixed(2)})`);
+  const zipfOf = (w) => score.get(w).toFixed(2);
+  console.log(`common: ${common.length} words, ${letters} letters, down to ${common.at(-1)} (zipf ${zipfOf(common.at(-1))})`);
+  console.log(`rare: ${rare.length} words, from ${rare[0]} (zipf ${zipfOf(rare[0])}) to ${rare.at(-1)} (zipf ${zipfOf(rare.at(-1))})`);
   console.log(`with stress: ${words.filter((w) => stress.has(w)).length}`);
   console.log(`bonus definitions: ${Object.keys(bonusDefs).length}`);
   console.log(`words: ${words.length}, bonus words: ${bonus.size}, homographs moved to rare: ${homographs}, broken lines skipped: ${broken}`);
