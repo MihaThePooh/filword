@@ -42,10 +42,11 @@ export function createSheet() {
     document.body.classList.remove('sheet-open');
   }
 
-  backdrop.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); // the tap must not reach the board underneath
-    close();
-  });
+  // Close on click, not on pointerdown: closing at the touch would hide the
+  // backdrop before the finger lifts, and the click would land on whatever is
+  // under it - another word would open instead of the card just closing.
+  backdrop.addEventListener('pointerdown', (e) => e.preventDefault());
+  backdrop.addEventListener('click', close);
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') close();
   });
