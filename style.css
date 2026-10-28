@@ -7,7 +7,12 @@
   --picked: #3a3a3a;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+html, body {
+  margin: 0;
+  height: 100%;
+  /* No pull-to-refresh and no rubber band: a swipe down must not reload the game. */
+  overscroll-behavior: none;
+}
 body {
   background: var(--bg);
   color: var(--text);
@@ -15,7 +20,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100dvh;
+  /* The page itself never scrolls - only the word list under the board does. */
+  height: 100dvh;
+  overflow: hidden;
   -webkit-tap-highlight-color: transparent;
 }
 header {
@@ -44,6 +51,7 @@ main {
   flex: 1;
   width: 100%;
   max-width: 480px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 0 12px;
@@ -70,7 +78,11 @@ main {
   justify-content: center;
   align-content: flex-start;
   gap: 6px;
-  padding: 12px 0;
+  /* A fixed gap under the board: scrolled words are cut at its edge
+     instead of sliding up to the cells. */
+  margin-top: 12px;
+  padding-bottom: 12px;
+  overscroll-behavior: contain;
 }
 .chip {
   border: 0;
