@@ -39,7 +39,11 @@ header {
 }
 .count { font-size: 18px; white-space: nowrap; }
 .count b { font-weight: 600; }
-.solved { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+.solved {
+  font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap;
+  /* Same height empty (while loading) and filled: the board must not jump. */
+  height: 15px; line-height: 15px;
+}
 .action {
   border: 1px solid var(--line);
   background: #fff;
