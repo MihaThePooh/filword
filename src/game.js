@@ -13,6 +13,7 @@ import { showLoader } from './loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
+import { setupInstall } from './install.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -28,7 +29,7 @@ const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
 // Shown in the footer, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 24;
+export const VERSION = 25;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -65,6 +66,7 @@ let used = new Set(); // every word ever found - never shown again
 
 async function init() {
   document.getElementById('version').textContent = ` · v${VERSION}`;
+  setupInstall();
   // Ask the browser not to evict the offline copy when the phone runs low on space.
   navigator.storage?.persist?.().catch(() => {});
   // The cells live for the whole session: boards change only their letters.
