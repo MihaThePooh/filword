@@ -29,7 +29,7 @@ const STORAGE_KEY = 'filword-state';
 const BOARD_SIZE = 8;
 // Shown in the footer, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 25;
+export const VERSION = 26;
 const STATS_KEY = 'filword-stats';
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -65,7 +65,7 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
-  document.getElementById('version').textContent = ` · v${VERSION}`;
+  document.getElementById('version').textContent = `v${VERSION}`;
   setupInstall();
   // Ask the browser not to evict the offline copy when the phone runs low on space.
   navigator.storage?.persist?.().catch(() => {});

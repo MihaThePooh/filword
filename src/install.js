@@ -17,11 +17,10 @@ function remembered() {
 
 export function setupInstall() {
   const link = document.getElementById('install');
-  const sep = document.getElementById('install-sep');
   document.getElementById('hub').href = HUB_URL;
   let offer = null;
 
-  const hide = () => { link.hidden = true; sep.hidden = true; };
+  const hide = () => { link.hidden = true; };
   const markInstalled = () => {
     try { localStorage.setItem(INSTALLED, '1'); } catch { /* private mode */ }
     hide();
