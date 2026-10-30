@@ -7,13 +7,13 @@
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v26';
+const CACHE = 'filword-v27';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
 const CORE = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
   'icons/icon-192.png', 'icons/icon-512.png',
   'src/game.js', 'src/board.js', 'src/rng.js', 'src/path.js', 'src/split.js',
-  'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js', 'src/rewards.js', 'src/progress.js', 'src/loader.js', 'src/install.js', 'data/bonus.json.gz',
+  'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js', 'src/rewards.js', 'src/progress.js', 'src/loader.js', 'src/install.js', 'src/cloud.js', 'data/bonus.json.gz',
   // Bonus definitions too: after the first install everything works offline.
   'data/bonus-defs.json.gz'];
 
@@ -33,6 +33,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  // The save is never answered from the cache: a stale copy would look like
+  // the server's and could win over newer progress.
+  if (new URL(req.url).pathname.startsWith('/api/')) return;
   if (new URL(req.url).pathname.includes('/data/')) {
     event.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => hit ?? fetchAndKeep(req)));
     return;

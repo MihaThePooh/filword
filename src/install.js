@@ -4,7 +4,9 @@
 // install dialog may only be opened from a tap. No event (the player declined
 // recently, another browser) - the link turns into a hint about Chrome's menu.
 
-const HUB_URL = 'https://hub.michaelperov.com/';
+import { HOME_URL } from './cloud.js';
+
+const HUB_URL = `${HOME_URL}/`;
 const INSTALLED = 'filword.installed';
 
 function standalone() {

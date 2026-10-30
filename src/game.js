@@ -14,6 +14,7 @@ import { REWARD, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 import { setupInstall } from './install.js';
+import * as cloud from './cloud.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -25,12 +26,12 @@ const OLD_PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7
 const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 // Bonus words in the list under the board: grey, as dark as the colours above.
 const BONUS_GREY = '#b5b3ab';
-const STORAGE_KEY = 'filword-state';
+const STORAGE_KEY = cloud.STATE_KEY;
 const BOARD_SIZE = 8;
 // Shown in the footer, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 26;
-const STATS_KEY = 'filword-stats';
+export const VERSION = 27;
+const STATS_KEY = cloud.STATS_KEY;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
 const HIT_ZONE = 0.8;
@@ -67,6 +68,9 @@ let used = new Set(); // every word ever found - never shown again
 async function init() {
   document.getElementById('version').textContent = `v${VERSION}`;
   setupInstall();
+  document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
+  // The save is fetched while the dictionary loads; the board waits for both.
+  const synced = cloud.start();
   // Ask the browser not to evict the offline copy when the phone runs low on space.
   navigator.storage?.persist?.().catch(() => {});
   // The cells live for the whole session: boards change only their letters.
@@ -88,6 +92,7 @@ async function init() {
     return;
   }
   await loader.done();
+  await synced;
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
@@ -468,6 +473,7 @@ function saveStats() {
 function saveJson(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    cloud.changed();
   } catch {
     // Private mode or full storage: the game still works, just without saving.
   }
