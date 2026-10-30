@@ -13,8 +13,23 @@ const HUB_URL = `${HOME_URL}/`;
 // so nothing cleared it (30.10.2026). Now only what is visible right now counts.
 try { localStorage.removeItem('filword.installed'); } catch { /* private mode */ }
 
+// Opened from the icon only when the launch came through start_url with the
+// ?installed mark (manifest). Another site's page opened from the window of the
+// installed hub answers display-mode: standalone too - the window is the hub's,
+// and the menu said «установлена» where nothing was installed (30.10.2026).
+const LAUNCH = 'filword.launched';
+try {
+  const url = new URL(location.href);
+  if (url.searchParams.has('installed')) {
+    sessionStorage.setItem(LAUNCH, '1');
+    url.searchParams.delete('installed');
+    history.replaceState(history.state, '', url.href);
+  }
+} catch { /* private mode - not from the icon */ }
+
 function standalone() {
-  return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const app = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  try { return app && sessionStorage.getItem(LAUNCH) === '1'; } catch { return false; }
 }
 
 export function setupMenu() {
