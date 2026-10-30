@@ -106,8 +106,12 @@ function renewPass() {
 
 class SignInNeeded extends Error {}
 
-// Request to our own API. 401 - the short pass expired: get a new one and
-// repeat once. Still 401 or 403 - a sign-in is needed.
+// Request to our own API. 401 - the short pass expired; 403 - the pass was
+// issued before this game joined the hub and does not list it. Both are
+// cured by a new pass: get one and repeat once. Without that, 403 sent the
+// page to the hub, the hub (session alive) sent it straight back, and round
+// it went until the old pass expired on its own (30.10.2026).
+// Still 401 or 403 after a renewal - a sign-in is needed.
 async function api(method, body) {
   const opts = { method, credentials: 'same-origin', cache: 'no-store', headers: {} };
   if (body) {
@@ -115,7 +119,7 @@ async function api(method, body) {
     opts.body = JSON.stringify(body);
   }
   let r = await fetch('/api/save', opts);
-  if (r.status === 401 && await renewPass()) r = await fetch('/api/save', opts);
+  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await fetch('/api/save', opts);
   if (r.status === 401 || r.status === 403) throw new SignInNeeded();
   return r;
 }

@@ -13,7 +13,7 @@ import { showLoader } from './loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
-import { setupInstall } from './install.js';
+import { setupMenu } from './install.js';
 import * as cloud from './cloud.js';
 
 // Bright, so found words stand out from the grey cells still in play.
@@ -28,9 +28,9 @@ const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 const BONUS_GREY = '#b5b3ab';
 const STORAGE_KEY = cloud.STATE_KEY;
 const BOARD_SIZE = 8;
-// Shown in the footer, so it is easy to tell which version a phone runs.
+// Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 27;
+export const VERSION = 28;
 const STATS_KEY = cloud.STATS_KEY;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -66,8 +66,8 @@ let shownCoins = 0; // what the counter shows; lags behind while coins fly
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
-  document.getElementById('version').textContent = `v${VERSION}`;
-  setupInstall();
+  document.getElementById('version').textContent = `Версия ${VERSION}`;
+  setupMenu();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
   // The save is fetched while the dictionary loads; the board waits for both.
   const synced = cloud.start();
@@ -446,10 +446,10 @@ function cellPainter() {
 function renderHeader() {
   const total = board.words.length;
   countEl.innerHTML = found.size === total
-    ? '<b>Поле пройдено!</b>'
-    : `Найдено <b>${found.size}</b> из ${total}`;
+    ? '<b>Готово!</b>'
+    : `Слова <b>${found.size}</b>/${total}`;
   if (found.size === total) {
-    actionEl.textContent = 'Следующее поле';
+    actionEl.textContent = 'Новое поле';
     actionEl.disabled = false;
   } else {
     const left = hintsLeft(hint, new Set(found.keys()));

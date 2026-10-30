@@ -1,8 +1,9 @@
-// "Install" and "all apps" links in the footer.
+// The menu: burger in the header, a sheet with install, all apps, credits,
+// sign-out and the version.
 //
 // Chrome fires beforeinstallprompt when it is ready to install the game; the
 // install dialog may only be opened from a tap. No event (the player declined
-// recently, another browser) - the link turns into a hint about Chrome's menu.
+// recently, another browser) - the item turns into a hint about Chrome's menu.
 
 import { HOME_URL } from './cloud.js';
 
@@ -17,25 +18,47 @@ function remembered() {
   try { return localStorage.getItem(INSTALLED) === '1'; } catch { return false; }
 }
 
-export function setupInstall() {
-  const link = document.getElementById('install');
-  document.getElementById('hub').href = HUB_URL;
+function forget() {
+  try { localStorage.removeItem(INSTALLED); } catch { /* private mode */ }
+}
+
+export function setupMenu() {
+  const menu = document.getElementById('menu');
+  const item = document.getElementById('install');
+  const hint = item.querySelector('small');
+  const close = () => { menu.hidden = true; };
   let offer = null;
 
-  const hide = () => { link.hidden = true; };
+  document.getElementById('burger').addEventListener('click', () => { menu.hidden = !menu.hidden; });
+  // A tap past the sheet closes it - no separate cross needed.
+  menu.addEventListener('click', (e) => { if (e.target === menu) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  document.getElementById('hub').addEventListener('click', () => { location.href = HUB_URL; });
+
+  // "Installed" is only a guess: the icon can be removed from the phone
+  // without the page knowing. So the item stays hidden only while Chrome is
+  // silent; once it offers to install, the guess was wrong.
+  const refresh = () => { item.hidden = standalone() || (remembered() && !offer); };
   const markInstalled = () => {
     try { localStorage.setItem(INSTALLED, '1'); } catch { /* private mode */ }
-    hide();
+    offer = null;
+    refresh();
   };
-  if (standalone() || remembered()) hide();
+  refresh();
 
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); offer = e; });
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    offer = e;
+    forget();
+    refresh();
+  });
   window.addEventListener('appinstalled', markInstalled);
-  link.addEventListener('click', () => {
+  item.addEventListener('click', () => {
     if (!offer) {
-      link.textContent = '⋮ в Chrome → «Добавить на главный экран»';
+      hint.textContent = 'Chrome сейчас не предлагает сам: ⋮ в углу → «Добавить на главный экран».';
       return;
     }
+    close();
     offer.prompt();
     offer.userChoice.then((r) => {
       if (r.outcome === 'accepted') markInstalled();

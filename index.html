@@ -12,6 +12,10 @@
 </head>
 <body>
   <header>
+    <button class="burger" id="burger" type="button" aria-label="Меню">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
     <div>
       <div class="count" id="count">Загрузка…</div>
       <div class="solved" id="solved"></div>
@@ -26,14 +30,15 @@
     <div class="grid" id="grid"></div>
     <div class="words" id="words"></div>
   </main>
-  <footer>
-    <button class="link" id="install" type="button">Установить игру</button>
-    <div class="row">
-      <span><a id="hub" href="#">Все приложения</a> · <a id="logout" href="#">Выйти</a></span>
+  <div class="menu" id="menu" hidden>
+    <div class="menu-sheet">
+      <button class="install" id="install" type="button" hidden>Установить игру<small>Иконка «Филворд» на экране телефона</small></button>
+      <button id="hub" type="button">Все приложения (хаб)</button>
       <a href="https://ru.wiktionary.org/" target="_blank" rel="noopener">Толкования: Викисловарь</a>
-      <span id="version"></span>
+      <button id="logout" type="button">Выйти</button>
+      <div class="menu-version" id="version"></div>
     </div>
-  </footer>
+  </div>
   <script type="module" src="src/game.js"></script>
 </body>
 </html>
