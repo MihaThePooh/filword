@@ -25,7 +25,6 @@ function forget() {
 export function setupMenu() {
   const menu = document.getElementById('menu');
   const item = document.getElementById('install');
-  const hint = item.querySelector('small');
   const close = () => { menu.hidden = true; };
   let offer = null;
 
@@ -35,10 +34,17 @@ export function setupMenu() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   document.getElementById('hub').addEventListener('click', () => { location.href = HUB_URL; });
 
-  // "Installed" is only a guess: the icon can be removed from the phone
-  // without the page knowing. So the item stays hidden only while Chrome is
-  // silent; once it offers to install, the guess was wrong.
-  const refresh = () => { item.hidden = standalone() || (remembered() && !offer); };
+  // The item is always there: when the game is installed it says so instead
+  // of vanishing. "Installed" is only a guess: the icon can be removed from
+  // the phone without the page knowing. So the guess is dropped once Chrome
+  // offers to install again, and where Chrome can tell (Android, by
+  // related_applications in the manifest) it answers itself.
+  const refresh = () => {
+    const done = (standalone() || remembered()) && !offer;
+    item.disabled = done;
+    item.classList.toggle('done', done);
+    item.innerHTML = `${done ? 'Игра установлена' : 'Установить игру'}<small>Иконка «Филворд» на экране телефона</small>`;
+  };
   const markInstalled = () => {
     try { localStorage.setItem(INSTALLED, '1'); } catch { /* private mode */ }
     offer = null;
@@ -53,16 +59,23 @@ export function setupMenu() {
     refresh();
   });
   window.addEventListener('appinstalled', markInstalled);
+  if (navigator.getInstalledRelatedApps) {
+    navigator.getInstalledRelatedApps()
+      .then((list) => { if (list.length) markInstalled(); })
+      .catch(() => { /* not supported - stay with the guess */ });
+  }
   item.addEventListener('click', () => {
     if (!offer) {
-      hint.textContent = 'Chrome сейчас не предлагает сам: ⋮ в углу → «Добавить на главный экран».';
+      item.querySelector('small').textContent =
+        'Chrome сейчас не предлагает сам: ⋮ в углу → «Добавить на главный экран». Открыто из хаба — сначала ⋮ → «Открыть в Chrome».';
       return;
     }
     close();
     offer.prompt();
     offer.userChoice.then((r) => {
-      if (r.outcome === 'accepted') markInstalled();
       offer = null;
+      if (r.outcome === 'accepted') markInstalled();
+      else refresh();
     });
   });
 }
