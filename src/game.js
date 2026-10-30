@@ -30,7 +30,7 @@ const STORAGE_KEY = cloud.STATE_KEY;
 const BOARD_SIZE = 8;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 29;
+export const VERSION = 30;
 const STATS_KEY = cloud.STATS_KEY;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.

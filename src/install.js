@@ -8,18 +8,13 @@
 import { HOME_URL } from './cloud.js';
 
 const HUB_URL = `${HOME_URL}/`;
-const INSTALLED = 'filword.installed';
+// "Installed" used to be kept in localStorage, and the mark outlived a
+// removed icon: in a tab opened from the hub Chrome never offers to install,
+// so nothing cleared it (30.10.2026). Now only what is visible right now counts.
+try { localStorage.removeItem('filword.installed'); } catch { /* private mode */ }
 
 function standalone() {
   return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-}
-
-function remembered() {
-  try { return localStorage.getItem(INSTALLED) === '1'; } catch { return false; }
-}
-
-function forget() {
-  try { localStorage.removeItem(INSTALLED); } catch { /* private mode */ }
 }
 
 export function setupMenu() {
@@ -35,18 +30,17 @@ export function setupMenu() {
   document.getElementById('hub').addEventListener('click', () => { location.href = HUB_URL; });
 
   // The item is always there: when the game is installed it says so instead
-  // of vanishing. "Installed" is only a guess: the icon can be removed from
-  // the phone without the page knowing. So the guess is dropped once Chrome
-  // offers to install again, and where Chrome can tell (Android, by
-  // related_applications in the manifest) it answers itself.
+  // of vanishing. "Installed" only when it is visible: opened from the icon,
+  // Chrome answered by related_applications in the manifest, or just installed.
+  let known = false;
   const refresh = () => {
-    const done = (standalone() || remembered()) && !offer;
+    const done = (standalone() || known) && !offer;
     item.disabled = done;
     item.classList.toggle('done', done);
     item.innerHTML = `${done ? 'Игра установлена' : 'Установить игру'}<small>Иконка «Филворд» на экране телефона</small>`;
   };
   const markInstalled = () => {
-    try { localStorage.setItem(INSTALLED, '1'); } catch { /* private mode */ }
+    known = true;
     offer = null;
     refresh();
   };
@@ -55,14 +49,14 @@ export function setupMenu() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     offer = e;
-    forget();
+    known = false;
     refresh();
   });
   window.addEventListener('appinstalled', markInstalled);
   if (navigator.getInstalledRelatedApps) {
     navigator.getInstalledRelatedApps()
       .then((list) => { if (list.length) markInstalled(); })
-      .catch(() => { /* not supported - stay with the guess */ });
+      .catch(() => { /* not supported - count as not installed */ });
   }
   item.addEventListener('click', () => {
     if (!offer) {
