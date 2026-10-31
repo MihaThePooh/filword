@@ -10,8 +10,14 @@
 // old version (409). Then the save with more progress wins - a week of play on
 // one phone is never wiped by an evening on another.
 
-export const STATE_KEY = 'filword-state';
-export const STATS_KEY = 'filword-stats';
+import { MODES } from './mode.js';
+
+export const STATE_KEY = MODES.adult.stateKey;
+export const STATS_KEY = MODES.adult.statsKey;
+// The kids version keeps its own board and progress; on the server both go
+// in one save, the kids part under "kids" inside state and stats.
+const KIDS_STATE_KEY = MODES.kids.stateKey;
+const KIDS_STATS_KEY = MODES.kids.statsKey;
 const OWNER_KEY = 'filword-owner';     // account the local copy belongs to
 const VERSION_KEY = 'filword-version'; // server version the local copy is based on
 const DIRTY_KEY = 'filword-dirty';     // '1' - local changes not on the server yet
@@ -19,10 +25,25 @@ const PUSH_DELAY = 1500;
 
 // --- the decision, kept pure so it can be tested without a browser ---
 
+// Grown-up part plus the kids part under "kids" - one object for the server.
+export function pack(main, kids) {
+  if (!kids) return main ?? null;
+  return { ...(main || {}), kids };
+}
+
+export function unpack(saved) {
+  if (!saved) return [null, null];
+  const { kids, ...main } = saved;
+  return [Object.keys(main).length ? main : null, kids ?? null];
+}
+
 // Which save went further: boards solved first, then words found overall.
+// Both versions count: an evening of the kids game is progress too.
 export function progressOf(stats) {
-  const s = stats || {};
-  return [s.solved || 0, (s.used || []).length, s.coins || 0];
+  const one = (s) => [s?.solved || 0, (s?.used || []).length, s?.coins || 0];
+  const main = one(stats);
+  const kids = one(stats?.kids);
+  return main.map((v, i) => v + kids[i]);
 }
 
 export function moreProgress(a, b) {
@@ -74,8 +95,8 @@ function localCopy() {
     owner: read(OWNER_KEY) ?? undefined,
     version: read(VERSION_KEY) ?? undefined,
     dirty: read(DIRTY_KEY) === 1,
-    state: read(STATE_KEY),
-    stats: read(STATS_KEY),
+    state: pack(read(STATE_KEY), read(KIDS_STATE_KEY)),
+    stats: pack(read(STATS_KEY), read(KIDS_STATS_KEY)),
   };
 }
 
@@ -129,9 +150,15 @@ let timer = null;
 let pushing = null;
 let onReplaced = () => location.reload();
 
+const SAVE_KEYS = [STATE_KEY, STATS_KEY, KIDS_STATE_KEY, KIDS_STATS_KEY];
+
 function adopt(save) {
-  write(STATE_KEY, save.state);
-  write(STATS_KEY, save.stats);
+  const [state, kidsState] = unpack(save.state);
+  const [stats, kidsStats] = unpack(save.stats);
+  write(STATE_KEY, state);
+  write(STATS_KEY, stats);
+  write(KIDS_STATE_KEY, kidsState);
+  write(KIDS_STATS_KEY, kidsStats);
   write(VERSION_KEY, save.version);
   write(DIRTY_KEY, null);
 }
@@ -141,7 +168,7 @@ async function push(version) {
   const r = await api('PUT', { state: local.state || {}, stats: local.stats || {}, version });
   if (r.status === 409) {
     const { save } = await r.json();
-    if (save && moreProgress(save.stats, read(STATS_KEY))) {
+    if (save && moreProgress(save.stats, localCopy().stats)) {
       adopt(save);
       onReplaced();
       return;
@@ -196,7 +223,7 @@ export async function start({ replaced } = {}) {
   const choice = decide(localCopy(), server);
   if (choice.act === 'adopt') adopt(server.save);
   if (choice.act === 'fresh') {
-    [STATE_KEY, STATS_KEY, VERSION_KEY, DIRTY_KEY].forEach((k) => write(k, null));
+    [...SAVE_KEYS, VERSION_KEY, DIRTY_KEY].forEach((k) => write(k, null));
   }
   write(OWNER_KEY, owner);
   if (choice.act === 'push') {
@@ -220,7 +247,7 @@ export async function logout() {
   timer = null;
   if (read(DIRTY_KEY) === 1) await flush();
   if (read(DIRTY_KEY) !== 1) {
-    [STATE_KEY, STATS_KEY, VERSION_KEY, DIRTY_KEY, OWNER_KEY].forEach((k) => write(k, null));
+    [...SAVE_KEYS, VERSION_KEY, DIRTY_KEY, OWNER_KEY].forEach((k) => write(k, null));
   }
   await fetch(`${ID_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   location.replace(`${HOME_URL}/`);

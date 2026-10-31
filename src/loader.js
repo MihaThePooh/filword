@@ -3,15 +3,17 @@
 // dictionary downloads; when it is all here the game swaps them for the real
 // board with a wave.
 
-// [row, first column, text] on the 8x8 board, left-aligned like a poster.
-export const LINES = [[2, 0, 'ФИЛВОРД'], [3, 0, 'БЕЗ'], [4, 0, 'РЕКЛАМЫ!']];
+import { MODES } from './mode.js';
+
+// [row, first column, text] on the 8x8 board; the kids board has its own (mode.js).
+export const LINES = MODES.adult.phrase;
 const COLOURS = ['#ff8a65', '#5cc461', '#4fa8e8']; // the game's first three
 const LIGHT_MS = 70; // the fastest a letter lights up, so it never just blinks
 const CREEP_MS = 250; // size unknown: one letter per this, leaving the last few
 
 // Every letter of the phrase: its cell, the letter and the line it belongs to.
-export function phraseCells(size) {
-  return LINES.flatMap(([row, col, text], line) =>
+export function phraseCells(size, lines = LINES) {
+  return lines.flatMap(([row, col, text], line) =>
     [...text].map((ch, i) => ({ cell: row * size + col + i, ch, line })));
 }
 
@@ -20,8 +22,8 @@ export function litCount(fraction, total) {
   return Math.max(0, Math.min(total, Math.round(fraction * total)));
 }
 
-export function showLoader(cellEls, size) {
-  const letters = phraseCells(size);
+export function showLoader(cellEls, size, lines = LINES) {
+  const letters = phraseCells(size, lines);
   for (const { cell, ch } of letters) {
     cellEls[cell].textContent = ch;
     cellEls[cell].classList.add('dim');

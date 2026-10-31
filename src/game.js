@@ -11,7 +11,8 @@ import { createSheet } from './sheet.js';
 import { loadDictionary, loadBonusWords, loadBonusDefs } from './dict-loader.js';
 import { showLoader } from './loader.js';
 import { REWARD, isBonusWord } from './rewards.js';
-import { shuffle, cycleDone, CYCLE_BOARDS } from './progress.js';
+import { shuffle, cycleDone } from './progress.js';
+import { MODES, currentMode, setMode } from './mode.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 import { setupMenu } from './install.js';
 import * as cloud from './cloud.js';
@@ -26,12 +27,15 @@ const OLD_PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7
 const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 // Bonus words in the list under the board: grey, as dark as the colours above.
 const BONUS_GREY = '#b5b3ab';
-const STORAGE_KEY = cloud.STATE_KEY;
-const BOARD_SIZE = 8;
+// Grown-up or kids version: board size, dictionary, save and cycle (mode.js).
+const MODE = currentMode();
+const CFG = MODES[MODE];
+const STORAGE_KEY = CFG.stateKey;
+const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 31;
-const STATS_KEY = cloud.STATS_KEY;
+export const VERSION = 32;
+const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
 const HIT_ZONE = 0.8;
@@ -68,11 +72,13 @@ let used = new Set(); // every word ever found - never shown again
 async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
+  setupModeSwitch();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
   // The save is fetched while the dictionary loads; the board waits for both.
   const synced = cloud.start();
   // Ask the browser not to evict the offline copy when the phone runs low on space.
   navigator.storage?.persist?.().catch(() => {});
+  gridEl.style.setProperty('--size', BOARD_SIZE);
   // The cells live for the whole session: boards change only their letters.
   cellEls = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => {
     const el = document.createElement('div');
@@ -80,9 +86,9 @@ async function init() {
     gridEl.appendChild(el);
     return el;
   });
-  const loader = showLoader(cellEls, BOARD_SIZE);
+  const loader = showLoader(cellEls, BOARD_SIZE, CFG.phrase);
   try {
-    const dict = await loadDictionary((f) => loader.progress(f));
+    const dict = await loadDictionary((f) => loader.progress(f), CFG.dict);
     index = indexDictionary(dict);
     dictByWord = new Map(dict.map((e) => [e.w, e]));
   } catch (err) {
@@ -97,7 +103,10 @@ async function init() {
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
   countEl.textContent = '';
-  loadBonusWords().then((set) => { bonusWords = set; }).catch((err) => console.warn('no bonus words', err));
+  // Kids get bonus coins only for words of their own dictionary: the full
+  // list of nouns has words a child should not meet.
+  if (MODE === 'kids') bonusWords = new Set(dictByWord.keys());
+  else loadBonusWords().then((set) => { bonusWords = set; }).catch((err) => console.warn('no bonus words', err));
   used = new Set(stats.used);
   const saved = loadJson(STORAGE_KEY);
   // The whole board is saved, not just its seed: the next board depends on
@@ -111,8 +120,20 @@ async function init() {
   gridEl.addEventListener('pointercancel', onUp);
 }
 
+// Menu item: the other version. Each keeps its own board, coins and progress.
+function setupModeSwitch() {
+  const item = document.getElementById('mode');
+  item.innerHTML = MODE === 'kids'
+    ? 'Взрослая версия<small>Поле 8×8, все слова</small>'
+    : 'Детская версия<small>Поле 5×5, простые слова</small>';
+  item.addEventListener('click', () => {
+    setMode(MODE === 'kids' ? 'adult' : 'kids');
+    location.reload();
+  });
+}
+
 function newBoard() {
-  if (cycleDone(stats)) {
+  if (cycleDone(stats, CFG.cycle)) {
     showShuffleCard(stats, doShuffle);
     return;
   }
@@ -121,7 +142,7 @@ function newBoard() {
     next = generateBoard(index, { size: BOARD_SIZE, seed: Date.now(), used });
   } catch (err) {
     if (!(err instanceof OutOfWordsError)) throw err;
-    // Should not happen with CYCLE_BOARDS below the dictionary size, but just in case.
+    // Should not happen with the cycle below the dictionary size, but just in case.
     showShuffleCard(stats, doShuffle);
     return;
   }
@@ -458,7 +479,7 @@ function renderHeader() {
   }
   coinEl.textContent = shownCoins;
   const rank = stats.shuffles ? ` · шафл ${stats.shuffles}` : '';
-  solvedEl.textContent = `Полей ${stats.solved}/${CYCLE_BOARDS}${rank}`;
+  solvedEl.textContent = `Полей ${stats.solved}/${CFG.cycle}${rank}`;
 }
 
 function saveState() {

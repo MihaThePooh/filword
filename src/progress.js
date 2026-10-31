@@ -4,12 +4,14 @@
 // starts over, the board counter goes back to 1, and the shuffle rank grows by one.
 // Coins are kept - they are the reward for everything done so far.
 
-// As many boards as the dictionary gives for sure: 30 simulated playthroughs
-// gave 2116-2122 boards (scripts/simulate.mjs), a few spare for unlucky splits.
-export const CYCLE_BOARDS = 2110;
+import { MODES } from './mode.js';
 
-export function cycleDone(stats) {
-  return (stats.solved ?? 0) >= CYCLE_BOARDS;
+// As many boards as the dictionary gives for sure, a few spare for unlucky
+// splits. Per mode: see mode.js.
+export const CYCLE_BOARDS = MODES.adult.cycle;
+
+export function cycleDone(stats, cycle = CYCLE_BOARDS) {
+  return (stats.solved ?? 0) >= cycle;
 }
 
 export function shuffle(stats) {

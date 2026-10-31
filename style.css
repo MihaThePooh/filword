@@ -122,8 +122,9 @@ main {
   width: 100%;
   aspect-ratio: 1;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(8, 1fr);
+  /* --size is set by the game: 8 for grown-ups, 5 for kids */
+  grid-template-columns: repeat(var(--size, 8), 1fr);
+  grid-template-rows: repeat(var(--size, 8), 1fr);
   gap: 4px;
   user-select: none;
   -webkit-user-select: none;
@@ -136,7 +137,8 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(18px, 6vw, 28px);
+  /* 6vw and 28px on the 8x8 board, bigger letters on the 5x5 one */
+  font-size: clamp(18px, calc(48vw / var(--size, 8)), calc(224px / var(--size, 8)));
   text-transform: uppercase;
   transition: background-color 0.25s;
 }
