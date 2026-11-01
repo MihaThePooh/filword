@@ -350,8 +350,9 @@ body.themed .action:disabled svg { opacity: .5; }
 .shelf { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .sitem { border: 0; background: none; padding: 0; cursor: pointer; text-align: center; color: var(--text); font: inherit; }
 .sthumb {
-  width: 100%; aspect-ratio: 9 / 16; border-radius: 14px; border: 2px solid #eceae3;
-  background-size: cover; background-position: center;
+  width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 2px solid #eceae3;
+  /* Zoomed past cover so the pattern reads large in the square crop. */
+  background-size: 165%; background-position: center;
 }
 .sitem.on .sthumb { border-color: #4fa8e8; box-shadow: 0 0 0 3px #d4e9fb; }
 .sitem.owned .sthumb { border-color: #5cc461; }
@@ -364,6 +365,23 @@ body.themed .action:disabled svg { opacity: .5; }
 .photo-item .sthumb {
   aspect-ratio: 16 / 9; border-style: dashed;
   background: linear-gradient(135deg, #cdbdad, #9fb0a0); filter: saturate(.7) brightness(1.08);
+}
+
+/* A short note centred over the tapped shop card, above the shop sheet. */
+.shopnote {
+  position: fixed; z-index: 70; transform: translate(-50%, -50%);
+  pointer-events: none; max-width: 70vw;
+  padding: 8px 14px; border-radius: 12px;
+  background: rgba(26, 23, 20, 0.92); color: #fff;
+  font-size: 14px; font-weight: 600; text-align: center; white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  animation: shopnote 2.2s ease-out forwards;
+}
+@keyframes shopnote {
+  0% { opacity: 0; transform: translate(-50%, -42%) scale(0.9); }
+  12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -54%) scale(1); }
 }
 
 /* Spending coins: the hint button and the counter give a short squeeze,

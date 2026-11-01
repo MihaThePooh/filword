@@ -39,7 +39,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 34;
+export const VERSION = 35;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -109,6 +109,7 @@ async function init() {
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
   applyTheme(stats);
+  warmBackgrounds();
   countEl.textContent = '';
   // Kids get bonus coins only for words of their own dictionary: the full
   // list of nouns has words a child should not meet.
@@ -167,7 +168,7 @@ function renderShop() {
       : `<div class="spr${canBuy(stats, b.id) ? '' : ' cant'}"><span class="coin"></span>${b.price}</div>`;
     tile.innerHTML = `<div class="sthumb" style="background-image:url('${bgSrc(b.id)}')"></div>`
       + `<div class="snm">${b.name}</div>${price}`;
-    tile.addEventListener('click', () => onShopTile(b.id));
+    tile.addEventListener('click', () => onShopTile(b.id, tile));
     shelf.appendChild(tile);
   }
   // Own photo with a soft filter - a later feature, shown so the shop feels whole.
@@ -176,17 +177,19 @@ function renderShop() {
   photo.className = 'sitem photo-item';
   photo.innerHTML = '<div class="sthumb"></div><div class="snm">Поставить своё фото</div>'
     + '<div class="spr">Скоро</div>';
-  photo.addEventListener('click', () => toast('Свои фото — скоро'));
+  photo.addEventListener('click', () => shopNote(photo, 'Свои фото — скоро'));
   shelf.appendChild(photo);
 }
 
 // Tap a background: wear or take off an owned one; buy a new one if coins allow.
-function onShopTile(id) {
+function onShopTile(id, tile) {
   if (isOwned(stats, id)) {
     stats = setActive(stats, activeId(stats) === id ? null : id);
   } else {
     const next = buy(stats, id);
-    if (!next) { toast('Не хватает монет'); return; }
+    // The message sits over the tapped card, on top of the shop sheet: a plain
+    // toast lives behind the panel and is all but hidden.
+    if (!next) { shopNote(tile, 'Не хватает монет'); return; }
     showSpend(stats.coins - next.coins);
     stats = next;
   }
@@ -194,6 +197,26 @@ function onShopTile(id) {
   applyTheme(stats);
   render();
   renderShop();
+}
+
+// A short message centred over a shop card, above the shop sheet.
+function shopNote(tile, text) {
+  const box = (tile.querySelector('.sthumb') ?? tile).getBoundingClientRect();
+  const note = document.createElement('div');
+  note.className = 'shopnote';
+  note.textContent = text;
+  note.style.left = `${box.left + box.width / 2}px`;
+  note.style.top = `${box.top + box.height / 2}px`;
+  document.body.appendChild(note);
+  note.addEventListener('animationend', () => note.remove());
+}
+
+// Warm up the shop in the background: once the game is up, quietly fetch every
+// background so the service worker caches it. Then the shop opens instantly and
+// works fully offline, without slowing the game's own start or bloating install.
+function warmBackgrounds() {
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+  idle(() => { for (const b of BACKGROUNDS) new Image().src = bgSrc(b.id); });
 }
 
 function newBoard() {
