@@ -9,8 +9,8 @@
 // that touches the page.
 
 export const BACKGROUNDS = [
-  { id: 'roses', name: 'Винтажные розы', price: 300 },
-  { id: 'rug', name: 'Персидский ковёр', price: 300 },
+  { id: 'roses', name: 'Винтажные розы', price: 700 },
+  { id: 'rug', name: 'Персидский ковёр', price: 700 },
 ];
 
 export const bgSrc = (id) => `data/bg/${id}.webp`;

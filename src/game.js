@@ -10,7 +10,7 @@ import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary, loadBonusWords, loadBonusDefs } from './dict-loader.js';
 import { showLoader } from './loader.js';
-import { REWARD, isBonusWord } from './rewards.js';
+import { REWARD, PRICE, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone } from './progress.js';
 import { MODES, currentMode, setMode } from './mode.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
@@ -440,7 +440,16 @@ function onAction() {
     newBoard();
     return;
   }
+  // Every press costs coins; nothing to show - nothing charged.
+  if (stats.coins < PRICE.hint) {
+    toast(`Подсказка стоит ${PRICE.hint} монет`);
+    return;
+  }
   const res = nextHint(hint, board.words, new Set(found.keys()));
+  if (res.hint === hint) return;
+  stats.coins -= PRICE.hint;
+  shownCoins = stats.coins;
+  saveStats();
   hint = res.hint;
   if (res.completed >= 0) markFound(res.completed);
   else {

@@ -22,14 +22,14 @@ test('shopOf tolerates missing or broken state', () => {
 });
 
 test('buy deducts coins, grants and wears the background', () => {
-  const s0 = { coins: 650, shop: { owned: [], active: null } };
+  const s0 = { coins: 800, shop: { owned: [], active: null } };
   assert.ok(canBuy(s0, 'roses'));
   const s1 = buy(s0, 'roses');
-  assert.equal(s1.coins, 350);
+  assert.equal(s1.coins, 100);
   assert.ok(isOwned(s1, 'roses'));
   assert.equal(activeId(s1), 'roses');
   // input untouched
-  assert.equal(s0.coins, 650);
+  assert.equal(s0.coins, 800);
   assert.deepEqual(s0.shop.owned, []);
 });
 
