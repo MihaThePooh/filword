@@ -61,6 +61,22 @@ export function setupMenu() {
   };
   refresh();
 
+  // Came from the hub's "Установить" button (?install): open the menu on the
+  // install item and pulse it, so install is one tap away. The native install
+  // dialog opens only on a tap, so it cannot be auto-popped from load.
+  try {
+    const iu = new URL(location.href);
+    if (iu.searchParams.has('install')) {
+      iu.searchParams.delete('install');
+      history.replaceState(history.state, '', iu.href);
+      if (!(standalone() || known)) {
+        menu.hidden = false;
+        item.classList.add('pulse');
+        setTimeout(() => item.classList.remove('pulse'), 2400);
+      }
+    }
+  } catch { /* private mode - the game just opens */ }
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     offer = e;
