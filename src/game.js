@@ -187,8 +187,8 @@ function onShopTile(id) {
   } else {
     const next = buy(stats, id);
     if (!next) { toast('Не хватает монет'); return; }
+    showSpend(stats.coins - next.coins);
     stats = next;
-    shownCoins = stats.coins;
   }
   saveStats();
   applyTheme(stats);
@@ -440,6 +440,7 @@ function onAction() {
     newBoard();
     return;
   }
+  pulse(actionEl);
   // Every press costs coins; nothing to show - nothing charged.
   if (stats.coins < PRICE.hint) {
     toast(`Подсказка стоит ${PRICE.hint} монет`);
@@ -448,7 +449,7 @@ function onAction() {
   const res = nextHint(hint, board.words, new Set(found.keys()));
   if (res.hint === hint) return;
   stats.coins -= PRICE.hint;
-  shownCoins = stats.coins;
+  showSpend(PRICE.hint);
   saveStats();
   hint = res.hint;
   if (res.completed >= 0) markFound(res.completed);
@@ -456,6 +457,30 @@ function onAction() {
     saveState();
     render();
   }
+}
+
+// A short squeeze of a button so a press is felt even before coins move.
+function pulse(el) {
+  el.classList.remove('pressed');
+  void el.offsetWidth; // restart the animation on a quick second press
+  el.classList.add('pressed');
+}
+
+// Coins spent: the counter drops at once and a "-amount" coin pill falls out
+// of it and fades, so the price is seen. Call after stats.coins is reduced.
+function showSpend(amount) {
+  shownCoins = stats.coins;
+  coinEl.textContent = shownCoins;
+  const counter = document.getElementById('coins');
+  pulse(counter);
+  const box = counter.getBoundingClientRect();
+  const drop = document.createElement('div');
+  drop.className = 'coin-loss';
+  drop.innerHTML = `<span class="coin"></span><span>−${amount}</span>`;
+  drop.style.left = `${box.left + box.width / 2}px`;
+  drop.style.top = `${box.bottom + 2}px`;
+  document.body.appendChild(drop);
+  drop.addEventListener('animationend', () => drop.remove());
 }
 
 // Coins fly from the cell to the counter in the header.

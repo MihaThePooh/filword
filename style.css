@@ -365,3 +365,34 @@ body.themed .action:disabled svg { opacity: .5; }
   aspect-ratio: 16 / 9; border-style: dashed;
   background: linear-gradient(135deg, #cdbdad, #9fb0a0); filter: saturate(.7) brightness(1.08);
 }
+
+/* Spending coins: the hint button and the counter give a short squeeze,
+   and a "-price" coin pill falls out of the counter and fades away. */
+.action.pressed { animation: press 0.32s ease-out; }
+.action.pressed svg { animation: bulb 0.6s ease-out; }
+.coins.pressed { animation: spend 0.4s ease-out; }
+@keyframes press {
+  40% { transform: scale(0.88); }
+  75% { transform: scale(1.06); }
+}
+@keyframes bulb {
+  30% { color: #e8a317; filter: drop-shadow(0 0 4px #f7c51e); }
+}
+@keyframes spend {
+  25% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+}
+.coin-loss {
+  position: fixed; z-index: 60; pointer-events: none;
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  font-size: 15px; font-weight: 700; color: #c0392b; white-space: nowrap;
+  animation: coin-loss 1.5s ease-in forwards;
+}
+.coin-loss .coin { width: 14px; height: 14px; }
+@keyframes coin-loss {
+  0% { transform: translate(-50%, -6px); opacity: 0; }
+  15% { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, 46px); opacity: 0; }
+}
