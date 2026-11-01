@@ -8,9 +8,21 @@
 // so the economy can be tested without a browser; applyTheme is the only part
 // that touches the page.
 
+const PRICE = 700;
 export const BACKGROUNDS = [
-  { id: 'roses', name: 'Винтажные розы', price: 700 },
-  { id: 'rug', name: 'Персидский ковёр', price: 700 },
+  { id: 'roses', name: 'Винтажные розы', price: PRICE },
+  { id: 'rug', name: 'Персидский ковёр', price: PRICE },
+  { id: 'chintz', name: 'Ситец в цветочек', price: PRICE },
+  { id: 'floral-stripes', name: 'Цветочные дорожки', price: PRICE },
+  { id: 'brown-damask', name: 'Коричневый дамаск', price: PRICE },
+  { id: 'olive-damask', name: 'Оливковый дамаск', price: PRICE },
+  { id: 'green-ornament', name: 'Зелёные вензеля', price: PRICE },
+  { id: 'gold-damask', name: 'Золотой дамаск', price: PRICE },
+  { id: 'mint-damask', name: 'Мятный дамаск', price: PRICE },
+  { id: 'blue-damask', name: 'Голубой дамаск', price: PRICE },
+  { id: 'olive-stripes', name: 'Оливковая полоска', price: PRICE },
+  { id: 'pistachio-stripes', name: 'Фисташковая полоска', price: PRICE },
+  { id: 'teal-stripes', name: 'Бирюзовая полоска', price: PRICE },
 ];
 
 export const bgSrc = (id) => `data/bg/${id}.webp`;
