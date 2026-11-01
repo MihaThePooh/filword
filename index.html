@@ -23,7 +23,15 @@
     <div class="coins" id="coins" title="Монеты">
       <span class="coin"></span><span id="coin-count">0</span>
     </div>
-    <button class="action" id="action" type="button">Подсказка</button>
+    <button class="shop" id="shop" type="button" aria-label="Магазин — фоны">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.05"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1.6 4H3.7Q4.6 4 4.76 4.89L6.04 11.91Q6.2 12.8 7.1 12.8H19.5Q20.4 12.8 20.53 11.91L21.47 5.79Q21.6 4.9 20.7 4.9H7.5"/>
+        <path d="M6.04 11.91L6.55 14.71Q6.71 15.6 7.61 15.6H19.4"/>
+        <circle cx="9.4" cy="18.6" r="1.5"/><circle cx="17.6" cy="18.6" r="1.5"/>
+      </svg>
+    </button>
+    <button class="action" id="action" type="button" aria-label="Подсказка">Подсказка</button>
   </header>
   <main>
     <div class="slot" id="slot"></div>
@@ -32,12 +40,20 @@
   </main>
   <div class="menu" id="menu" hidden>
     <div class="menu-sheet">
+      <button id="shopItem" type="button">Магазин — фоны<small>Обои и свои фото на всё поле</small></button>
       <button class="install" id="install" type="button">Установить игру<small>Иконка «Филворд» на экране телефона</small></button>
       <button id="mode" type="button"></button>
       <button id="hub" type="button">Все приложения (хаб)</button>
       <a href="https://ru.wiktionary.org/" target="_blank" rel="noopener">Толкования: Викисловарь</a>
       <button id="logout" type="button">Выйти</button>
       <div class="menu-version" id="version"></div>
+    </div>
+  </div>
+  <div class="shopwrap" id="shopwrap" hidden>
+    <div class="shoppanel">
+      <h2>Магазин — фоны</h2>
+      <p class="sub">Фон встаёт на всё приложение. Купленный остаётся навсегда.</p>
+      <div class="shelf" id="shelf"></div>
     </div>
   </div>
   <script type="module" src="src/game.js"></script>

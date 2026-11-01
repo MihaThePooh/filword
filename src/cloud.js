@@ -11,6 +11,15 @@
 // one phone is never wiped by an evening on another.
 
 import { MODES } from './mode.js';
+import { shopOf, mergeOwned } from './shop.js';
+
+// Adopted stats, but with the backgrounds bought on this phone kept too.
+function withOwned(stats, boughtHere) {
+  const shop = shopOf(stats);
+  const owned = mergeOwned(shop.owned, boughtHere);
+  if (owned.length === shop.owned.length) return stats;
+  return { ...stats, shop: { ...shop, owned } };
+}
 
 export const STATE_KEY = MODES.adult.stateKey;
 export const STATS_KEY = MODES.adult.statsKey;
@@ -153,10 +162,14 @@ let onReplaced = () => location.reload();
 const SAVE_KEYS = [STATE_KEY, STATS_KEY, KIDS_STATE_KEY, KIDS_STATS_KEY];
 
 function adopt(save) {
+  // Backgrounds bought on this phone must not vanish when another phone's save
+  // wins the merge: the one with more progress may carry fewer of them. So the
+  // owned lists are joined, and the server keeps everything else it decided.
+  const boughtHere = shopOf(read(STATS_KEY)).owned;
   const [state, kidsState] = unpack(save.state);
   const [stats, kidsStats] = unpack(save.stats);
   write(STATE_KEY, state);
-  write(STATS_KEY, stats);
+  write(STATS_KEY, stats && withOwned(stats, boughtHere));
   write(KIDS_STATE_KEY, kidsState);
   write(KIDS_STATS_KEY, kidsStats);
   write(VERSION_KEY, save.version);

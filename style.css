@@ -279,3 +279,89 @@ main {
 @keyframes lit {
   50% { transform: scale(1.15); }
 }
+
+/* ===== Магазин: фоны на всё приложение ===== */
+/* Фон: центр картинки совмещаем с центром экрана, лишнее по краям обрезаем
+   (cover + center). Один файл 1080x1920 ложится красиво на любой телефон. */
+body.themed { background: var(--bgimg) center center / cover no-repeat, var(--bg); }
+
+/* Подсказка теперь иконка-лампочка с числом; кнопка магазина — тележка.
+   Базовый вид (без выбранного фона) — в тон остальной шапке. */
+.action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.action svg { width: 19px; height: 19px; display: block; }
+.shop {
+  width: 34px; height: 34px; flex: 0 0 auto; display: flex;
+  align-items: center; justify-content: center; padding: 0; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text);
+}
+.shop svg { width: 21px; height: 21px; display: block; }
+.shop:active { transform: scale(0.94); }
+
+/* С выбранным фоном вся строка превращается в матовые плашки одной высоты.
+   Крайние (меню и подсказка) прилипают к краям экрана, внешние углы острые. */
+body.themed header { align-items: center; gap: 6px; padding-left: 0; padding-right: 0; }
+body.themed header > .burger,
+body.themed header > div:not(.coins),
+body.themed header > .coins,
+body.themed header > .shop,
+body.themed header > .action { height: 44px; }
+body.themed .burger,
+body.themed header > div:not(.coins),
+body.themed .coins,
+body.themed .shop,
+body.themed .action {
+  background: rgba(255,255,255,.3); border-color: transparent; color: var(--text);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+}
+body.themed .burger, body.themed .solved { color: var(--text); }
+body.themed .burger {
+  width: 44px; border-radius: 0 12px 12px 0;
+  justify-content: flex-start; padding: 0 12px 0 9px;
+}
+body.themed .burger svg { width: 18px; height: 18px; }
+body.themed header > div:not(.coins) {
+  border-radius: 12px; padding: 4px 11px;
+  flex-direction: column; align-items: flex-start; justify-content: center;
+}
+body.themed .coins { border-radius: 999px; padding: 0 13px; }
+body.themed .shop { border-radius: 12px; padding: 0; width: 44px; }
+body.themed .shop svg { width: 29px; height: 29px; }
+body.themed .action {
+  border-radius: 12px 0 0 12px; gap: 5px;
+  justify-content: flex-end; padding: 0 9px 0 12px;
+  font-size: 15px; font-weight: 600;
+}
+body.themed .action svg { width: 19px; height: 19px; }
+body.themed .action:disabled svg { opacity: .5; }
+
+/* Нижняя панель магазина */
+.shopwrap[hidden] { display: none; }
+.shopwrap {
+  position: fixed; inset: 0; z-index: 50; background: rgba(26,23,20,.4);
+  display: flex; align-items: flex-end;
+}
+.shoppanel {
+  background: #fff; width: 100%; max-width: 480px; margin: 0 auto;
+  max-height: 82dvh; overflow: auto; border-radius: 20px 20px 0 0; padding: 16px 16px 26px;
+}
+.shoppanel h2 { margin: 2px 0 2px; font-size: 20px; }
+.shoppanel .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+.shelf { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.sitem { border: 0; background: none; padding: 0; cursor: pointer; text-align: center; color: var(--text); font: inherit; }
+.sthumb {
+  width: 100%; aspect-ratio: 9 / 16; border-radius: 14px; border: 2px solid #eceae3;
+  background-size: cover; background-position: center;
+}
+.sitem.on .sthumb { border-color: #4fa8e8; box-shadow: 0 0 0 3px #d4e9fb; }
+.sitem.owned .sthumb { border-color: #5cc461; }
+.snm { font-size: 14px; margin-top: 6px; }
+.spr { font-size: 12px; color: var(--muted); display: flex; gap: 4px; align-items: center; justify-content: center; }
+.spr .coin { width: 13px; height: 13px; }
+.spr.have { color: #5cc461; }
+.spr.cant { color: #c67; }
+.photo-item { grid-column: 1 / -1; }
+.photo-item .sthumb {
+  aspect-ratio: 16 / 9; border-style: dashed;
+  background: linear-gradient(135deg, #cdbdad, #9fb0a0); filter: saturate(.7) brightness(1.08);
+}

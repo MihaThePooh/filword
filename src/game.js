@@ -16,6 +16,9 @@ import { MODES, currentMode, setMode } from './mode.js';
 import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 import { setupMenu } from './install.js';
 import * as cloud from './cloud.js';
+import {
+  BACKGROUNDS, bgSrc, isOwned, activeId, canBuy, buy, setActive, applyTheme,
+} from './shop.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -27,6 +30,8 @@ const OLD_PALETTE = ['#f6c8b8', '#c9e4c5', '#bcd7ee', '#f3e2a9', '#e2cdee', '#f7
 const brighter = (c) => PALETTE[OLD_PALETTE.indexOf(c)] ?? c;
 // Bonus words in the list under the board: grey, as dark as the colours above.
 const BONUS_GREY = '#b5b3ab';
+// Hint button is a lightbulb with the number of hints left.
+const BULB_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.4 1 2.5h6c0-1.1.3-1.9 1-2.5A6 6 0 0 0 12 3Z"/></svg>`;
 // Grown-up or kids version: board size, dictionary, save and cycle (mode.js).
 const MODE = currentMode();
 const CFG = MODES[MODE];
@@ -34,7 +39,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 32;
+export const VERSION = 33;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -73,6 +78,7 @@ async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
   setupModeSwitch();
+  setupShop();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
   // The save is fetched while the dictionary loads; the board waits for both.
   const synced = cloud.start();
@@ -102,6 +108,7 @@ async function init() {
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
+  applyTheme(stats);
   countEl.textContent = '';
   // Kids get bonus coins only for words of their own dictionary: the full
   // list of nouns has words a child should not meet.
@@ -130,6 +137,63 @@ function setupModeSwitch() {
     setMode(MODE === 'kids' ? 'adult' : 'kids');
     location.reload();
   });
+}
+
+// Shop: backgrounds for the whole app. Opens from the cart in the header and
+// from the menu; the catalogue and the economy live in shop.js.
+function setupShop() {
+  const wrap = document.getElementById('shopwrap');
+  const open = () => { renderShop(); wrap.hidden = false; };
+  document.getElementById('shop').addEventListener('click', open);
+  document.getElementById('shopItem').addEventListener('click', () => {
+    document.getElementById('menu').hidden = true;
+    open();
+  });
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.hidden = true; });
+}
+
+function renderShop() {
+  const shelf = document.getElementById('shelf');
+  shelf.innerHTML = '';
+  const active = activeId(stats);
+  for (const b of BACKGROUNDS) {
+    const owned = isOwned(stats, b.id);
+    const on = active === b.id;
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = `sitem${owned ? ' owned' : ''}${on ? ' on' : ''}`;
+    const price = owned
+      ? `<div class="spr have">${on ? 'стоит' : 'надеть'}</div>`
+      : `<div class="spr${canBuy(stats, b.id) ? '' : ' cant'}"><span class="coin"></span>${b.price}</div>`;
+    tile.innerHTML = `<div class="sthumb" style="background-image:url('${bgSrc(b.id)}')"></div>`
+      + `<div class="snm">${b.name}</div>${price}`;
+    tile.addEventListener('click', () => onShopTile(b.id));
+    shelf.appendChild(tile);
+  }
+  // Own photo with a soft filter - a later feature, shown so the shop feels whole.
+  const photo = document.createElement('button');
+  photo.type = 'button';
+  photo.className = 'sitem photo-item';
+  photo.innerHTML = '<div class="sthumb"></div><div class="snm">Поставить своё фото</div>'
+    + '<div class="spr">Скоро</div>';
+  photo.addEventListener('click', () => toast('Свои фото — скоро'));
+  shelf.appendChild(photo);
+}
+
+// Tap a background: wear or take off an owned one; buy a new one if coins allow.
+function onShopTile(id) {
+  if (isOwned(stats, id)) {
+    stats = setActive(stats, activeId(stats) === id ? null : id);
+  } else {
+    const next = buy(stats, id);
+    if (!next) { toast('Не хватает монет'); return; }
+    stats = next;
+    shownCoins = stats.coins;
+  }
+  saveStats();
+  applyTheme(stats);
+  render();
+  renderShop();
 }
 
 function newBoard() {
@@ -474,7 +538,7 @@ function renderHeader() {
     actionEl.disabled = false;
   } else {
     const left = hintsLeft(hint, new Set(found.keys()));
-    actionEl.textContent = left > 0 ? `Подсказка · ${left}` : 'Подсказок нет';
+    actionEl.innerHTML = `${BULB_SVG}<span>${left}</span>`;
     actionEl.disabled = left === 0;
   }
   coinEl.textContent = shownCoins;
