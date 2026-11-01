@@ -294,7 +294,7 @@ body.themed { background: var(--bgimg) center center / cover no-repeat, var(--bg
   align-items: center; justify-content: center; padding: 0; cursor: pointer;
   border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text);
 }
-.shop svg { width: 21px; height: 21px; display: block; }
+.shop svg { width: 20px; height: 20px; display: block; }
 .shop:active { transform: scale(0.94); }
 
 /* С выбранным фоном вся строка превращается в матовые плашки одной высоты.
@@ -326,7 +326,7 @@ body.themed header > div:not(.coins) {
 }
 body.themed .coins { border-radius: 999px; padding: 0 13px; }
 body.themed .shop { border-radius: 12px; padding: 0; width: 44px; }
-body.themed .shop svg { width: 29px; height: 29px; }
+body.themed .shop svg { width: 26px; height: 26px; }
 body.themed .action {
   border-radius: 12px 0 0 12px; gap: 5px;
   justify-content: flex-end; padding: 0 9px 0 12px;
