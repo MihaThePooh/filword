@@ -420,3 +420,10 @@ body.themed .action:disabled svg { opacity: .5; }
   15% { transform: translate(-50%, 0); opacity: 1; }
   100% { transform: translate(-50%, 46px); opacity: 0; }
 }
+
+/* Statistics screen: label left, number right. */
+.statlist { display: flex; flex-direction: column; }
+.strow { display: flex; justify-content: space-between; align-items: baseline;
+  padding: 11px 2px; border-bottom: 1px solid #eceae3; font-size: 15px; }
+.strow:last-child { border-bottom: 0; }
+.strow b { font-size: 17px; font-variant-numeric: tabular-nums; }

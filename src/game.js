@@ -19,6 +19,7 @@ import * as cloud from './cloud.js';
 import {
   BACKGROUNDS, bgSrc, isOwned, activeId, canBuy, buy, setActive, applyTheme,
 } from './shop.js';
+import { statRows } from './stats.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -39,7 +40,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 35;
+export const VERSION = 36;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -79,6 +80,7 @@ async function init() {
   setupMenu();
   setupModeSwitch();
   setupShop();
+  setupStats();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
   // The save is fetched while the dictionary loads; the board waits for both.
   const synced = cloud.start();
@@ -142,6 +144,28 @@ function setupModeSwitch() {
 
 // Shop: backgrounds for the whole app. Opens from the cart in the header and
 // from the menu; the catalogue and the economy live in shop.js.
+// Record of words on one board: hidden and bonus words found here together.
+function noteBoardRecord() {
+  const onBoard = found.size + bonusFound.length;
+  if (onBoard > (stats.maxWords || 0)) stats.maxWords = onBoard;
+}
+
+// Statistics: lifetime counters from stats.js, opened from the menu.
+function setupStats() {
+  const wrap = document.getElementById('statwrap');
+  document.getElementById('statsItem').addEventListener('click', () => {
+    document.getElementById('menu').hidden = true;
+    renderStats();
+    wrap.hidden = false;
+  });
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.hidden = true; });
+}
+
+function renderStats() {
+  document.getElementById('statlist').innerHTML = statRows(stats)
+    .map((r) => `<div class="strow"><span>${r.label}</span><b>${r.value}</b></div>`).join('');
+}
+
 function setupShop() {
   const wrap = document.getElementById('shopwrap');
   const open = () => { renderShop(); wrap.hidden = false; };
@@ -190,6 +214,8 @@ function onShopTile(id, tile) {
     // The message sits over the tapped card, on top of the shop sheet: a plain
     // toast lives behind the panel and is all but hidden.
     if (!next) { shopNote(tile, 'Не хватает монет'); return; }
+    stats.coinsSpent = (stats.coinsSpent || 0) + (stats.coins - next.coins);
+    next.coinsSpent = stats.coinsSpent;
     showSpend(stats.coins - next.coins);
     stats = next;
   }
@@ -342,6 +368,8 @@ function onUp(e) {
     const word = selection.map((c) => board.letters[c]).join('');
     const lastCell = selection.at(-1);
     bonusFound.push(word);
+    stats.bonusFound = (stats.bonusFound || 0) + 1;
+    noteBoardRecord();
     wordLog.push({ b: word });
     renderWords(true);
     selection = [];
@@ -427,6 +455,8 @@ addEventListener('resize', updateFades);
 
 function markFound(i) {
   found.set(i, PALETTE[found.size % PALETTE.length]);
+  stats.wordsFound = (stats.wordsFound || 0) + 1;
+  noteBoardRecord();
   wordLog.push({ i });
   renderWords(true);
   used.add(board.words[i].word);
@@ -472,6 +502,8 @@ function onAction() {
   const res = nextHint(hint, board.words, new Set(found.keys()));
   if (res.hint === hint) return;
   stats.coins -= PRICE.hint;
+  stats.hintsUsed = (stats.hintsUsed || 0) + 1;
+  stats.coinsSpent = (stats.coinsSpent || 0) + PRICE.hint;
   showSpend(PRICE.hint);
   saveStats();
   hint = res.hint;
@@ -509,6 +541,7 @@ function showSpend(amount) {
 // Coins fly from the cell to the counter in the header.
 function addCoins(amount, fromEl) {
   stats.coins += amount;
+  stats.coinsEarned = (stats.coinsEarned || 0) + amount;
   saveStats();
   const counter = document.getElementById('coins');
   const target = counter.getBoundingClientRect();
