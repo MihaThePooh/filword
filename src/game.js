@@ -20,6 +20,7 @@ import {
   BACKGROUNDS, bgSrc, isOwned, activeId, canBuy, buy, setActive, applyTheme,
 } from './shop.js';
 import { statRows } from './stats.js';
+import { evaluate, achievementRows } from './achievements.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -40,7 +41,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 36;
+export const VERSION = 37;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -81,6 +82,7 @@ async function init() {
   setupModeSwitch();
   setupShop();
   setupStats();
+  setupAchievements();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
   // The save is fetched while the dictionary loads; the board waits for both.
   const synced = cloud.start();
@@ -123,6 +125,10 @@ async function init() {
   // which words are used up, so a seed alone would not rebuild the same one.
   if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus, saved.log);
   else newBoard();
+  // Pay out anything already earned (progress from before achievements, or a
+  // save synced from another phone) so stars and coins are up to date at once.
+  // After the board exists: runAchievements redraws the header.
+  runAchievements();
   actionEl.addEventListener('click', onAction);
   gridEl.addEventListener('pointerdown', onDown);
   gridEl.addEventListener('pointermove', onMove);
@@ -144,10 +150,52 @@ function setupModeSwitch() {
 
 // Shop: backgrounds for the whole app. Opens from the cart in the header and
 // from the menu; the catalogue and the economy live in shop.js.
+// A board solved without a single hint counts toward the «Чистое поле» award.
+let hintUsedThisBoard = false;
+
+// Pay out any newly earned achievement stars and tell the player. Safe to call
+// as often as we like: evaluate pays each star only once (stats.awards).
+function runAchievements() {
+  const res = evaluate(stats);
+  if (!res.awarded.length) return;
+  stats = res.stats;
+  if (stats.coins > (stats.maxCoins || 0)) stats.maxCoins = stats.coins;
+  shownCoins = stats.coins;
+  coinEl.textContent = shownCoins;
+  saveStats();
+  renderHeader();
+  const last = res.awarded[res.awarded.length - 1];
+  const total = res.awarded.reduce((n, x) => n + x.coins, 0);
+  toast(`\u{1F3C6} ${last.name} ${'\u2605'.repeat(last.star)} +${total}`);
+}
+
 // Record of words on one board: hidden and bonus words found here together.
 function noteBoardRecord() {
   const onBoard = found.size + bonusFound.length;
   if (onBoard > (stats.maxWords || 0)) stats.maxWords = onBoard;
+}
+
+// Achievements: ranked goals from achievements.js, opened from the menu.
+function setupAchievements() {
+  const wrap = document.getElementById('achwrap');
+  document.getElementById('achItem').addEventListener('click', () => {
+    document.getElementById('menu').hidden = true;
+    renderAchievements();
+    wrap.hidden = false;
+  });
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.hidden = true; });
+}
+
+function renderAchievements() {
+  document.getElementById('achlist').innerHTML = achievementRows(stats).map((r) => {
+    const stars = '\u2605'.repeat(r.stars) + '\u2606'.repeat(3 - r.stars);
+    const goal = r.next === null
+      ? '<span class="agoal done">выполнено</span>'
+      : `<span class="agoal">${r.value} / ${r.next}</span>`;
+    return `<div class="arow"><div class="atop"><b>${r.name}</b>`
+      + `<span class="astars">${stars}</span></div>`
+      + `<div class="abot"><span>${r.hint}</span>${goal}</div></div>`;
+  }).join('');
 }
 
 // Statistics: lifetime counters from stats.js, opened from the menu.
@@ -218,6 +266,7 @@ function onShopTile(id, tile) {
     next.coinsSpent = stats.coinsSpent;
     showSpend(stats.coins - next.coins);
     stats = next;
+    runAchievements();
   }
   saveStats();
   applyTheme(stats);
@@ -276,6 +325,7 @@ function doShuffle() {
 let busy = false;
 let busyTimer;
 function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog) {
+  hintUsedThisBoard = false;
   sheet.close();
   bonusFound = savedBonus ?? [];
   board = nextBoard;
@@ -370,6 +420,7 @@ function onUp(e) {
     bonusFound.push(word);
     stats.bonusFound = (stats.bonusFound || 0) + 1;
     noteBoardRecord();
+    runAchievements();
     wordLog.push({ b: word });
     renderWords(true);
     selection = [];
@@ -403,6 +454,9 @@ function openDefinition(cell) {
 
 // Definition card for a hidden word or a bonus word from the list.
 function showWord(entry) {
+  stats.defsOpened = (stats.defsOpened || 0) + 1;
+  saveStats();
+  runAchievements();
   if (entry.b === undefined) {
     const w = board.words[entry.i];
     sheet.open(w.word, found.get(entry.i), w.defs, w.stress);
@@ -462,11 +516,15 @@ function markFound(i) {
   used.add(board.words[i].word);
   // A word can be found only once, so this fires once per board.
   const solvedNow = found.size === board.words.length;
-  if (solvedNow) stats.solved++;
+  if (solvedNow) {
+    stats.solved++;
+    if (!hintUsedThisBoard) stats.cleanBoards = (stats.cleanBoards || 0) + 1;
+  }
   addCoins(REWARD.word + (solvedNow ? REWARD.board : 0), cellEls[board.words[i].cells.at(-1)]);
   saveStats();
   saveState();
   render();
+  runAchievements();
   if (solvedNow) celebrate();
 }
 
@@ -503,6 +561,7 @@ function onAction() {
   if (res.hint === hint) return;
   stats.coins -= PRICE.hint;
   stats.hintsUsed = (stats.hintsUsed || 0) + 1;
+  hintUsedThisBoard = true;
   stats.coinsSpent = (stats.coinsSpent || 0) + PRICE.hint;
   showSpend(PRICE.hint);
   saveStats();
@@ -542,6 +601,7 @@ function showSpend(amount) {
 function addCoins(amount, fromEl) {
   stats.coins += amount;
   stats.coinsEarned = (stats.coinsEarned || 0) + amount;
+  if (stats.coins > (stats.maxCoins || 0)) stats.maxCoins = stats.coins;
   saveStats();
   const counter = document.getElementById('coins');
   const target = counter.getBoundingClientRect();

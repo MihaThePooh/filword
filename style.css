@@ -427,3 +427,15 @@ body.themed .action:disabled svg { opacity: .5; }
   padding: 11px 2px; border-bottom: 1px solid #eceae3; font-size: 15px; }
 .strow:last-child { border-bottom: 0; }
 .strow b { font-size: 17px; font-variant-numeric: tabular-nums; }
+
+/* Achievements screen. */
+.achlist { display: flex; flex-direction: column; }
+.arow { padding: 12px 2px; border-bottom: 1px solid #eceae3; }
+.arow:last-child { border-bottom: 0; }
+.atop { display: flex; justify-content: space-between; align-items: baseline; }
+.atop b { font-size: 16px; }
+.astars { font-size: 16px; color: #f0a500; letter-spacing: 1px; }
+.abot { display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 3px; font-size: 13px; color: var(--muted); }
+.agoal { font-variant-numeric: tabular-nums; }
+.agoal.done { color: #5cc461; font-weight: 600; }
