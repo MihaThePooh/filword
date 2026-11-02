@@ -45,7 +45,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 44;
+export const VERSION = 45;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -231,6 +231,13 @@ function runAchievements() {
     coinFx.hold(item.coins);
     showAward(item, slotEl, (from) => coinFx.fly(item.coins, from, { isHeld: true }));
   }
+}
+
+// A word already found on this board: a bonus word or a hidden one.
+function alreadyFound(word) {
+  if (bonusFound.includes(word)) return true;
+  for (const i of found.keys()) if (board.words[i].word === word) return true;
+  return false;
 }
 
 // The longest word ever found, hidden or bonus.
@@ -533,6 +540,12 @@ function onUp(e) {
     addCoins(REWARD.bonus, cellEls[lastCell]);
     toast(`Бонусное слово «${word}» +${REWARD.bonus}`);
     saveState();
+    render();
+  } else if (alreadyFound(selection.map((c) => board.letters[c]).join(''))) {
+    // Found before on this board: say so. Without it a repeat just shook,
+    // as if the game did not know the word («лом», 02.11.2026).
+    toast(`«${selection.map((c) => board.letters[c]).join('')}» уже найдено`);
+    selection = [];
     render();
   } else if (rightWordWrongPath(selection, board.letters, board.words, new Set(found.keys())) >= 0) {
     // The word is right, but it hides in other cells.
