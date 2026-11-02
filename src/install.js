@@ -6,6 +6,7 @@
 // recently, another browser) - the item turns into a hint about Chrome's menu.
 
 import { HOME_URL } from './cloud.js';
+import { show, hide, toggle } from './sheets.js';
 
 const HUB_URL = `${HOME_URL}/`;
 // "Installed" used to be kept in localStorage, and the mark outlived a
@@ -35,10 +36,10 @@ function standalone() {
 export function setupMenu() {
   const menu = document.getElementById('menu');
   const item = document.getElementById('install');
-  const close = () => { menu.hidden = true; };
+  const close = () => hide(menu);
   let offer = null;
 
-  document.getElementById('burger').addEventListener('click', () => { menu.hidden = !menu.hidden; });
+  document.getElementById('burger').addEventListener('click', () => toggle(menu));
   // A tap past the sheet closes it - no separate cross needed.
   menu.addEventListener('click', (e) => { if (e.target === menu) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
@@ -70,7 +71,7 @@ export function setupMenu() {
       iu.searchParams.delete('install');
       history.replaceState(history.state, '', iu.href);
       if (!(standalone() || known)) {
-        menu.hidden = false;
+        show(menu);
         item.classList.add('pulse');
         setTimeout(() => item.classList.remove('pulse'), 2400);
       }

@@ -21,6 +21,7 @@ import {
 } from './shop.js';
 import { statRows } from './stats.js';
 import { evaluate, achievementRows } from './achievements.js';
+import { show, hide } from './sheets.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -41,7 +42,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 37;
+export const VERSION = 38;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -176,37 +177,71 @@ function noteBoardRecord() {
 }
 
 // Achievements: ranked goals from achievements.js, opened from the menu.
+// Folded, a row shows the name, the stars and a green bar of the way to the
+// next star. A tap unfolds it like an accordion: what it is, how to get it,
+// and three stars - a tap on a star tells its goal and reward.
+let achRows = [];
+
 function setupAchievements() {
   const wrap = document.getElementById('achwrap');
+  const list = document.getElementById('achlist');
   document.getElementById('achItem').addEventListener('click', () => {
-    document.getElementById('menu').hidden = true;
+    hide(document.getElementById('menu'));
     renderAchievements();
-    wrap.hidden = false;
+    show(wrap);
   });
-  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.hidden = true; });
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) hide(wrap); });
+  list.addEventListener('click', (e) => {
+    const row = e.target.closest('.arow');
+    if (!row) return;
+    const star = e.target.closest('.astar');
+    if (star) {
+      showStarInfo(row, Number(star.dataset.k));
+      return;
+    }
+    if (e.target.closest('.ahead')) row.classList.toggle('open');
+  });
 }
 
 function renderAchievements() {
-  document.getElementById('achlist').innerHTML = achievementRows(stats).map((r) => {
-    const stars = '\u2605'.repeat(r.stars) + '\u2606'.repeat(3 - r.stars);
-    const goal = r.next === null
-      ? '<span class="agoal done">выполнено</span>'
-      : `<span class="agoal">${r.value} / ${r.next}</span>`;
-    return `<div class="arow"><div class="atop"><b>${r.name}</b>`
-      + `<span class="astars">${stars}</span></div>`
-      + `<div class="abot"><span>${r.hint}</span>${goal}</div></div>`;
+  achRows = achievementRows(stats);
+  document.getElementById('achlist').innerHTML = achRows.map((r) => {
+    const stars = '★'.repeat(r.stars) + '☆'.repeat(3 - r.stars);
+    const progress = r.next === null
+      ? 'Все три звезды собраны'
+      : `${r.value} из ${r.next} ${r.unit}`;
+    const starBtns = r.goals.map((_, k) => `<button type="button" class="astar${k < r.stars ? ' got' : ''}" `
+      + `data-k="${k}" aria-label="Звезда ${k + 1}">${k < r.stars ? '★' : '☆'}</button>`).join('');
+    return `<div class="arow" data-id="${r.id}">`
+      + `<button type="button" class="ahead"><b>${r.name}</b><span class="astars">${stars}</span></button>`
+      + `<div class="abar"><i style="width:${r.pct}%"></i></div>`
+      + '<div class="abody"><div class="ainner">'
+      + `<p class="aabout">${r.about}</p>`
+      + `<div class="aprog">${progress}</div>`
+      + `<div class="astarbtns">${starBtns}</div>`
+      + '<div class="astarinfo">Нажми на звезду — покажу, за что она и сколько даёт.</div>'
+      + '</div></div></div>';
   }).join('');
+}
+
+function showStarInfo(row, k) {
+  const r = achRows.find((x) => x.id === row.dataset.id);
+  if (!r) return;
+  row.querySelectorAll('.astar').forEach((el, i) => el.classList.toggle('sel', i === k));
+  const state = k < r.stars ? 'получена' : 'впереди';
+  row.querySelector('.astarinfo').innerHTML = `<b>${'★'.repeat(k + 1)}</b> — ${r.goals[k]} ${r.unit}`
+    + ` · <span class="acoin"><span class="coin"></span>+${r.coins[k]}</span> · ${state}`;
 }
 
 // Statistics: lifetime counters from stats.js, opened from the menu.
 function setupStats() {
   const wrap = document.getElementById('statwrap');
   document.getElementById('statsItem').addEventListener('click', () => {
-    document.getElementById('menu').hidden = true;
+    hide(document.getElementById('menu'));
     renderStats();
-    wrap.hidden = false;
+    show(wrap);
   });
-  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.hidden = true; });
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) hide(wrap); });
 }
 
 function renderStats() {
@@ -216,13 +251,13 @@ function renderStats() {
 
 function setupShop() {
   const wrap = document.getElementById('shopwrap');
-  const open = () => { renderShop(); wrap.hidden = false; };
+  const open = () => { renderShop(); show(wrap); };
   document.getElementById('shop').addEventListener('click', open);
   document.getElementById('shopItem').addEventListener('click', () => {
-    document.getElementById('menu').hidden = true;
+    hide(document.getElementById('menu'));
     open();
   });
-  wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.hidden = true; });
+  wrap.addEventListener('click', (e) => { if (e.target === wrap) hide(wrap); });
 }
 
 function renderShop() {

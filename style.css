@@ -428,14 +428,51 @@ body.themed .action:disabled svg { opacity: .5; }
 .strow:last-child { border-bottom: 0; }
 .strow b { font-size: 17px; font-variant-numeric: tabular-nums; }
 
-/* Achievements screen. */
-.achlist { display: flex; flex-direction: column; }
-.arow { padding: 12px 2px; border-bottom: 1px solid #eceae3; }
-.arow:last-child { border-bottom: 0; }
-.atop { display: flex; justify-content: space-between; align-items: baseline; }
-.atop b { font-size: 16px; }
-.astars { font-size: 16px; color: #f0a500; letter-spacing: 1px; }
-.abot { display: flex; justify-content: space-between; align-items: baseline;
-  margin-top: 3px; font-size: 13px; color: var(--muted); }
-.agoal { font-variant-numeric: tabular-nums; }
-.agoal.done { color: #5cc461; font-weight: 600; }
+/* Achievements screen: a line above, between and below every row. Folded row
+   = name, stars and a green bar to the next star; a tap unfolds the rest. */
+.achlist { display: flex; flex-direction: column; border-top: 1px solid #eceae3; }
+.arow { border-bottom: 1px solid #eceae3; }
+.ahead { display: flex; justify-content: space-between; align-items: center; width: 100%;
+  padding: 13px 2px 8px; border: 0; background: none; font: inherit; color: var(--text);
+  text-align: left; cursor: pointer; }
+.ahead b { font-size: 16px; }
+.astars { font-size: 17px; color: #f0a500; letter-spacing: 1px; }
+.abar { height: 5px; margin: 0 2px 12px; border-radius: 99px; background: #eceae3; overflow: hidden; }
+.abar i { display: block; height: 100%; border-radius: inherit; background: #5cc461;
+  transition: width .4s ease-out; }
+.abody { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
+.arow.open .abody { grid-template-rows: 1fr; }
+.ainner { overflow: hidden; }
+.aabout { margin: 0 2px 8px; font-size: 14px; line-height: 1.4; }
+.aprog { margin: 0 2px 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.astarbtns { display: flex; gap: 10px; margin: 0 2px 8px; }
+.astar { width: 40px; height: 40px; border: 1px solid #eceae3; border-radius: 10px; background: #fff;
+  font-size: 22px; line-height: 1; color: #c9c4b8; cursor: pointer; }
+.astar.got { color: #f0a500; }
+.astar.sel { border-color: #f0a500; box-shadow: 0 0 0 3px #fcebc2; }
+.astarinfo { margin: 0 2px 14px; font-size: 13px; color: var(--muted); min-height: 18px; }
+.astarinfo b { color: #f0a500; font-weight: 400; }
+.acoin { display: inline-flex; align-items: center; gap: 3px; }
+.acoin .coin { width: 12px; height: 12px; }
+@media (prefers-reduced-motion: reduce) { .abody, .abar i { transition: none; } }
+
+/* Smooth open and close. The menu slides in from the left (the burger's side),
+   bottom panels rise from below; closing plays the reverse via .closing
+   (src/sheets.js waits 200 ms, keep the leave animations at .2s). */
+.menu { animation: dim-in .2s ease-out; }
+.menu .menu-sheet { animation: menu-in .24s cubic-bezier(.2, .8, .2, 1); }
+.menu.closing { animation: dim-out .2s ease-in forwards; }
+.menu.closing .menu-sheet { animation: menu-out .2s ease-in forwards; }
+.shopwrap { animation: dim-in .22s ease-out; }
+.shopwrap .shoppanel { animation: panel-in .3s cubic-bezier(.2, .8, .2, 1); }
+.shopwrap.closing { animation: dim-out .2s ease-in forwards; }
+.shopwrap.closing .shoppanel { animation: panel-out .2s ease-in forwards; }
+@keyframes dim-in { from { background-color: rgba(26, 23, 20, 0); } }
+@keyframes dim-out { to { background-color: rgba(26, 23, 20, 0); } }
+@keyframes menu-in { from { transform: translateX(calc(-100% - 16px)); opacity: .4; } }
+@keyframes menu-out { to { transform: translateX(calc(-100% - 16px)); opacity: 0; } }
+@keyframes panel-in { from { transform: translateY(100%); } }
+@keyframes panel-out { to { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .menu, .menu .menu-sheet, .shopwrap, .shopwrap .shoppanel { animation: none !important; }
+}

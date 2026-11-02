@@ -1,0 +1,29 @@
+// Smooth open and close for the menu and the bottom panels.
+//
+// They are switched with the hidden attribute, and display:none cannot be
+// animated away: opening plays a CSS animation by itself, but closing would
+// cut off at once. So hide() first adds .closing (the "leave" animation in
+// style.css) and sets hidden only when it has played.
+
+const LEAVE_MS = 200; // must match the closing animations in style.css
+
+const reduced = () => typeof matchMedia === 'function'
+  && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+export function show(el) {
+  clearTimeout(el._leave);
+  el.classList.remove('closing');
+  el.hidden = false;
+}
+
+export function hide(el) {
+  if (el.hidden || el.classList.contains('closing')) return;
+  if (reduced()) { el.hidden = true; return; }
+  el.classList.add('closing');
+  el._leave = setTimeout(() => {
+    el.hidden = true;
+    el.classList.remove('closing');
+  }, LEAVE_MS);
+}
+
+export const toggle = (el) => (el.hidden || el.classList.contains('closing') ? show(el) : hide(el));

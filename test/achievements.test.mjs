@@ -58,3 +58,13 @@ test('achievementRows shows stars, value and next goal', () => {
   const done = achievementRows({ solved: 200 }).find((r) => r.name === 'Марафонец');
   assert.equal(done.next, null);
 });
+
+test('achievementRows: progress bar percent, goals, coins and text', () => {
+  const m = achievementRows({ solved: 25 }).find((r) => r.id === 'marathon');
+  assert.equal(m.pct, 50); // 25 of 50 toward the second star
+  assert.deepEqual(m.goals, [10, 50, 150]);
+  assert.deepEqual(m.coins, [50, 100, 150]);
+  assert.ok(m.about && m.unit);
+  const done = achievementRows({ solved: 999 }).find((r) => r.id === 'marathon');
+  assert.equal(done.pct, 100);
+});

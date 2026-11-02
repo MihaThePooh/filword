@@ -9,19 +9,28 @@
 import { shopOf } from './shop.js';
 
 export const ACHIEVEMENTS = [
-  { id: 'marathon', name: 'Марафонец', hint: 'Пройти полей',
+  { id: 'marathon', name: 'Марафонец', unit: 'полей',
+    about: 'Проходи поля до конца: засчитывается каждое закрытое поле.',
     read: (s) => s.solved || 0, stars: [10, 50, 150], coins: [50, 100, 150] },
-  { id: 'hunter', name: 'Охотник', hint: 'Слов на одном поле',
+  { id: 'hunter', name: 'Охотник', unit: 'слов на одном поле',
+    about: 'Найди много слов на одном поле: загаданные и бонусные считаются вместе. '
+      + 'Рекорд держится на бонусных словах — ищи их.',
     read: (s) => s.maxWords || 0, stars: [15, 20, 30], coins: [50, 100, 150] },
-  { id: 'bonus', name: 'Собиратель', hint: 'Бонусных слов',
+  { id: 'bonus', name: 'Собиратель', unit: 'бонусных слов',
+    about: 'Бонусное слово — настоящее слово из словаря, которое не загадано на поле. '
+      + 'За каждое ещё и монеты сверху.',
     read: (s) => s.bonusFound || 0, stars: [25, 100, 300], coins: [50, 100, 150] },
-  { id: 'erudite', name: 'Эрудит', hint: 'Открыть толкований',
+  { id: 'erudite', name: 'Эрудит', unit: 'толкований',
+    about: 'Нажимай на найденные слова и читай, что они значат.',
     read: (s) => s.defsOpened || 0, stars: [20, 100, 300], coins: [50, 100, 150] },
-  { id: 'clean', name: 'Чистое поле', hint: 'Полей без подсказок',
+  { id: 'clean', name: 'Чистое поле', unit: 'полей без подсказок',
+    about: 'Закрой поле, ни разу не нажав подсказку. Сложное — и награда больше.',
     read: (s) => s.cleanBoards || 0, stars: [1, 10, 50], coins: [100, 250, 500] },
-  { id: 'rich', name: 'Богач', hint: 'Монет накоплено разом',
+  { id: 'rich', name: 'Богач', unit: 'монет разом',
+    about: 'Накопи столько монет одновременно. Считается рекорд: траты его не отнимают.',
     read: (s) => s.maxCoins || 0, stars: [1000, 5000, 15000], coins: [50, 100, 150] },
-  { id: 'collector', name: 'Коллекционер', hint: 'Фонов куплено',
+  { id: 'collector', name: 'Коллекционер', unit: 'фонов',
+    about: 'Покупай фоны в магазине. Редкое — и награда больше.',
     read: (s) => shopOf(s).owned.length, stars: [3, 8, 13], coins: [100, 250, 500] },
 ];
 
@@ -54,17 +63,26 @@ export function evaluate(stats) {
   return { stats: { ...s, coins, awards }, awarded };
 }
 
-// Rows for the screen: name, what it asks, stars earned, value and next goal.
+// Rows for the screen: what to show folded (name, stars, progress bar) and
+// unfolded (description, numbers, each star's goal and reward).
+// pct is the way to the next star; 100 once all three are collected.
 export function achievementRows(stats) {
   const s = stats || {};
   return ACHIEVEMENTS.map((a) => {
     const stars = starsFor(a, s);
+    const value = a.read(s);
+    const next = stars < 3 ? a.stars[stars] : null;
     return {
+      id: a.id,
       name: a.name,
-      hint: a.hint,
+      about: a.about,
+      unit: a.unit,
       stars,
-      value: a.read(s),
-      next: stars < 3 ? a.stars[stars] : null,
+      value,
+      next,
+      goals: a.stars,
+      coins: a.coins,
+      pct: next === null ? 100 : Math.min(100, Math.floor((value / next) * 100)),
     };
   });
 }
