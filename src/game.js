@@ -111,6 +111,11 @@ async function init() {
   await loader.done();
   await synced;
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
+  // «Монет заработано» is counted only since 02.11.2026. Whatever is in the
+  // wallet plus what was spent must have been earned, so older saves start
+  // from that floor instead of zero.
+  const earnedFloor = (stats.coins || 0) + (stats.coinsSpent || 0);
+  if ((stats.coinsEarned || 0) < earnedFloor) stats.coinsEarned = earnedFloor;
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
   applyTheme(stats);
@@ -155,18 +160,26 @@ function setupModeSwitch() {
 let hintUsedThisBoard = false;
 
 // Pay out any newly earned achievement stars and tell the player. Safe to call
-// as often as we like: evaluate pays each star only once (stats.awards).
+// as often as we like: evaluate pays only what is not paid yet (awardCoins).
+// Rewards are earned coins too, so they count toward «Богач» - which may unlock
+// a star of its own, hence a few passes.
 function runAchievements() {
-  const res = evaluate(stats);
-  if (!res.awarded.length) return;
-  stats = res.stats;
-  if (stats.coins > (stats.maxCoins || 0)) stats.maxCoins = stats.coins;
+  const awarded = [];
+  for (let pass = 0; pass < 3; pass++) {
+    const res = evaluate(stats);
+    if (!res.awarded.length) break;
+    stats = res.stats;
+    const got = res.awarded.reduce((n, x) => n + x.coins, 0);
+    stats.coinsEarned = (stats.coinsEarned || 0) + got;
+    awarded.push(...res.awarded);
+  }
+  if (!awarded.length) return;
   shownCoins = stats.coins;
   coinEl.textContent = shownCoins;
   saveStats();
   renderHeader();
-  const last = res.awarded[res.awarded.length - 1];
-  const total = res.awarded.reduce((n, x) => n + x.coins, 0);
+  const last = awarded[awarded.length - 1];
+  const total = awarded.reduce((n, x) => n + x.coins, 0);
   toast(`\u{1F3C6} ${last.name} ${'\u2605'.repeat(last.star)} +${total}`);
 }
 
@@ -207,9 +220,6 @@ function renderAchievements() {
   achRows = achievementRows(stats);
   document.getElementById('achlist').innerHTML = achRows.map((r) => {
     const stars = '★'.repeat(r.stars) + '☆'.repeat(3 - r.stars);
-    const progress = r.next === null
-      ? 'Все три звезды собраны'
-      : `${r.value} из ${r.next} ${r.unit}`;
     const starBtns = r.goals.map((_, k) => `<button type="button" class="astar${k < r.stars ? ' got' : ''}" `
       + `data-k="${k}" aria-label="Звезда ${k + 1}">${k < r.stars ? '★' : '☆'}</button>`).join('');
     return `<div class="arow" data-id="${r.id}">`
@@ -217,7 +227,7 @@ function renderAchievements() {
       + `<div class="abar"><i style="width:${r.pct}%"></i></div>`
       + '<div class="abody"><div class="ainner">'
       + `<p class="aabout">${r.about}</p>`
-      + `<div class="aprog">${progress}</div>`
+      + `<div class="aprog">${r.progress}</div>`
       + `<div class="astarbtns">${starBtns}</div>`
       + '<div class="astarinfo">Нажми на звезду — покажу, за что она и сколько даёт.</div>'
       + '</div></div></div>';
@@ -228,9 +238,8 @@ function showStarInfo(row, k) {
   const r = achRows.find((x) => x.id === row.dataset.id);
   if (!r) return;
   row.querySelectorAll('.astar').forEach((el, i) => el.classList.toggle('sel', i === k));
-  const state = k < r.stars ? 'получена' : 'впереди';
-  row.querySelector('.astarinfo').innerHTML = `<b>${'★'.repeat(k + 1)}</b> — ${r.goals[k]} ${r.unit}`
-    + ` · <span class="acoin"><span class="coin"></span>+${r.coins[k]}</span> · ${state}`;
+  row.querySelector('.astarinfo').innerHTML = `<b>${'★'.repeat(k + 1)}</b> — ${r.goals[k]}`
+    + ` · <span class="acoin"><span class="coin"></span>+${r.coins[k]}</span>`;
 }
 
 // Statistics: lifetime counters from stats.js, opened from the menu.
@@ -636,7 +645,6 @@ function showSpend(amount) {
 function addCoins(amount, fromEl) {
   stats.coins += amount;
   stats.coinsEarned = (stats.coinsEarned || 0) + amount;
-  if (stats.coins > (stats.maxCoins || 0)) stats.maxCoins = stats.coins;
   saveStats();
   const counter = document.getElementById('coins');
   const target = counter.getBoundingClientRect();

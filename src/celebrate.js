@@ -1,3 +1,4 @@
+import { plural } from './stats.js';
 // Celebration when a board is solved: a ripple over the cells,
 // confetti, and a card with praise.
 
@@ -138,14 +139,8 @@ export function confetti() {
   requestAnimationFrame(frame);
 }
 
-// 1 слово, 2 слова, 5 слов.
-export function plural(n, one, few, many) {
-  const m10 = n % 10;
-  const m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-  return many;
-}
+// plural lives in stats.js (pure, no DOM); kept exported here for old imports.
+export { plural };
 
 // The card in the middle of the screen. Resolves when it is closed;
 // onNext is called when the player taps "Следующее поле".
