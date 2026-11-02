@@ -15,12 +15,13 @@ test('catalog: three rising goals and three coin tiers each', () => {
   }
 });
 
-test('goals and prices as agreed on 02.11.2026', () => {
+test('goals and prices as agreed on 02.11.2026 (second round)', () => {
   const by = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
   assert.deepEqual([by.marathon.stars, by.marathon.coins], [[100, 350, 1000], [300, 500, 1000]]);
   assert.deepEqual([by.hunter.stars, by.hunter.coins], [[25, 30, 35], [200, 300, 500]]);
-  assert.deepEqual(by.clean.coins, [50, 250, 700]);
-  assert.deepEqual([by.rich.stars, by.rich.coins], [[1000, 5000, 15000], [50, 500, 1000]]);
+  assert.deepEqual([by.clean.stars, by.clean.coins], [[10, 150, 500], [100, 300, 1000]]);
+  assert.deepEqual([by.rich.stars, by.rich.coins], [[5000, 15000, 30000], [300, 700, 1000]]);
+  assert.deepEqual([by.bonus.stars, by.bonus.coins], [[100, 350, 1000], [300, 700, 1500]]);
   assert.deepEqual([by.collector.stars, by.collector.coins], [[3, 10, 30], [100, 300, 1000]]);
   assert.deepEqual([by.veteran.stars, by.veteran.coins], [[1, 5, 30], [1000, 5000, 30000]]);
 });
@@ -63,10 +64,10 @@ test('old stars-paid saves: the difference is topped up, nothing taken back', ()
 });
 
 test('collector reads the shop, rich reads coins earned, veteran reads shuffles', () => {
-  const r = evaluate({ coins: 0, coinsEarned: 1000, shuffles: 1,
+  const r = evaluate({ coins: 0, coinsEarned: 5000, shuffles: 1,
     shop: { owned: ['roses', 'rug', 'chintz'], active: null } });
   assert.equal(r.stats.awardCoins.collector, 100);
-  assert.equal(r.stats.awardCoins.rich, 50);
+  assert.equal(r.stats.awardCoins.rich, 300);
   assert.equal(r.stats.awardCoins.veteran, 1000);
 });
 
