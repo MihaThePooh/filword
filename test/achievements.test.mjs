@@ -126,3 +126,10 @@ test('mergeAwards joins passes of one achievement', () => {
   assert.equal(m.length, 2);
   assert.deepEqual(m[0], { id: 'rich', name: 'Богач', from: 0, star: 2, coins: 550 });
 });
+
+test('erudite: 100/500/1000 definitions for 300/700/1500', () => {
+  const by = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
+  assert.deepEqual([by.erudite.stars, by.erudite.coins], [[100, 500, 1000], [300, 700, 1500]]);
+  assert.equal(evaluate({ coins: 0, defsOpened: 99 }).awarded.length, 0);
+  assert.equal(evaluate({ coins: 0, defsOpened: 100 }).stats.coins, 300);
+});

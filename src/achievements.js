@@ -28,7 +28,7 @@ export const ACHIEVEMENTS = [
     read: (s) => s.bonusFound || 0, stars: [25, 100, 300], coins: [50, 100, 150] },
   { id: 'erudite', name: 'Эрудит', goal: form(['толкование', 'толкования', 'толкований']),
     about: 'Нажимай на найденные слова и читай, что они значат.',
-    read: (s) => s.defsOpened || 0, stars: [20, 100, 300], coins: [50, 100, 150] },
+    read: (s) => s.defsOpened || 0, stars: [100, 500, 1000], coins: [300, 700, 1500] },
   { id: 'clean', name: 'Чистое поле', goal: (n) => `${form(['поле', 'поля', 'полей'])(n)} без подсказок`,
     about: 'Закрой поле, ни разу не нажав подсказку.',
     read: (s) => s.cleanBoards || 0, stars: [1, 10, 50], coins: [50, 250, 700] },
