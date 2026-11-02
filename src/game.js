@@ -20,7 +20,9 @@ import {
   BACKGROUNDS, bgSrc, isOwned, activeId, canBuy, buy, setActive, applyTheme,
 } from './shop.js';
 import { statRows } from './stats.js';
-import { evaluate, achievementRows } from './achievements.js';
+import { evaluate, achievementRows, mergeAwards } from './achievements.js';
+import { createCoinFx } from './coinfx.js';
+import { showAward } from './awardpop.js';
 import { show, hide } from './sheets.js';
 import { createClock } from './timer.js';
 
@@ -43,7 +45,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 39;
+export const VERSION = 40;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -75,7 +77,7 @@ let bonusFound = []; // bonus words already counted on this board
 // word (index in board.words), { b } for a bonus word. Shown under the board.
 let wordLog = [];
 let dictByWord = new Map(); // word -> dictionary entry, for bonus definitions
-let shownCoins = 0; // what the counter shows; lags behind while coins fly
+let coinFx; // the header counter: runs up coin by coin, waits for coins in the air
 let used = new Set(); // every word ever found - never shown again
 
 async function init() {
@@ -117,8 +119,8 @@ async function init() {
   // from that floor instead of zero.
   const earnedFloor = (stats.coins || 0) + (stats.coinsSpent || 0);
   if ((stats.coinsEarned || 0) < earnedFloor) stats.coinsEarned = earnedFloor;
-  shownCoins = stats.coins;
-  coinEl.textContent = shownCoins;
+  coinFx = createCoinFx({ counter: document.getElementById('coins'), number: coinEl, total: () => stats.coins });
+  coinFx.reset();
   applyTheme(stats);
   warmBackgrounds();
   countEl.textContent = '';
@@ -205,13 +207,13 @@ function runAchievements() {
     awarded.push(...res.awarded);
   }
   if (!awarded.length) return;
-  shownCoins = stats.coins;
-  coinEl.textContent = shownCoins;
   saveStats();
   renderHeader();
-  const last = awarded[awarded.length - 1];
-  const total = awarded.reduce((n, x) => n + x.coins, 0);
-  toast(`\u{1F3C6} ${last.name} ${'\u2605'.repeat(last.star)} +${total}`);
+  // The counter waits: each banner sends its coins flying when it is shown.
+  for (const item of mergeAwards(awarded)) {
+    coinFx.hold(item.coins);
+    showAward(item, slotEl, (from) => coinFx.fly(item.coins, from, { isHeld: true }));
+  }
 }
 
 // The longest word ever found, hidden or bonus.
@@ -685,8 +687,7 @@ function pulse(el) {
 // Coins spent: the counter drops at once and a "-amount" coin pill falls out
 // of it and fades, so the price is seen. Call after stats.coins is reduced.
 function showSpend(amount) {
-  shownCoins = stats.coins;
-  coinEl.textContent = shownCoins;
+  coinFx.spend(amount);
   const counter = document.getElementById('coins');
   pulse(counter);
   const box = counter.getBoundingClientRect();
@@ -704,40 +705,7 @@ function addCoins(amount, fromEl) {
   stats.coins += amount;
   stats.coinsEarned = (stats.coinsEarned || 0) + amount;
   saveStats();
-  const counter = document.getElementById('coins');
-  const target = counter.getBoundingClientRect();
-  const from = fromEl?.getBoundingClientRect();
-  const sync = () => {
-    shownCoins = stats.coins;
-    coinEl.textContent = shownCoins;
-  };
-  if (!from || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    sync();
-    return;
-  }
-  const flights = Math.min(amount, 8);
-  for (let k = 0; k < flights; k++) {
-    const coin = document.createElement('span');
-    coin.className = 'coin flying';
-    document.body.appendChild(coin);
-    const x0 = from.left + from.width / 2;
-    const y0 = from.top + from.height / 2;
-    const x1 = target.left + 10;
-    const y1 = target.top + target.height / 2;
-    coin.animate([
-      { transform: `translate(${x0}px, ${y0}px) scale(0.6)`, opacity: 0 },
-      { transform: `translate(${x0 + (Math.random() - 0.5) * 60}px, ${y0 - 40}px) scale(1.2)`, opacity: 1, offset: 0.3 },
-      { transform: `translate(${x1}px, ${y1}px) scale(0.8)`, opacity: 1 },
-    ], { duration: 700, delay: k * 70, easing: 'ease-in' }).finished.then(() => {
-      coin.remove();
-      // Each landed coin ticks the counter; the last tick lands on the exact total.
-      shownCoins = k === flights - 1 ? stats.coins : Math.min(stats.coins, shownCoins + 1);
-      coinEl.textContent = shownCoins;
-      counter.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], 200);
-    });
-  }
-  // Safety net: even if an animation is interrupted, end with the exact number.
-  setTimeout(sync, 700 + flights * 70 + 100);
+  coinFx.fly(amount, fromEl);
 }
 
 let toastTimer;
@@ -792,7 +760,6 @@ function renderHeader() {
     actionEl.innerHTML = `${BULB_SVG}<span>${left}</span>`;
     actionEl.disabled = left === 0;
   }
-  coinEl.textContent = shownCoins;
   const rank = stats.shuffles ? ` · шафл ${stats.shuffles}` : '';
   solvedEl.textContent = `Полей ${stats.solved}/${CFG.cycle}${rank}`;
 }

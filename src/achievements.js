@@ -21,7 +21,7 @@ export const ACHIEVEMENTS = [
   { id: 'hunter', name: 'Охотник', goal: (n) => `${form(['слово', 'слова', 'слов'])(n)} на одном поле`,
     about: 'Найди много слов на одном поле: загаданные и бонусные считаются вместе. '
       + 'Рекорд держится на бонусных словах — ищи их.',
-    read: (s) => s.maxWords || 0, stars: [15, 17, 20], coins: [200, 300, 500] },
+    read: (s) => s.maxWords || 0, stars: [25, 30, 35], coins: [200, 300, 500] },
   { id: 'bonus', name: 'Собиратель', goal: form(['бонусное слово', 'бонусных слова', 'бонусных слов']),
     about: 'Бонусное слово — настоящее слово из словаря, которое не загадано на поле. '
       + 'За каждое ещё и монеты сверху.',
@@ -103,15 +103,33 @@ export function evaluate(stats) {
   const awarded = [];
   for (const a of ACHIEVEMENTS) {
     const now = starsFor(a, s);
-    const due = sum(a.coins, now) - (paid[a.id] || 0);
+    const before = paid[a.id] || 0;
+    const due = sum(a.coins, now) - before;
     if (due > 0) {
       coins += due;
-      paid[a.id] = (paid[a.id] || 0) + due;
-      awarded.push({ id: a.id, name: a.name, star: now, coins: due });
+      paid[a.id] = before + due;
+      // Stars already paid for: those whose total price is covered.
+      let from = 0;
+      while (from < now && sum(a.coins, from + 1) <= before) from++;
+      awarded.push({ id: a.id, name: a.name, from, star: now, coins: due });
     }
   }
   if (!awarded.length) return { stats: s, awarded };
   return { stats: { ...s, coins, awardCoins: paid }, awarded };
+}
+
+// Several evaluate passes may pay one achievement twice («Богач» grows from
+// rewards). One entry per achievement: the lowest start, the highest star,
+// the coins added up - so the player sees one banner per achievement.
+export function mergeAwards(list) {
+  const by = new Map();
+  for (const x of list) {
+    const was = by.get(x.id);
+    if (!was) by.set(x.id, { ...x });
+    else by.set(x.id, { ...was, from: Math.min(was.from, x.from), star: Math.max(was.star, x.star),
+      coins: was.coins + x.coins });
+  }
+  return [...by.values()];
 }
 
 // Rows for the screen: what to show folded (name, stars, progress bar) and

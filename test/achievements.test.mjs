@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ACHIEVEMENTS, starsFor, evaluate, achievementRows } from '../src/achievements.js';
+import { ACHIEVEMENTS, starsFor, evaluate, achievementRows, mergeAwards } from '../src/achievements.js';
 
 const marathon = ACHIEVEMENTS.find((a) => a.id === 'marathon');
 
@@ -18,7 +18,7 @@ test('catalog: three rising goals and three coin tiers each', () => {
 test('goals and prices as agreed on 02.11.2026', () => {
   const by = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
   assert.deepEqual([by.marathon.stars, by.marathon.coins], [[100, 350, 1000], [300, 500, 1000]]);
-  assert.deepEqual([by.hunter.stars, by.hunter.coins], [[15, 17, 20], [200, 300, 500]]);
+  assert.deepEqual([by.hunter.stars, by.hunter.coins], [[25, 30, 35], [200, 300, 500]]);
   assert.deepEqual(by.clean.coins, [50, 250, 700]);
   assert.deepEqual([by.rich.stars, by.rich.coins], [[1000, 5000, 15000], [50, 500, 1000]]);
   assert.deepEqual([by.collector.stars, by.collector.coins], [[3, 10, 30], [100, 300, 1000]]);
@@ -51,7 +51,7 @@ test('several stars at once are paid together', () => {
 
 test('old stars-paid saves: the difference is topped up, nothing taken back', () => {
   // Paid under the first catalogue: hunter 1 star = 50, marathon 1 star = 50.
-  const s = { coins: 0, maxWords: 16, solved: 22, awards: { hunter: 1, marathon: 1 } };
+  const s = { coins: 0, maxWords: 26, solved: 22, awards: { hunter: 1, marathon: 1 } };
   const r = evaluate(s);
   // hunter star 1 is worth 200 now -> +150; marathon (22 < 100) owes nothing.
   assert.equal(r.stats.coins, 150);
@@ -106,4 +106,23 @@ test('Усидчивый counts hours on the boards', () => {
   assert.equal(p.stars, 1);
   assert.equal(p.progress, '2 ч 00 мин / 10 часов на полях');
   assert.deepEqual(p.goals, ['1 час на полях', '10 часов на полях', '50 часов на полях']);
+});
+
+test('awarded tells the stars before and after', () => {
+  const r = evaluate({ coins: 0, solved: 400 });
+  const m = r.awarded.find((x) => x.id === 'marathon');
+  assert.deepEqual([m.from, m.star, m.coins], [0, 2, 800]);
+  const r2 = evaluate({ ...r.stats, solved: 1000 });
+  const m2 = r2.awarded.find((x) => x.id === 'marathon');
+  assert.deepEqual([m2.from, m2.star, m2.coins], [2, 3, 1000]);
+});
+
+test('mergeAwards joins passes of one achievement', () => {
+  const m = mergeAwards([
+    { id: 'rich', name: 'Богач', from: 0, star: 1, coins: 50 },
+    { id: 'hunter', name: 'Охотник', from: 0, star: 3, coins: 1000 },
+    { id: 'rich', name: 'Богач', from: 1, star: 2, coins: 500 },
+  ]);
+  assert.equal(m.length, 2);
+  assert.deepEqual(m[0], { id: 'rich', name: 'Богач', from: 0, star: 2, coins: 550 });
 });
