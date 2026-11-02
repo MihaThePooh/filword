@@ -23,6 +23,15 @@ export const BACKGROUNDS = [
   { id: 'olive-stripes', name: 'Оливковая полоска', price: PRICE },
   { id: 'pistachio-stripes', name: 'Фисташковая полоска', price: PRICE },
   { id: 'teal-stripes', name: 'Бирюзовая полоска', price: PRICE },
+  // 02.11.2026: ковры, гжель и вышивка
+  { id: 'red-carpet', name: 'Красный ковёр', price: PRICE },
+  { id: 'medallion-rug', name: 'Ковёр с медальоном', price: PRICE },
+  { id: 'gzhel', name: 'Гжель', price: PRICE },
+  { id: 'red-embroidery', name: 'Красная вышивка', price: PRICE },
+  { id: 'star-embroidery', name: 'Вышитые звёзды', price: PRICE },
+  { id: 'ribbon-embroidery', name: 'Узорные ленты', price: PRICE },
+  { id: 'linen-embroidery', name: 'Вышивка на льне', price: PRICE },
+  { id: 'black-embroidery', name: 'Вышивка на чёрном', price: PRICE },
 ];
 
 export const bgSrc = (id) => `data/bg/${id}.webp`;
