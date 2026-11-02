@@ -303,43 +303,53 @@ body.themed { background: var(--bgimg) center center / cover no-repeat, var(--bg
 .shop svg { width: 20px; height: 20px; display: block; }
 .shop:active { transform: scale(0.94); }
 
-/* С выбранным фоном вся строка превращается в матовые плашки одной высоты.
-   Крайние (меню и подсказка) прилипают к краям экрана, внешние углы острые. */
-body.themed header { align-items: center; gap: 6px; padding-left: 0; padding-right: 0; }
-body.themed header > .burger,
-body.themed header > div:not(.coins),
-body.themed header > .coins,
-body.themed header > .shop,
-body.themed header > .action { height: 44px; }
+/* Шапка — матовые плашки одной высоты, с фоном и без (с 02.11.2026 одна
+   на всё; прежняя шапка с кнопками-кружками убрана). Крайние плашки (меню
+   и подсказка) прилипают к краям экрана, внешние углы острые.
+   Без фона плашки белые с лёгкой тенью, с фоном — матовое стекло. */
+body header { align-items: center; gap: 6px; padding-left: 0; padding-right: 0; }
+body header > .burger,
+body header > div:not(.coins),
+body header > .coins,
+body header > .shop,
+body header > .action { height: 44px; }
+body .burger,
+body header > div:not(.coins),
+body .coins,
+body .shop,
+body .action {
+  background: #fff; border: 1px solid transparent; color: var(--text);
+  box-shadow: 0 1px 3px rgba(26, 23, 20, 0.08);
+  display: flex; align-items: center; justify-content: center;
+}
 body.themed .burger,
 body.themed header > div:not(.coins),
 body.themed .coins,
 body.themed .shop,
 body.themed .action {
-  background: rgba(255,255,255,.3); border-color: transparent; color: var(--text);
+  background: rgba(255,255,255,.3); box-shadow: none;
   -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
-  display: flex; align-items: center; justify-content: center;
 }
-body.themed .burger, body.themed .solved { color: var(--text); }
-body.themed .burger {
+body .burger, body .solved { color: var(--text); }
+body .burger {
   width: 44px; border-radius: 0 12px 12px 0;
   justify-content: flex-start; padding: 0 12px 0 9px;
 }
-body.themed .burger svg { width: 18px; height: 18px; }
-body.themed header > div:not(.coins) {
+body .burger svg { width: 18px; height: 18px; }
+body header > div:not(.coins) {
   border-radius: 12px; padding: 4px 11px;
   flex-direction: column; align-items: flex-start; justify-content: center;
 }
-body.themed .coins { border-radius: 999px; padding: 0 13px; }
-body.themed .shop { border-radius: 12px; padding: 0; width: 44px; }
-body.themed .shop svg { width: 26px; height: 26px; }
-body.themed .action {
+body .coins { border-radius: 999px; padding: 0 13px; }
+body .shop { border-radius: 12px; padding: 0; width: 44px; }
+body .shop svg { width: 26px; height: 26px; }
+body .action {
   border-radius: 12px 0 0 12px; gap: 5px;
   justify-content: flex-end; padding: 0 9px 0 12px;
   font-size: 15px; font-weight: 600;
 }
-body.themed .action svg { width: 19px; height: 19px; }
-body.themed .action:disabled svg { opacity: .5; }
+body .action svg { width: 19px; height: 19px; }
+body .action:disabled svg { opacity: .5; }
 
 /* Нижняя панель магазина */
 .shopwrap[hidden] { display: none; }
