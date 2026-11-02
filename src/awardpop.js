@@ -2,15 +2,16 @@
 // «Собери слово по-другому» shows) with the name, three stars - the new ones
 // pop in one by one with sparkles - and the reward pill, from which the coins
 // fly to the counter. Several at once wait in a queue, one banner at a time.
+// Timings doubled on 02.11.2026: at first it flew by too fast to follow.
 
 const queue = [];
 let busy = false;
 
-const POP_IN = 350; // banner bounces in, then the first new star
-const STAR_GAP = 320; // between new stars
-const COINS_AFTER = 300; // reward pill shows, then the coins take off
-const STAY = 1500; // after the coins leave, before the banner fades
-const FADE = 250;
+const POP_IN = 700; // banner bounces in, then the first new star
+const STAR_GAP = 640; // between new stars
+const COINS_AFTER = 600; // reward pill shows, then the coins take off
+const STAY = 3000; // after the coins leave, before the banner fades
+const FADE = 500;
 
 // item: { name, from, star, coins } from mergeAwards; anchor: the board slot;
 // onCoins(el): called once, when the coins should fly out of el.
