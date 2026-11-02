@@ -183,6 +183,11 @@ function runAchievements() {
   toast(`\u{1F3C6} ${last.name} ${'\u2605'.repeat(last.star)} +${total}`);
 }
 
+// The longest word ever found, hidden or bonus.
+function noteLongest(word) {
+  if ([...word].length > [...(stats.longestWord || '')].length) stats.longestWord = word;
+}
+
 // Record of words on one board: hidden and bonus words found here together.
 function noteBoardRecord() {
   const onBoard = found.size + bonusFound.length;
@@ -255,7 +260,8 @@ function setupStats() {
 
 function renderStats() {
   document.getElementById('statlist').innerHTML = statRows(stats)
-    .map((r) => `<div class="strow"><span>${r.label}</span><b>${r.value}</b></div>`).join('');
+    .map((r) => `<div class="strow"><span>${r.label}${r.sub ? `<small>${r.sub}</small>` : ''}</span>`
+      + `<b>${r.value}</b></div>`).join('');
 }
 
 function setupShop() {
@@ -463,6 +469,7 @@ function onUp(e) {
     const lastCell = selection.at(-1);
     bonusFound.push(word);
     stats.bonusFound = (stats.bonusFound || 0) + 1;
+    noteLongest(word);
     noteBoardRecord();
     runAchievements();
     wordLog.push({ b: word });
@@ -554,6 +561,7 @@ addEventListener('resize', updateFades);
 function markFound(i) {
   found.set(i, PALETTE[found.size % PALETTE.length]);
   stats.wordsFound = (stats.wordsFound || 0) + 1;
+  noteLongest(board.words[i].word);
   noteBoardRecord();
   wordLog.push({ i });
   renderWords(true);

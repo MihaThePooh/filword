@@ -7,7 +7,10 @@ const byLabel = (rows, label) => rows.find((r) => r.label === label).value;
 test('statRows reads counters and tolerates a missing/empty save', () => {
   const rows = statRows(undefined);
   assert.ok(rows.length >= 8);
-  for (const r of rows) assert.equal(r.value, 0);
+  for (const r of rows) {
+    if (r.label === 'Самое длинное слово') assert.equal(r.value, '—');
+    else assert.equal(r.value, 0);
+  }
 });
 
 test('statRows reflects the stored counters', () => {
@@ -24,7 +27,7 @@ test('statRows reflects the stored counters', () => {
   assert.equal(byLabel(rows, 'Подсказок взято'), 3);
   assert.equal(byLabel(rows, 'Монет заработано'), 200);
   assert.equal(byLabel(rows, 'Монет потрачено'), 150);
-  assert.equal(byLabel(rows, 'Перетасовок'), 1);
+  assert.equal(byLabel(rows, 'Шафлов сделано'), 1);
   assert.equal(byLabel(rows, 'Фонов куплено'), 2);
 });
 
@@ -37,4 +40,12 @@ test('negative or junk counters read as zero', () => {
 
 test('STAT_DEFAULTS are all zero', () => {
   for (const v of Object.values(STAT_DEFAULTS)) assert.equal(v, 0);
+});
+
+test('longest word: length with the right form and the word itself', () => {
+  const row = statRows({ longestWord: 'ПЕРЕПЛЕТЕНИЕ' }).find((r) => r.label === 'Самое длинное слово');
+  assert.equal(row.value, '12 букв');
+  assert.equal(row.sub, 'переплетение');
+  const two = statRows({ longestWord: 'КОТ' }).find((r) => r.label === 'Самое длинное слово');
+  assert.equal(two.value, '3 буквы');
 });
