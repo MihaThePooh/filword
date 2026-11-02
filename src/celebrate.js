@@ -1,3 +1,4 @@
+import { fmtClock } from './timer.js';
 import { plural } from './stats.js';
 // Celebration when a board is solved: a ripple over the cells,
 // confetti, and a card with praise.
@@ -144,7 +145,7 @@ export { plural };
 
 // The card in the middle of the screen. Resolves when it is closed;
 // onNext is called when the player taps "Следующее поле".
-export function showWinCard({ solved, words }, onNext) {
+export function showWinCard({ solved, words, ms }, onNext) {
   const overlay = document.createElement('div');
   overlay.className = 'win';
   const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
@@ -156,7 +157,8 @@ export function showWinCard({ solved, words }, onNext) {
       <div class="win-hint">Тапни мимо, чтобы посмотреть слова</div>
     </div>`;
   overlay.querySelector('.win-title').textContent = praise;
-  overlay.querySelector('.win-stats').textContent = `Поле №${solved} · ${words} ${plural(words, 'слово', 'слова', 'слов')}`;
+  const time = ms ? ` · ${fmtClock(ms)}` : '';
+  overlay.querySelector('.win-stats').textContent = `Поле №${solved} · ${words} ${plural(words, 'слово', 'слова', 'слов')}${time}`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('show'));
 

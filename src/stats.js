@@ -4,6 +4,7 @@
 // directly (markFound, bonus, hint, purchase) and they ride along the save.
 
 import { shopOf } from './shop.js';
+import { fmtClock, fmtGap, fmtSpan } from './timer.js';
 
 // 1 слово, 2 слова, 5 слов.
 export function plural(n, one, few, many) {
@@ -21,6 +22,9 @@ export const STAT_DEFAULTS = {
 };
 
 const n = (v) => (typeof v === 'number' && v > 0 ? Math.floor(v) : 0);
+
+// A time record, or a dash until there is one.
+const timeOr = (ms, fmt) => (n(ms) ? fmt(ms) : '—');
 
 // The longest word ever found: its length, and the word itself under the label.
 function longestRow(word) {
@@ -46,6 +50,11 @@ export function statRows(stats) {
     { label: 'Монет заработано', value: n(s.coinsEarned) },
     { label: 'Монет потрачено', value: n(s.coinsSpent) },
     { label: 'Шафлов сделано', value: n(s.shuffles) },
+    { label: 'Время на полях', value: n(s.totalMs) ? fmtSpan(s.totalMs) : '—' },
+    { label: 'Самое быстрое поле', value: timeOr(s.fastestBoard, fmtClock) },
+    { label: 'Самое долгое поле', value: timeOr(s.slowestBoard, fmtClock) },
+    { label: 'Самая короткая пауза между словами', value: timeOr(s.fastestGap, fmtGap) },
+    { label: 'Самая долгая пауза между словами', value: timeOr(s.slowestGap, fmtGap) },
     { label: 'Фонов куплено', value: shopOf(s).owned.length },
   ];
 }

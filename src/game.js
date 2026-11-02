@@ -22,6 +22,7 @@ import {
 import { statRows } from './stats.js';
 import { evaluate, achievementRows } from './achievements.js';
 import { show, hide } from './sheets.js';
+import { createClock } from './timer.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -42,7 +43,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 38;
+export const VERSION = 39;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -129,7 +130,8 @@ async function init() {
   const saved = loadJson(STORAGE_KEY);
   // The whole board is saved, not just its seed: the next board depends on
   // which words are used up, so a seed alone would not rebuild the same one.
-  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus, saved.log);
+  if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus, saved.log,
+    saved.time ?? { ms: 0, last: null, timed: false });
   else newBoard();
   // Pay out anything already earned (progress from before achievements, or a
   // save synced from another phone) so stars and coins are up to date at once.
@@ -158,6 +160,35 @@ function setupModeSwitch() {
 // from the menu; the catalogue and the economy live in shop.js.
 // A board solved without a single hint counts toward the «Чистое поле» award.
 let hintUsedThisBoard = false;
+
+// Board time (timer.js): runs while the board is in play and on screen.
+// lastFindAt - board time of the previous hidden word, for pauses between words.
+// boardTimed - false for a board resumed from a save made before the timer:
+// its earlier time is unknown, so it cannot set speed records.
+const clock = createClock();
+let lastFindAt = null;
+let boardTimed = true;
+
+// Fold the time run so far into «Время на полях».
+function tickClock() { stats.totalMs = (stats.totalMs || 0) + clock.lap(); }
+function stopClock() { stats.totalMs = (stats.totalMs || 0) + clock.pause(); }
+function runClock() {
+  if (board && found.size < board.words.length && document.visibilityState === 'visible') clock.start();
+}
+
+// Leaving the screen pauses the board and saves the time; coming back resumes.
+function onScreenChange() {
+  if (document.visibilityState === 'visible') { runClock(); return; }
+  if (!clock.running()) return;
+  stopClock();
+  saveStats();
+  saveState();
+}
+document.addEventListener('visibilitychange', onScreenChange);
+addEventListener('pagehide', onScreenChange);
+
+const keepMin = (key, v) => { if (!(stats[key] > 0) || v < stats[key]) stats[key] = v; };
+const keepMax = (key, v) => { if (!(stats[key] > v)) stats[key] = v; };
 
 // Pay out any newly earned achievement stars and tell the player. Safe to call
 // as often as we like: evaluate pays only what is not paid yet (awardCoins).
@@ -374,8 +405,12 @@ function doShuffle() {
 // Taps wait until the wave has passed.
 let busy = false;
 let busyTimer;
-function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog) {
-  hintUsedThisBoard = false;
+function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, savedTime) {
+  if (board) stopClock(); // the board being left keeps its time in the total
+  hintUsedThisBoard = savedTime?.hinted ?? false;
+  clock.reset(savedTime?.ms ?? 0);
+  lastFindAt = savedTime?.last ?? null;
+  boardTimed = savedTime ? savedTime.timed !== false : true;
   sheet.close();
   bonusFound = savedBonus ?? [];
   board = nextBoard;
@@ -395,6 +430,7 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog) {
   busyTimer = setTimeout(() => {
     busy = false;
     render();
+    runClock();
   }, wave);
 }
 
@@ -568,9 +604,22 @@ function markFound(i) {
   used.add(board.words[i].word);
   // A word can be found only once, so this fires once per board.
   const solvedNow = found.size === board.words.length;
+  tickClock();
+  const at = clock.elapsed();
+  if (lastFindAt !== null) {
+    keepMin('fastestGap', at - lastFindAt);
+    keepMax('slowestGap', at - lastFindAt);
+  }
+  lastFindAt = at;
   if (solvedNow) {
+    stopClock();
     stats.solved++;
     if (!hintUsedThisBoard) stats.cleanBoards = (stats.cleanBoards || 0) + 1;
+    if (boardTimed) {
+      keepMin('fastestBoard', at);
+      keepMax('slowestBoard', at);
+      if (!hintUsedThisBoard) keepMin('fastestClean', at);
+    }
   }
   addCoins(REWARD.word + (solvedNow ? REWARD.board : 0), cellEls[board.words[i].cells.at(-1)]);
   saveStats();
@@ -590,7 +639,8 @@ function celebrate() {
     setTimeout(() => {
       if (board !== solvedBoard) return;
       confetti();
-      showWinCard({ solved: stats.solved, words: board.words.length }, () => newBoard());
+      showWinCard({ solved: stats.solved, words: board.words.length, ms: boardTimed ? clock.elapsed() : 0 },
+        () => newBoard());
     }, wave + 500);
   }, 250); // the colour of the last word settles first
 }
@@ -748,7 +798,8 @@ function renderHeader() {
 }
 
 function saveState() {
-  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound, log: wordLog });
+  const time = { ms: clock.elapsed(), last: lastFindAt, timed: boardTimed, hinted: hintUsedThisBoard };
+  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound, log: wordLog, time });
 }
 
 function saveStats() {

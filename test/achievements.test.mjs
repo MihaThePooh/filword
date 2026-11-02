@@ -8,7 +8,9 @@ test('catalog: three rising goals and three coin tiers each', () => {
   for (const a of ACHIEVEMENTS) {
     assert.equal(a.stars.length, 3, a.id);
     assert.equal(a.coins.length, 3, a.id);
-    assert.ok(a.stars[0] < a.stars[1] && a.stars[1] < a.stars[2], a.id);
+    // «at least» goals rise, «at most» (time) goals fall
+    const [x, y, z] = a.less ? [...a.stars].reverse() : a.stars;
+    assert.ok(x < y && y < z, a.id);
     assert.ok(a.about && a.goal, a.id);
   }
 });
@@ -81,4 +83,27 @@ test('achievementRows: progress text with the right word form, bar, goals', () =
   const done = achievementRows({ solved: 5000 }).find((r) => r.id === 'marathon');
   assert.equal(done.pct, 100);
   assert.equal(done.progress, 'Все три звезды собраны');
+});
+
+test('Молния: the faster clean board, the more stars; no record - no star', () => {
+  const l = ACHIEVEMENTS.find((a) => a.id === 'lightning');
+  assert.equal(starsFor(l, {}), 0);
+  assert.equal(starsFor(l, { fastestClean: 400000 }), 0); // 6:40
+  assert.equal(starsFor(l, { fastestClean: 200000 }), 1); // 3:20
+  assert.equal(starsFor(l, { fastestClean: 100000 }), 2); // 1:40
+  assert.equal(starsFor(l, { fastestClean: 80000 }), 3); // 1:20
+  const row = achievementRows({ fastestClean: 200000 }).find((r) => r.id === 'lightning');
+  assert.equal(row.progress, 'Лучшее: 3:20 · цель 3:00');
+  assert.equal(row.pct, 90);
+  assert.equal(row.goals[2], 'поле за 1:30 без подсказок');
+  const none = achievementRows({}).find((r) => r.id === 'lightning');
+  assert.equal(none.pct, 0);
+});
+
+test('Усидчивый counts hours on the boards', () => {
+  const rows = achievementRows({ totalMs: 2 * 3600000 });
+  const p = rows.find((r) => r.id === 'patient');
+  assert.equal(p.stars, 1);
+  assert.equal(p.progress, '2 ч 00 мин / 10 часов на полях');
+  assert.deepEqual(p.goals, ['1 час на полях', '10 часов на полях', '50 часов на полях']);
 });

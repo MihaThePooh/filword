@@ -10,6 +10,7 @@
 
 import { shopOf } from './shop.js';
 import { plural } from './stats.js';
+import { fmtClock, fmtSpan } from './timer.js';
 
 const form = (forms) => (n) => `${n} ${plural(n, ...forms)}`;
 
@@ -31,6 +32,14 @@ export const ACHIEVEMENTS = [
   { id: 'clean', name: 'Чистое поле', goal: (n) => `${form(['поле', 'поля', 'полей'])(n)} без подсказок`,
     about: 'Закрой поле, ни разу не нажав подсказку.',
     read: (s) => s.cleanBoards || 0, stars: [1, 10, 50], coins: [50, 250, 700] },
+  { id: 'lightning', name: 'Молния', less: true, show: fmtClock,
+    goal: (ms) => `поле за ${fmtClock(ms)} без подсказок`,
+    about: 'Закрой поле быстро и ни разу не нажав подсказку. Время идёт, только пока поле на экране.',
+    read: (s) => s.fastestClean || 0, stars: [300000, 180000, 90000], coins: [100, 300, 700] },
+  { id: 'patient', name: 'Усидчивый', show: fmtSpan,
+    goal: (ms) => { const h = ms / 3600000; return `${h} ${plural(h, 'час', 'часа', 'часов')} на полях`; },
+    about: 'Сколько всего времени ты провёл на полях. Считается, только пока игра на экране.',
+    read: (s) => s.totalMs || 0, stars: [3600000, 36000000, 180000000], coins: [100, 300, 700] },
   { id: 'rich', name: 'Богач', goal: form(['монета', 'монеты', 'монет']),
     about: 'Считается общее количество заработанных монет за всё время.',
     read: (s) => s.coinsEarned || 0, stars: [1000, 5000, 15000], coins: [50, 500, 1000] },
@@ -62,10 +71,26 @@ function paidOf(s) {
   return paid;
 }
 
+// Has a value reached a goal? Most goals are «at least», time ones are «at most»
+// (less: true) and need a record to exist at all.
+const reached = (a, v, t) => (a.less ? v > 0 && v <= t : v >= t);
+
 // How many stars (0..3) the current value reaches.
 export function starsFor(a, stats) {
   const v = a.read(stats || {});
-  return a.stars.reduce((count, t) => count + (v >= t ? 1 : 0), 0);
+  return a.stars.reduce((count, t) => count + (reached(a, v, t) ? 1 : 0), 0);
+}
+
+// Progress line and bar for the screen.
+function progressOf(a, value, next) {
+  if (next === null) return { progress: 'Все три звезды собраны', pct: 100 };
+  const show = a.show || String;
+  if (a.less) {
+    return value
+      ? { progress: `Лучшее: ${show(value)} · цель ${show(next)}`, pct: Math.min(100, Math.floor((next / value) * 100)) }
+      : { progress: `Пока нет · цель ${show(next)}`, pct: 0 };
+  }
+  return { progress: `${show(value)} / ${a.goal(next)}`, pct: Math.min(100, Math.floor((value / next) * 100)) };
 }
 
 // Pay what newly reached stars are worth. Never mutates the input.
@@ -107,8 +132,7 @@ export function achievementRows(stats) {
       next,
       coins: a.coins,
       goals: a.stars.map(a.goal),
-      progress: next === null ? 'Все три звезды собраны' : `${value} / ${a.goal(next)}`,
-      pct: next === null ? 100 : Math.min(100, Math.floor((value / next) * 100)),
+      ...progressOf(a, value, next),
     };
   });
 }

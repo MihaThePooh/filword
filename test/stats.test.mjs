@@ -8,8 +8,8 @@ test('statRows reads counters and tolerates a missing/empty save', () => {
   const rows = statRows(undefined);
   assert.ok(rows.length >= 8);
   for (const r of rows) {
-    if (r.label === 'Самое длинное слово') assert.equal(r.value, '—');
-    else assert.equal(r.value, 0);
+    // records that do not exist yet (longest word, times) show a dash
+    assert.ok(r.value === 0 || r.value === '—', r.label);
   }
 });
 
@@ -48,4 +48,14 @@ test('longest word: length with the right form and the word itself', () => {
   assert.equal(row.sub, 'переплетение');
   const two = statRows({ longestWord: 'КОТ' }).find((r) => r.label === 'Самое длинное слово');
   assert.equal(two.value, '3 буквы');
+});
+
+test('time rows: total, fastest/slowest board and pauses', () => {
+  const rows = statRows({ totalMs: 185 * 60000, fastestBoard: 107000, slowestBoard: 1260000,
+    fastestGap: 2300, slowestGap: 95000 });
+  assert.equal(byLabel(rows, 'Время на полях'), '3 ч 05 мин');
+  assert.equal(byLabel(rows, 'Самое быстрое поле'), '1:47');
+  assert.equal(byLabel(rows, 'Самое долгое поле'), '21:00');
+  assert.equal(byLabel(rows, 'Самая короткая пауза между словами'), '2,3 с');
+  assert.equal(byLabel(rows, 'Самая долгая пауза между словами'), '1:35');
 });
