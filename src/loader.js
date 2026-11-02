@@ -1,6 +1,6 @@
 // Loading screen inside the board itself: ФИЛВОРД / БЕЗ / РЕКЛАМЫ! is written
-// in the empty cells, dim at first. Letters light up one by one as the
-// dictionary downloads; when it is all here the game swaps them for the real
+// in the empty cells, dim at first. Letters light up one by one as the game
+// loads (see STAGES); when it is all here the game swaps them for the real
 // board with a wave.
 
 import { MODES } from './mode.js';
@@ -17,9 +17,24 @@ export function phraseCells(size, lines = LINES) {
     [...text].map((ch, i) => ({ cell: row * size + col + i, ch, line })));
 }
 
-// How many letters to light for a download fraction (0..1).
+// How many letters to light for a fraction of the loading (0..1). The last
+// letter waits for the real end: until then something is still loading, and
+// a fully lit phrase that just sits there looks like a hang (02.11.2026).
 export function litCount(fraction, total) {
-  return Math.max(0, Math.min(total, Math.round(fraction * total)));
+  const n = Math.max(0, Math.min(total, Math.round(fraction * total)));
+  return fraction < 1 ? Math.min(n, total - 1) : n;
+}
+
+// Loading is more than the dictionary download: after it the dictionary is
+// unpacked and indexed, and the player's save comes from the server (over a
+// VPN that can take seconds). Each stage owns its share of the phrase, so the
+// letters stop exactly where the loading stops.
+export const STAGES = { download: 0.5, prepare: 0.25, save: 0.25 };
+
+// parts: { stage: 0..1 } -> 0..1 for the whole loading.
+export function overall(parts) {
+  return Object.entries(STAGES)
+    .reduce((sum, [k, w]) => sum + w * Math.max(0, Math.min(1, parts[k] || 0)), 0);
 }
 
 export function showLoader(cellEls, size, lines = LINES) {

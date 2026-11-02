@@ -9,7 +9,7 @@ import {
 import { emptyHint, nextHint, hintedCells, hintsLeft } from './hint.js';
 import { createSheet } from './sheet.js';
 import { loadDictionary, loadBonusWords, loadBonusDefs } from './dict-loader.js';
-import { showLoader } from './loader.js';
+import { showLoader, overall } from './loader.js';
 import { REWARD, PRICE, isBonusWord } from './rewards.js';
 import { shuffle, cycleDone } from './progress.js';
 import { MODES, currentMode, setMode } from './mode.js';
@@ -45,7 +45,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 42;
+export const VERSION = 43;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -101,18 +101,35 @@ async function init() {
     return el;
   });
   const loader = showLoader(cellEls, BOARD_SIZE, CFG.phrase);
+  // The phrase shows the whole loading, not just the download (loader.js STAGES).
+  const parts = { download: 0, prepare: 0, save: 0 };
+  const report = () => loader.progress(overall(parts));
+  synced.then(() => { parts.save = 1; report(); });
   try {
-    const dict = await loadDictionary((f) => loader.progress(f), CFG.dict);
+    const dict = await loadDictionary((f) => {
+      // Size unknown: count it half done once bytes flow.
+      parts.download = f ?? Math.max(parts.download, 0.5);
+      report();
+    }, CFG.dict);
+    parts.download = 1;
+    parts.prepare = 0.5; // unpacked and parsed
+    report();
+    // Let the letters paint before indexing holds the page for a moment.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     index = indexDictionary(dict);
     dictByWord = new Map(dict.map((e) => [e.w, e]));
+    parts.prepare = 1;
+    report();
   } catch (err) {
     await loader.done();
     countEl.textContent = 'Не удалось загрузить словарь';
     console.error(err);
     return;
   }
-  await loader.done();
+  // The save first, then the last letters: the phrase is lit to the end only
+  // when the game can really start.
   await synced;
+  await loader.done();
   stats = { solved: 0, used: [], coins: 0, ...loadJson(STATS_KEY) };
   // «Монет заработано» is counted only since 02.11.2026. Whatever is in the
   // wallet plus what was spent must have been earned, so older saves start
