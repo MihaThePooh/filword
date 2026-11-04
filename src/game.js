@@ -17,7 +17,7 @@ import { ripple, confetti, showWinCard, showShuffleCard } from './celebrate.js';
 import { setupMenu } from './install.js';
 import * as cloud from './cloud.js';
 import {
-  BACKGROUNDS, bgSrc, isOwned, activeId, canBuy, buy, setActive, applyTheme,
+  BACKGROUNDS, bgSrc, isOwned, activeId, canBuy, buy, setActive, applyTheme, tryOn,
 } from './shop.js';
 import { statRows } from './stats.js';
 import { evaluate, achievementRows, mergeAwards } from './achievements.js';
@@ -45,7 +45,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 48;
+export const VERSION = 49;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -85,6 +85,7 @@ async function init() {
   setupMenu();
   setupModeSwitch();
   setupShop();
+  setupTryOn();
   setupStats();
   setupAchievements();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
@@ -347,7 +348,7 @@ function renderShop() {
       : `<div class="spr${canBuy(stats, b.id) ? '' : ' cant'}"><span class="coin"></span>${b.price}</div>`;
     tile.innerHTML = `<div class="sthumb" style="background-image:url('${bgSrc(b.id)}')"></div>`
       + `<div class="snm">${b.name}</div>${price}`;
-    tile.addEventListener('click', () => onShopTile(b.id, tile));
+    tile.addEventListener('click', () => onShopTile(b.id));
     shelf.appendChild(tile);
   }
   // Own photo with a soft filter - a later feature, shown so the shop feels whole.
@@ -360,25 +361,73 @@ function renderShop() {
   shelf.appendChild(photo);
 }
 
-// Tap a background: wear or take off an owned one; buy a new one if coins allow.
-function onShopTile(id, tile) {
-  if (isOwned(stats, id)) {
-    stats = setActive(stats, activeId(stats) === id ? null : id);
-  } else {
-    const next = buy(stats, id);
-    // The message sits over the tapped card, on top of the shop sheet: a plain
-    // toast lives behind the panel and is all but hidden.
-    if (!next) { shopNote(tile, 'Не хватает монет'); return; }
-    stats.coinsSpent = (stats.coinsSpent || 0) + (stats.coins - next.coins);
-    next.coinsSpent = stats.coinsSpent;
-    showSpend(stats.coins - next.coins);
-    stats = next;
-    runAchievements();
-  }
+// Tap a background: wear or take off an owned one; a new one is tried on first.
+function onShopTile(id) {
+  if (!isOwned(stats, id)) { startTryOn(id); return; }
+  stats = setActive(stats, activeId(stats) === id ? null : id);
   saveStats();
   applyTheme(stats);
   render();
   renderShop();
+}
+
+// Try-on: the shop steps aside, the background goes on the whole game and a bar
+// at the bottom offers «Купить» or «Назад». Nothing is saved until bought, so a
+// reload or leaving the game simply drops the try-on. The phone's Back button
+// works as «Назад»: opening pushes a history step, Back pops it.
+let trying = null; // id of the background on try, or null
+let shopScroll = 0; // where the shop was scrolled, to come back to the same card
+function startTryOn(id) {
+  const info = tryOn(stats, id);
+  if (!info || trying) return;
+  trying = id;
+  shopScroll = document.querySelector('#shopwrap .shoppanel').scrollTop;
+  hide(document.getElementById('shopwrap'));
+  applyTheme(stats, id);
+  const bar = document.getElementById('tryon');
+  bar.querySelector('.tname').textContent = info.name;
+  bar.querySelector('.tprice').innerHTML = `<span class="coin"></span>${info.price}`;
+  const buyBtn = document.getElementById('tryBuy');
+  buyBtn.disabled = info.short > 0;
+  buyBtn.textContent = info.short > 0 ? `Не хватает ${info.short}` : 'Купить';
+  show(bar);
+  history.pushState({ tryon: id }, '');
+}
+
+// Leave the try-on. bought - the background stays and the game goes on;
+// otherwise the old background comes back and the shop opens where it was.
+function endTryOn(bought) {
+  if (!trying) return;
+  trying = null;
+  hide(document.getElementById('tryon'));
+  applyTheme(stats);
+  if (bought) return;
+  show(document.getElementById('shopwrap'));
+  // display:none may forget the scroll; put the shop back at the tried card.
+  document.querySelector('#shopwrap .shoppanel').scrollTop = shopScroll;
+}
+
+function buyTried() {
+  const id = trying;
+  const next = id && buy(stats, id);
+  if (!next) return;
+  stats.coinsSpent = (stats.coinsSpent || 0) + (stats.coins - next.coins);
+  next.coinsSpent = stats.coinsSpent;
+  showSpend(stats.coins - next.coins);
+  stats = next;
+  runAchievements();
+  saveStats();
+  render();
+  renderShop();
+  endTryOn(true);
+  history.back(); // drop the try-on history step; popstate finds nothing to do
+  toast(`Фон «${tryOn(stats, id).name}» теперь твой`);
+}
+
+function setupTryOn() {
+  document.getElementById('tryBuy').addEventListener('click', buyTried);
+  document.getElementById('tryBack').addEventListener('click', () => history.back());
+  addEventListener('popstate', () => { if (trying) endTryOn(false); });
 }
 
 // A short message centred over a shop card, above the shop sheet.

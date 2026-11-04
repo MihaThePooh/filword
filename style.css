@@ -383,6 +383,40 @@ body .action:disabled svg { opacity: .5; }
   background: linear-gradient(135deg, #cdbdad, #9fb0a0); filter: saturate(.7) brightness(1.08);
 }
 
+/* Try-on bar: the background is on the whole game, the shop is put away.
+   A clear layer over the game swallows taps, so trying on cannot play. */
+.tryon[hidden] { display: none; }
+.tryon {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  padding: 0 12px calc(16px + env(safe-area-inset-bottom));
+}
+.tcard {
+  width: 100%; max-width: 456px; border-radius: 16px; background: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+.tinfo {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 12px 16px; font-size: 16px; font-weight: 600; color: var(--text);
+}
+.tprice { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.tbtns {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 0 16px 14px;
+}
+.tbtns button {
+  height: 48px; border-radius: 12px; border: 1px solid var(--line); background: #fff;
+  font: inherit; font-size: 16px; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.tbtns .tbuy { background: #5cc461; border-color: #5cc461; color: #fff; }
+.tbtns .tbuy:disabled { background: #eceae3; border-color: #eceae3; color: #b0826f; cursor: default; }
+.tbtns button:active:not(:disabled) { transform: scale(0.97); }
+.tryon { animation: fade-in .2s ease-out; }
+.tryon .tcard { animation: panel-in .3s cubic-bezier(.2, .8, .2, 1); }
+.tryon.closing .tcard { animation: panel-out .2s ease-in forwards; }
+@keyframes fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .tryon, .tryon * { animation: none !important; } }
+
 /* A short note centred over the tapped shop card, above the shop sheet. */
 .shopnote {
   position: fixed; z-index: 70; transform: translate(-50%, -50%);

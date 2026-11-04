@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BACKGROUNDS, bgSrc, shopOf, isOwned, activeId, canBuy, buy, setActive, mergeOwned,
+  BACKGROUNDS, bgSrc, shopOf, isOwned, activeId, canBuy, buy, setActive, mergeOwned, tryOn,
 } from '../src/shop.js';
 
 test('catalog: real backgrounds with a price and a webp file', () => {
@@ -65,4 +65,16 @@ test('owned backgrounds survive when another device wins the merge', async () =>
   const merged = { ...serverStats, shop: { owned: mergeOwned([], boughtHere), active: null } };
   assert.ok(merged.shop.owned.includes('roses'));
   assert.equal(merged.coins, 640); // server's coins kept, background kept
+});
+
+test('tryOn: name, price and coins still missing', () => {
+  const rich = { coins: 800, shop: { owned: [], active: null } };
+  assert.deepEqual(tryOn(rich, 'roses'),
+    { id: 'roses', name: 'Винтажные розы', price: 700, owned: false, short: 0 });
+  assert.equal(tryOn({ coins: 523 }, 'roses').short, 177);
+  assert.equal(tryOn(undefined, 'roses').short, 700);
+  assert.equal(tryOn({ coins: 0, shop: { owned: ['roses'] } }, 'roses').owned, true);
+  assert.equal(tryOn(rich, 'nope'), null);
+  // trying on spends nothing and changes nothing
+  assert.deepEqual(rich, { coins: 800, shop: { owned: [], active: null } });
 });

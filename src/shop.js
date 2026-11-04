@@ -84,12 +84,23 @@ export function mergeOwned(a, b) {
   return [...new Set([...(a || []), ...(b || [])])];
 }
 
+// Try-on before buying: what the bar under a previewed background shows.
+// short - coins still missing (0 when the background can be bought now).
+export function tryOn(stats, id) {
+  const item = byId.get(id);
+  if (!item) return null;
+  const coins = stats?.coins ?? 0;
+  return { id, name: item.name, price: item.price, owned: isOwned(stats, id),
+    short: Math.max(0, item.price - coins) };
+}
+
 // --- the one part that touches the page ---
 
 // Paint the chosen background on the whole app, or clear it. Safe without a DOM.
-export function applyTheme(stats) {
+// previewId - a background being tried on, painted instead of the worn one.
+export function applyTheme(stats, previewId = null) {
   if (typeof document === 'undefined') return;
-  const id = activeId(stats);
+  const id = (previewId && byId.has(previewId)) ? previewId : activeId(stats);
   document.body.classList.toggle('themed', Boolean(id));
   if (id) document.body.style.setProperty('--bgimg', `url("${bgSrc(id)}")`);
   else document.body.style.removeProperty('--bgimg');
