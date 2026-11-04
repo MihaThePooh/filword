@@ -2,6 +2,8 @@
 // Opens by tap on a found word (on the board or in the list under it);
 // closes by tap anywhere outside the card or by Escape.
 
+import { opened, closed } from './backstack.js';
+
 const GHOST_CLICK_MS = 400;
 
 export function createSheet() {
@@ -39,11 +41,13 @@ export function createSheet() {
     sheet.scrollTop = 0;
     document.body.classList.add('sheet-open');
     openedAt = performance.now();
+    opened(sheet, close);
   }
 
   let closedAt = -Infinity;
   let openedAt = -Infinity;
   function close() {
+    closed(sheet);
     if (document.body.classList.contains('sheet-open')) closedAt = performance.now();
     document.body.classList.remove('sheet-open');
   }
@@ -60,6 +64,12 @@ export function createSheet() {
   // closing the card at once. Clicks right after opening are not closes.
   backdrop.addEventListener('click', () => {
     if (performance.now() - openedAt >= GHOST_CLICK_MS) close();
+  });
+  // The tap that opened the card may lift its finger right over the link
+  // (a letter low on the board sits under it): that click must not open
+  // Викисловарь. Only a deliberate tap on the open card does.
+  src.addEventListener('click', (e) => {
+    if (performance.now() - openedAt < GHOST_CLICK_MS) e.preventDefault();
   });
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape') close();

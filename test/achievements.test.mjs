@@ -134,3 +134,14 @@ test('erudite: 100/500/1000 definitions for 300/700/1500', () => {
   assert.equal(evaluate({ coins: 0, defsOpened: 99 }).awarded.length, 0);
   assert.equal(evaluate({ coins: 0, defsOpened: 100 }).stats.coins, 300);
 });
+
+test('Снайпер: boards without bonus words, 1/3/7 for 300/500/700', () => {
+  const a = ACHIEVEMENTS.find((x) => x.id === 'sniper');
+  assert.deepEqual([a.stars, a.coins], [[1, 3, 7], [300, 500, 700]]);
+  assert.equal(starsFor(a, {}), 0);
+  assert.equal(starsFor(a, { sniperBoards: 3 }), 2);
+  const { stats, awarded } = evaluate({ coins: 0, sniperBoards: 7 });
+  const got = awarded.find((x) => x.id === 'sniper');
+  assert.equal(got.coins, 1500);
+  assert.ok(stats.coins >= 1500);
+});

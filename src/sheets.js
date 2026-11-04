@@ -5,18 +5,23 @@
 // cut off at once. So hide() first adds .closing (the "leave" animation in
 // style.css) and sets hidden only when it has played.
 
+import { opened, closed } from './backstack.js';
+
 const LEAVE_MS = 200; // must match the closing animations in style.css
 
 const reduced = () => typeof matchMedia === 'function'
   && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function show(el) {
+// onBack - what the phone's Back button does while it is open (default: hide).
+export function show(el, onBack = () => hide(el)) {
   clearTimeout(el._leave);
   el.classList.remove('closing');
   el.hidden = false;
+  opened(el, onBack);
 }
 
 export function hide(el) {
+  closed(el);
   if (el.hidden || el.classList.contains('closing')) return;
   if (reduced()) { el.hidden = true; return; }
   el.classList.add('closing');

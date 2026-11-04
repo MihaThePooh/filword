@@ -45,7 +45,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 49;
+export const VERSION = 50;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -374,7 +374,7 @@ function onShopTile(id) {
 // Try-on: the shop steps aside, the background goes on the whole game and a bar
 // at the bottom offers «Купить» or «Назад». Nothing is saved until bought, so a
 // reload or leaving the game simply drops the try-on. The phone's Back button
-// works as «Назад»: opening pushes a history step, Back pops it.
+// works as «Назад» (backstack.js through show).
 let trying = null; // id of the background on try, or null
 let shopScroll = 0; // where the shop was scrolled, to come back to the same card
 function startTryOn(id) {
@@ -390,8 +390,7 @@ function startTryOn(id) {
   const buyBtn = document.getElementById('tryBuy');
   buyBtn.disabled = info.short > 0;
   buyBtn.textContent = info.short > 0 ? `Не хватает ${info.short}` : 'Купить';
-  show(bar);
-  history.pushState({ tryon: id }, '');
+  show(bar, () => endTryOn(false));
 }
 
 // Leave the try-on. bought - the background stays and the game goes on;
@@ -420,14 +419,12 @@ function buyTried() {
   render();
   renderShop();
   endTryOn(true);
-  history.back(); // drop the try-on history step; popstate finds nothing to do
   toast(`Фон «${tryOn(stats, id).name}» теперь твой`);
 }
 
 function setupTryOn() {
   document.getElementById('tryBuy').addEventListener('click', buyTried);
-  document.getElementById('tryBack').addEventListener('click', () => history.back());
-  addEventListener('popstate', () => { if (trying) endTryOn(false); });
+  document.getElementById('tryBack').addEventListener('click', () => endTryOn(false));
 }
 
 // A short message centred over a shop card, above the shop sheet.
@@ -696,6 +693,7 @@ function markFound(i) {
     stopClock();
     stats.solved++;
     if (!hintUsedThisBoard) stats.cleanBoards = (stats.cleanBoards || 0) + 1;
+    if (!bonusFound.length) stats.sniperBoards = (stats.sniperBoards || 0) + 1;
     if (boardTimed) {
       keepMin('fastestBoard', at);
       keepMax('slowestBoard', at);
