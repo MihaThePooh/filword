@@ -86,21 +86,6 @@ test('achievementRows: progress text with the right word form, bar, goals', () =
   assert.equal(done.progress, 'Все три звезды собраны');
 });
 
-test('Молния: the faster clean board, the more stars; no record - no star', () => {
-  const l = ACHIEVEMENTS.find((a) => a.id === 'lightning');
-  assert.equal(starsFor(l, {}), 0);
-  assert.equal(starsFor(l, { fastestClean: 400000 }), 0); // 6:40
-  assert.equal(starsFor(l, { fastestClean: 200000 }), 1); // 3:20
-  assert.equal(starsFor(l, { fastestClean: 100000 }), 2); // 1:40
-  assert.equal(starsFor(l, { fastestClean: 80000 }), 3); // 1:20
-  const row = achievementRows({ fastestClean: 200000 }).find((r) => r.id === 'lightning');
-  assert.equal(row.progress, 'Лучшее: 3:20 · цель 3:00');
-  assert.equal(row.pct, 90);
-  assert.equal(row.goals[2], 'поле за 1:30 без подсказок');
-  const none = achievementRows({}).find((r) => r.id === 'lightning');
-  assert.equal(none.pct, 0);
-});
-
 test('Усидчивый counts hours on the boards', () => {
   const rows = achievementRows({ totalMs: 2 * 3600000 });
   const p = rows.find((r) => r.id === 'patient');

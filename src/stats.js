@@ -52,6 +52,7 @@ export function statRows(stats) {
     { label: 'Шафлов сделано', value: n(s.shuffles) },
     { label: 'Время на полях', value: n(s.totalMs) ? fmtSpan(s.totalMs) : '—' },
     { label: 'Самое быстрое поле', value: timeOr(s.fastestBoard, fmtClock) },
+    { label: 'Самое быстрое поле без подсказок', value: timeOr(s.fastestClean, fmtClock) },
     { label: 'Самое долгое поле', value: timeOr(s.slowestBoard, fmtClock) },
     { label: 'Самая короткая пауза между словами', value: timeOr(s.fastestGap, fmtGap) },
     { label: 'Самая долгая пауза между словами', value: timeOr(s.slowestGap, fmtGap) },
