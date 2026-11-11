@@ -10,6 +10,15 @@
 
 const PRICE = 700;
 export const BACKGROUNDS = [
+  { id: 'red-chintz', name: 'Красный ситец', price: PRICE },
+  { id: 'golden-painting', name: 'Золотая роспись', price: PRICE },
+  { id: 'floral-gzhel', name: 'Цветочная гжель', price: PRICE },
+  { id: 'khokhloma', name: 'Хохлома', price: PRICE },
+  { id: 'red-scrolls', name: 'Красные вензеля', price: PRICE },
+  { id: 'night-flowers', name: 'Ночные цветы', price: PRICE },
+  { id: 'folk-painting', name: 'Народная роспись', price: PRICE },
+  { id: 'black-painting', name: 'Роспись на чёрном', price: PRICE },
+  { id: 'scarlet-branch', name: 'Алая ветвь', price: PRICE },
   { id: 'blue-floral', name: 'Синие цветы', price: PRICE },
   { id: 'burgundy-damask', name: 'Бордовый дамаск', price: PRICE },
   { id: 'roses', name: 'Винтажные розы', price: PRICE },
