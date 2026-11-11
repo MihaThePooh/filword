@@ -10,6 +10,7 @@
 
 const PRICE = 700;
 export const BACKGROUNDS = [
+  { id: 'burgundy-damask', name: 'Бордовый дамаск', price: PRICE },
   { id: 'roses', name: 'Винтажные розы', price: PRICE },
   { id: 'rug', name: 'Персидский ковёр', price: PRICE },
   { id: 'chintz', name: 'Ситец в цветочек', price: PRICE },

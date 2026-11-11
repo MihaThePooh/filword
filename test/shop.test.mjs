@@ -1,14 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import {
   BACKGROUNDS, bgSrc, shopOf, isOwned, activeId, canBuy, buy, setActive, mergeOwned, tryOn,
 } from '../src/shop.js';
 
 test('catalog: real backgrounds with a price and a webp file', () => {
   assert.ok(BACKGROUNDS.length >= 2);
+  assert.equal(new Set(BACKGROUNDS.map((b) => b.id)).size, BACKGROUNDS.length);
   for (const b of BACKGROUNDS) {
     assert.ok(b.id && b.name && b.price > 0, b.id);
     assert.equal(bgSrc(b.id), `data/bg/${b.id}.webp`);
+    assert.ok(existsSync(new URL('../' + bgSrc(b.id), import.meta.url)), 'missing image: ' + b.id);
   }
 });
 
