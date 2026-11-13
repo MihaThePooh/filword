@@ -1,3 +1,4 @@
+import { keepSkins } from './skins.js';
 // Sign-in through the hub and the player's save on the server.
 //
 // The game still plays from localStorage: it is the working copy and what
@@ -165,13 +166,15 @@ function adopt(save) {
   // Backgrounds bought on this phone must not vanish when another phone's save
   // wins the merge: the one with more progress may carry fewer of them. So the
   // owned lists are joined, and the server keeps everything else it decided.
-  const boughtHere = shopOf(read(STATS_KEY)).owned;
+  const previous = read(STATS_KEY);
+  const previousKids = read(KIDS_STATS_KEY);
+  const boughtHere = shopOf(previous).owned;
   const [state, kidsState] = unpack(save.state);
   const [stats, kidsStats] = unpack(save.stats);
   write(STATE_KEY, state);
-  write(STATS_KEY, stats && withOwned(stats, boughtHere));
+  write(STATS_KEY, stats && keepSkins(withOwned(stats, boughtHere), previous));
   write(KIDS_STATE_KEY, kidsState);
-  write(KIDS_STATS_KEY, kidsStats);
+  write(KIDS_STATS_KEY, kidsStats && keepSkins(withOwned(kidsStats, shopOf(previousKids).owned), previousKids));
   write(VERSION_KEY, save.version);
   write(DIRTY_KEY, null);
 }

@@ -1,3 +1,5 @@
+import { planCats, revealCat } from './cat-collection.js';
+import { CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
 // Game screen: draws the board, follows the finger, colours found words.
 
 import {
@@ -45,7 +47,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 55;
+export const VERSION = 56;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -86,6 +88,7 @@ async function init() {
   setupModeSwitch();
   setupShop();
   setupTryOn();
+  document.addEventListener('visibilitychange', () => document.body.classList.toggle('cat-resting', document.hidden));
   setupStats();
   setupAchievements();
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
@@ -95,9 +98,12 @@ async function init() {
   navigator.storage?.persist?.().catch(() => {});
   gridEl.style.setProperty('--size', BOARD_SIZE);
   // The cells live for the whole session: boards change only their letters.
-  cellEls = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, () => {
+  cellEls = Array.from({ length: BOARD_SIZE * BOARD_SIZE }, (_, index) => {
     const el = document.createElement('div');
     el.className = 'cell';
+    el.dataset.catIndex = index;
+    el.style.setProperty('--cat-delay', `${-(index * 1.73 % 13)}s`);
+    el.style.setProperty('--cat-duration', `${9 + index % 7 * .61}s`);
     gridEl.appendChild(el);
     return el;
   });
@@ -140,6 +146,7 @@ async function init() {
   coinFx = createCoinFx({ counter: document.getElementById('coins'), number: coinEl, total: () => stats.coins });
   coinFx.reset();
   applyTheme(stats);
+  applySkin(stats);
   warmBackgrounds();
   countEl.textContent = '';
   // Kids get bonus coins only for words of their own dictionary: the full
@@ -151,7 +158,7 @@ async function init() {
   // The whole board is saved, not just its seed: the next board depends on
   // which words are used up, so a seed alone would not rebuild the same one.
   if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus, saved.log,
-    saved.time ?? { ms: 0, last: null, timed: false });
+    saved.time ?? { ms: 0, last: null, timed: false }, saved.cats);
   else newBoard();
   // Pay out anything already earned (progress from before achievements, or a
   // save synced from another phone) so stars and coins are up to date at once.
@@ -266,6 +273,7 @@ function setupAchievements() {
     renderAchievements();
     show(wrap);
   });
+  document.getElementById('shopBack').addEventListener('click', () => { shopSection = 'home'; renderShop(); });
   wrap.addEventListener('click', (e) => { if (e.target === wrap) hide(wrap); });
   list.addEventListener('click', (e) => {
     const row = e.target.closest('.arow');
@@ -324,7 +332,7 @@ function renderStats() {
 
 function setupShop() {
   const wrap = document.getElementById('shopwrap');
-  const open = () => { renderShop(); show(wrap); };
+  const open = () => { shopSection = 'home'; renderShop(); show(wrap); };
   document.getElementById('shop').addEventListener('click', open);
   document.getElementById('shopItem').addEventListener('click', () => {
     hide(document.getElementById('menu'));
@@ -333,9 +341,24 @@ function setupShop() {
   wrap.addEventListener('click', (e) => { if (e.target === wrap) hide(wrap); });
 }
 
+let shopSection = 'home';
 function renderShop() {
   const shelf = document.getElementById('shelf');
   shelf.innerHTML = '';
+  const title = document.getElementById('shopTitle');
+  title.textContent = shopSection === 'home' ? 'Магазин' : shopSection === 'cats' ? 'Котики' : 'Фоны';
+  document.getElementById('shopBack').hidden = shopSection === 'home';
+  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. Собирай коллекцию: котики иногда появляются на одной букве найденного слова. На поле каждый котик встречается только один раз.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
+  if (shopSection === 'home') {
+    for (const [section,name] of [['backgrounds','Фоны'],['cats','Котики']]) {
+      const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'sitem category-item'; tile.dataset.section = section;
+      tile.innerHTML = (section === 'backgrounds' ? `<div class="sthumb" style="background-image:url('${bgSrc('blue-floral')}')"></div>` : '<div class="sthumb cat-thumb"><div class="cell shop-cat-cell"></div></div>') + `<div class="snm">${name}</div>`;
+      tile.addEventListener('click', () => { shopSection = section; renderShop(); document.querySelector('#shopwrap .shoppanel').scrollTop = 0; });
+      shelf.appendChild(tile); if (section === 'cats') paintCatSample(tile.querySelector('.shop-cat-cell'),0);
+    }
+    return;
+  }
+  if (shopSection === 'cats') { renderSkinShop(shelf); return; }
   const active = activeId(stats);
   for (const b of BACKGROUNDS) {
     const owned = isOwned(stats, b.id);
@@ -361,6 +384,25 @@ function renderShop() {
   shelf.appendChild(photo);
 }
 
+function renderSkinShop(shelf) {
+  const classic = document.createElement('button'); classic.type = 'button'; classic.className = 'classic-cells-button'; classic.dataset.skin = 'classic';
+  classic.textContent = activeSkin(stats) ? 'Вернуть обычные клетки' : 'Сейчас обычные клетки';
+  classic.addEventListener('click', () => { stats = wearSkin(stats,null); applySkin(stats); saveStats(); render(); renderShop(); }); shelf.appendChild(classic);
+  for (const index of catShopOrder()) {
+    const item = CELL_SKINS[index];
+    const owned = ownsSkin(stats,item.id);
+    const tile = document.createElement('button'); tile.type = 'button'; tile.dataset.skin = item.id;
+    tile.className = `sitem skin-item${owned ? ' owned' : ''}${owned && activeSkin(stats) ? ' on' : ''}`;
+    tile.innerHTML = '<div class="sthumb cat-thumb"><div class="cell shop-cat-cell"></div></div>'
+      + `<div class="snm">${item.name}</div><div class="spr">` + (owned ? (activeSkin(stats) ? 'в коллекции' : 'выбрать') : '<span class="coin"></span>500') + '</div>';
+    tile.addEventListener('click', () => {
+      if (!owned) { startTryOn(item.id,'skin'); return; }
+      stats = wearSkin(stats,item.id); applySkin(stats); saveStats(); render(); renderShop();
+    });
+    shelf.appendChild(tile); paintCatSample(tile.querySelector('.shop-cat-cell'),index);
+  }
+}
+
 // Tap a background: wear or take off an owned one; a new one is tried on first.
 function onShopTile(id) {
   if (!isOwned(stats, id)) { startTryOn(id); return; }
@@ -375,15 +417,18 @@ function onShopTile(id) {
 // at the bottom offers «Купить» or «Назад». Nothing is saved until bought, so a
 // reload or leaving the game simply drops the try-on. The phone's Back button
 // works as «Назад» (backstack.js through show).
+let tryingKind = 'background';
 let trying = null; // id of the background on try, or null
 let shopScroll = 0; // where the shop was scrolled, to come back to the same card
-function startTryOn(id) {
-  const info = tryOn(stats, id);
+function startTryOn(id, kind = 'background') {
+  const info = kind === 'skin' ? trySkin(stats, id) : tryOn(stats, id);
   if (!info || trying) return;
   trying = id;
+  tryingKind = kind;
   shopScroll = document.querySelector('#shopwrap .shoppanel').scrollTop;
   hide(document.getElementById('shopwrap'));
-  applyTheme(stats, id);
+  if (kind === 'skin') { applySkin(stats, id); render(); }
+  else applyTheme(stats, id);
   const bar = document.getElementById('tryon');
   bar.querySelector('.tname').textContent = info.name;
   bar.querySelector('.tprice').innerHTML = `<span class="coin"></span>${info.price}`;
@@ -400,6 +445,8 @@ function endTryOn(bought) {
   trying = null;
   hide(document.getElementById('tryon'));
   applyTheme(stats);
+  applySkin(stats);
+  render();
   if (bought) return;
   show(document.getElementById('shopwrap'));
   // display:none may forget the scroll; put the shop back at the tried card.
@@ -408,18 +455,25 @@ function endTryOn(bought) {
 
 function buyTried() {
   const id = trying;
-  const next = id && buy(stats, id);
+  const info = tryingKind === 'skin' ? trySkin(stats, id) : tryOn(stats, id);
+  const next = id && (tryingKind === 'skin' ? buySkin(stats, id) : buy(stats, id));
   if (!next) return;
   stats.coinsSpent = (stats.coinsSpent || 0) + (stats.coins - next.coins);
   next.coinsSpent = stats.coinsSpent;
   showSpend(stats.coins - next.coins);
   stats = next;
+  if (tryingKind === 'skin') {
+    const remaining = board.words.map((_,i)=>i).filter(i=>!found.has(i));
+    const unused = skinsOf(stats).owned.filter(id=>!boardCats.placed.some(([,cat])=>cat===id));
+    boardCats.plan = planCats(remaining.length, unused).map(([i,id])=>[remaining[i],id]);
+    saveState();
+  }
   runAchievements();
   saveStats();
   render();
   renderShop();
   endTryOn(true);
-  toast(`Фон «${tryOn(stats, id).name}» теперь твой`);
+  toast(`${tryingKind === 'skin' ? 'Котик' : 'Фон'} «${info.name}» теперь твой`);
 }
 
 function setupTryOn() {
@@ -477,7 +531,8 @@ function doShuffle() {
 // Taps wait until the wave has passed.
 let busy = false;
 let busyTimer;
-function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, savedTime) {
+let boardCats = { plan: [], placed: [] };
+function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, savedTime, savedCats) {
   if (board) stopClock(); // the board being left keeps its time in the total
   hintUsedThisBoard = savedTime?.hinted ?? false;
   clock.reset(savedTime?.ms ?? 0);
@@ -486,6 +541,7 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, saved
   sheet.close();
   bonusFound = savedBonus ?? [];
   board = nextBoard;
+  boardCats = savedCats?.plan && savedCats?.placed ? savedCats : { plan: planCats(board.words.length, skinsOf(stats).owned), placed: [] };
   found = new Map([...(savedFound ?? [])].map(([i, c]) => [i, brighter(c)]));
   // Boards saved before the list existed: hidden words first, then bonus ones.
   wordLog = savedLog ?? [...found.keys()].map((i) => ({ i })).concat(bonusFound.map((b) => ({ b })));
@@ -495,6 +551,7 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, saved
   saveState();
   renderHeader();
   const shown = board;
+  gridEl.classList.toggle('cat-selecting', selection.length > 0);
   const paint = cellPainter();
   busy = true;
   const wave = ripple(cellEls, board.size, undefined, (cell) => { if (board === shown) paint(cell); });
@@ -673,6 +730,7 @@ wordsEl.addEventListener('scroll', updateFades, { passive: true });
 addEventListener('resize', updateFades);
 
 function markFound(i) {
+  revealCat(boardCats, i, board.words[i].cells);
   found.set(i, PALETTE[found.size % PALETTE.length]);
   stats.wordsFound = (stats.wordsFound || 0) + 1;
   noteLongest(board.words[i].word);
@@ -801,6 +859,7 @@ function toast(text) {
 }
 
 function render() {
+  gridEl.classList.toggle('cat-selecting', selection.length > 0);
   const paint = cellPainter();
   cellEls.forEach((_, cell) => paint(cell));
   renderHeader();
@@ -815,12 +874,13 @@ function cellPainter() {
   const hinted = new Set(hintList);
   return (cell) => {
     const el = cellEls[cell];
-    if (el.textContent !== board.letters[cell]) el.textContent = board.letters[cell];
+    const catId = boardCats.placed.find(([at]) => at === cell)?.[1] ?? null;
+    paintLetter(el, board.letters[cell], catId);
     el.classList.remove('dim');
     el.classList.toggle('picked', picked.has(cell));
     el.classList.toggle('hinted', hinted.has(cell));
     el.classList.toggle('hint-start', cell === hintList[0]);
-    el.style.background = picked.has(cell) ? '' : (colour[cell] ?? '');
+    el.style.background = el.classList.contains('cat-cell') ? '' : picked.has(cell) ? '' : (colour[cell] ?? '');
   };
 }
 
@@ -843,7 +903,7 @@ function renderHeader() {
 
 function saveState() {
   const time = { ms: clock.elapsed(), last: lastFindAt, timed: boardTimed, hinted: hintUsedThisBoard };
-  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound, log: wordLog, time });
+  saveJson(STORAGE_KEY, { board, found: [...found], hint, bonus: bonusFound, log: wordLog, time, cats: boardCats });
 }
 
 function saveStats() {

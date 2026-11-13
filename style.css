@@ -569,3 +569,167 @@ body.awarding .toast { opacity: 0; }
   .award, .award-star.new, .award-gain, .award-star i { animation: none; }
   .award-star.new { color: #f0a500; }
 }
+
+/* A quiet illustrated companion around each letter. The board geometry never moves. */
+.shop-heading { grid-column: 1 / -1; margin: 10px 0 0; font-size: 16px; text-align: left; }
+.skin-thumb { background: #f6f5ee; display: grid; place-items: center; overflow: hidden; }
+.cat-thumb { background: radial-gradient(ellipse at 50% 45%, #fff9e6, #f1ebde); }
+.skin-sample { position: relative; display: block; width: 110px; height: 110px; font-size: 42px; --cat-delay: -1s; --cat-duration: 10s; }
+.classic-sample { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 12px; background: var(--cell); font-size: 36px; }
+.kitten { position: absolute; inset: 0; display: block; pointer-events: none; }
+.cat-body, .cat-head, .cat-tail { position: absolute; display: block; background-repeat: no-repeat; background-size: contain; }
+.cat-body { left: 21%; top: 34%; width: 68%; aspect-ratio: 565 / 547; background-image: var(--cat-body-art, url('data/skins/cat-body.webp')); transform-origin: 50% 100%; animation: cat-breathe var(--cat-duration, 7s) ease-in-out var(--cat-delay, 0s) infinite; }
+.cat-tail { left: 12%; top: 37%; width: 30%; aspect-ratio: 298 / 548; background-image: var(--cat-tail-art, url('data/skins/cat-tail.webp')); transform-origin: 65% 92%; animation: cat-tail var(--cat-duration, 7s) ease-in-out var(--cat-delay, 0s) infinite; }
+.cat-head { left: 22%; top: -1%; width: 66%; aspect-ratio: 564 / 481; transform-origin: 50% 90%; animation: cat-nuzzle var(--cat-duration, 7s) ease-in-out var(--cat-delay, 0s) infinite; }
+.cat-face, .cat-ear { position: absolute; inset: 0; background: var(--cat-head-art, url('data/skins/cat-head.webp')) no-repeat center / contain; }
+.cat-face { clip-path: polygon(0 36%, 36% 36%, 36% 0, 64% 0, 64% 36%, 100% 36%, 100% 100%, 0 100%); }
+.cat-ear { animation: cat-ear var(--cat-duration, 10s) ease-in-out var(--cat-delay, 0s) infinite; }
+.ear-left { clip-path: polygon(0 0, 38% 0, 38% 40%, 0 40%); transform-origin: 28% 36%; --ear-turn: -9deg; }
+.ear-right { clip-path: polygon(62% 0, 100% 0, 100% 40%, 62% 40%); transform-origin: 72% 36%; --ear-turn: 7deg; animation-direction: reverse; }
+.cat-eye { position: absolute; top: 52%; width: 16%; height: 16%; border-radius: 48% 48% 47% 47%; background: radial-gradient(ellipse at 50% 42%, #362215 42%, #905423 67%, #271d15 80%); transform-origin: 50% 55%; animation: cat-blink 12s linear var(--cat-delay, 0s) infinite; }
+.eye-left { left: 25%; transform: rotate(-5deg); }
+.eye-right { right: 25%; }
+.cat-eye i { position: absolute; width: 32%; height: 32%; border-radius: 50%; top: 14%; left: 18%; background: #fff9e9; box-shadow: 3px 3px 0 -1px #fff9e9; animation: cat-gaze var(--cat-duration, 10s) ease-in-out var(--cat-delay, 0s) infinite; }
+.cell-letter { position: absolute; left: 10%; right: 0; top: 68%; transform: translateY(-50%); text-align: center; z-index: 2; color: #382417; font-size: .93em; font-weight: 650; line-height: 1; pointer-events: none; }
+.cat-skin .cell.cat-cell { position: relative; isolation: isolate; border-radius: 10px; background: transparent; }
+.cat-skin .cell.cat-cell.picked { background: #cce9f7; box-shadow: inset 0 0 0 2px #368bc3; }
+.cat-skin .cell.cat-cell.picked .cell-letter { color: #173d61; }
+.cat-skin .cell.cat-cell.hinted { box-shadow: inset 0 0 0 2px #e0a040; background-color: #fff1cc; }
+.cat-skin .cell.cat-cell.hint-start { background-color: #ffe4a6; }
+.cat-skin .cell .cat-eye { box-shadow: 0 -1px 1px #8c52232b; }
+.grid.cat-selecting .kitten *, body.cat-resting .kitten *, body.sheet-open .grid .kitten *, body:has(.shopwrap:not([hidden])) .grid .kitten * { animation-play-state: paused; }
+/* A short sequence with rests: curious glance, stretch, affectionate nuzzle.
+   Translations are percentages of the illustrated part, never the letter or hitbox. */
+@keyframes cat-breathe {
+  0%, 12%, 48%, 78%, 100% { transform: translateY(0) rotate(0); }
+  24% { transform: translateY(-1%) rotate(-.8deg); }
+  32% { transform: translateY(-2.5%) rotate(.7deg); }
+  61% { transform: translateY(-1.1%) rotate(.5deg); }
+  68% { transform: translateY(-.4%) rotate(-.5deg); }
+}
+@keyframes cat-nuzzle {
+  0%, 10%, 45%, 80%, 100% { transform: translate(0, 0) rotate(0); }
+  18% { transform: translate(-1%, -.8%) rotate(-5deg); }
+  25% { transform: translate(1%, -1.5%) rotate(4deg); }
+  32% { transform: translate(0, -3.5%) rotate(1deg); }
+  57% { transform: translate(1.2%, .5%) rotate(5deg); }
+  65% { transform: translate(-.8%, 1.2%) rotate(-4deg); }
+  72% { transform: translate(0, .5%) rotate(1.5deg); }
+}
+@keyframes cat-tail {
+  0%, 12%, 46%, 80%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-10deg); }
+  28% { transform: rotate(12deg); }
+  36% { transform: rotate(-7deg); }
+  56% { transform: rotate(14deg); }
+  64% { transform: rotate(-12deg); }
+  72% { transform: rotate(6deg); }
+}
+@keyframes cat-ear {
+  0%, 16%, 23%, 55%, 63%, 100% { transform: rotate(0); }
+  19%, 59% { transform: rotate(var(--ear-turn)); }
+}
+@keyframes cat-gaze {
+  0%, 10%, 38%, 80%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-25%); }
+  25% { transform: translateX(25%); }
+  57%, 65% { transform: translateX(18%); }
+}
+@keyframes cat-blink { 0%, 90%, 94%, 100% { transform: scaleY(1); } 91.5%, 92% { transform: scaleY(.07); } }
+@media (prefers-reduced-motion: reduce) { .kitten * { animation: none !important; } }
+
+/* A little cat colony: real pose drawings plus differently styled articulated kittens. */
+.kitten { --coat: none; }
+.coat-ginger { --coat: none; }
+.coat-cream { --coat: saturate(.38) brightness(1.22); }
+.coat-silver { --coat: none; }
+.coat-chocolate { --coat: saturate(.6) brightness(.70); }
+.coat-snow { --coat: none; }
+.coat-smoke { --coat: brightness(.76); }
+.coat-sand { --coat: saturate(.48) sepia(.18) brightness(1.10); }
+.coat-cinnamon { --coat: saturate(.8) sepia(.2) brightness(.88); }
+.kitten > .cat-body, .kitten > .cat-tail, .kitten .cat-face, .kitten .cat-ear { filter: var(--coat); }
+/* The letter plaque keeps its light colour even on dark-coated kittens. */
+.cat-skin .cell-letter::before, .skin-sample .cell-letter::before {
+  content: ''; position: absolute; z-index: -1; left: 24%; right: 24%; top: 50%; aspect-ratio: 1; transform: translateY(-50%);
+  background: radial-gradient(ellipse at 40% 25%, #fff5e1, #f5dfb7); border-radius: 50%; box-shadow: inset 0 0 0 1px #debf8c55;
+}
+.pose-curious .cat-head { rotate: -7deg; translate: 1% -1%; }
+.pose-curious .cat-eye { height: 19%; width: 17%; }
+.pose-curious .cat-tail { left: 10%; rotate: -8deg; }
+.pose-wink .eye-right { animation-name: cat-wink; }
+.pose-wink .cat-head { rotate: 5deg; }
+.pose-sleepy .cat-eye { height: 9%; top: 55%; border-radius: 50%; animation-name: cat-drowsy; }
+.pose-sleepy .cat-head { rotate: -4deg; translate: 0 2%; animation-name: cat-doze; }
+.pose-sleepy .cat-tail { animation-duration: 18s; }
+.ears-1 .ear-left { rotate: -5deg; }
+.ears-2 .ear-right { rotate: 5deg; }
+.paws-1 .cat-body { rotate: -1.8deg; }
+.paws-2 .cat-body { rotate: 1.8deg; }
+.cat-nose { position: absolute; width: 7%; height: 5%; top: 68.6%; left: 46.5%; background: #d77f6d; clip-path: polygon(5% 10%,95% 10%,50% 95%); border-radius: 35%; }
+.nose-1 .cat-nose { background: #754438; }
+.nose-2 .cat-nose { background: #e0a392; }
+.cat-portrait { position: absolute; inset: 0; transform-origin: 55% 68%; animation: cat-full-breathe var(--cat-duration, 11s) ease-in-out var(--cat-delay, 0s) infinite; }
+.pose-sleep .cat-portrait { --cat-art: url('data/skins/cat-sleep.webp'); animation-name: cat-sleep; }
+.pose-stretch .cat-portrait { --cat-art: url('data/skins/cat-stretch.webp'); animation-name: cat-stretch; }
+.pose-hang .cat-portrait { --cat-art: url('data/skins/cat-hang.webp'); transform-origin: 50% 4%; animation-name: cat-hang; }
+.pose-play .cat-portrait { --cat-art: url('data/skins/cat-play.webp'); animation-name: cat-play; }
+@keyframes cat-wink { 0%, 9%, 25%, 63%, 80%, 100% { transform: scaleY(1); } 14%, 20%, 70%, 75% { transform: scaleY(.08); } }
+@keyframes cat-drowsy { 0%, 30%, 75%, 100% { transform: scaleY(.6); } 40%, 65% { transform: scaleY(.08); } }
+@keyframes cat-doze { 0%, 15%, 80%, 100% { transform: rotate(0); } 40%, 60% { transform: rotate(-5deg) translateY(2%); } }
+@keyframes cat-sleep { 0%,100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+@keyframes cat-stretch { 0%,15%,85%,100% { transform: rotate(0); } 36% { transform: rotate(-4deg) translateY(-1%); } 55% { transform: rotate(2deg); } }
+@keyframes cat-hang { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes cat-play { 0%,12%,78%,100% { transform: rotate(0); } 27% { transform: rotate(-4deg) translateY(-2%); } 42% { transform: rotate(4deg); } 57% { transform: rotate(-2deg); } }
+.skin-colony { display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; height: 100%; padding: 8px; gap: 2px; }
+.skin-colony .skin-sample { width: 100%; height: 100%; font-size: 29px; }
+
+/* Natural-coat sprites retain pink skin and pads; no global grayscale recolouring. */
+.coat-silver, .coat-smoke { --cat-body-art: url('data/skins/cat-silver-body.webp'); --cat-head-art: url('data/skins/cat-silver-head.webp'); --cat-tail-art: url('data/skins/cat-silver-tail.webp'); }
+.coat-snow { --cat-body-art: url('data/skins/cat-white-body.webp'); --cat-head-art: url('data/skins/cat-white-head.webp'); --cat-tail-art: url('data/skins/cat-white-tail.webp'); }
+
+/* Artwork grows 8% towards its neighbours; letters and touch targets keep their positions. */
+.cat-skin .grid .kitten { transform: scale(1.08); transform-origin: 55% 68%; }
+.cat-approved-art { position: absolute; inset: 0; background: no-repeat center / contain; transform-origin: 55% 68%; animation: cat-nuzzle var(--cat-duration, 11s) ease-in-out var(--cat-delay, 0s) infinite; }
+.cell:has(.cat-approved-art) .cell-letter::before { content: none; }
+/* The approved reclining variants use a coloured coat plus the original warm plaque. */
+.cat-portrait::before, .cat-portrait::after { content: ''; position: absolute; inset: 0; background: var(--cat-art) no-repeat center / contain; }
+.cat-portrait::before { filter: var(--coat); }
+.cat-portrait::after { mask-image: radial-gradient(ellipse var(--disc-r, 24%) var(--disc-r, 24%) at var(--disc-x, 55%) var(--disc-y, 68%), #000 92%, transparent 100%); }
+.pose-sleep { --disc-x: 54%; --disc-y: 65%; --disc-r: 25%; }
+.pose-hang { --disc-x: 48%; --disc-y: 73%; --disc-r: 24%; }
+.pose-play { --disc-x: 55%; --disc-y: 68%; --disc-r: 23%; }
+.cell:has(.cat-portrait) .cell-letter::before { content: none; }
+
+
+/* The letter keeps its original uniform position, size and weight from before centring.
+   Each kitten moves its own plaque centre under that stationary letter. */
+.cat-skin .grid .cell-letter { position: absolute; left: 10%; right: 0; top: 68%; width: auto; transform: translateY(-50%); font-size: .93em; font-weight: 650; line-height: 1; color: #382417; }
+.cat-skin .grid .cell-letter::before { content: none; }
+.cat-skin .grid .kitten {
+  transform-origin: var(--letter-x,55%) var(--letter-y,68%);
+  transform: translate(calc(55% - var(--letter-x,55%) + var(--glyph-shift-x,0em)),calc(68% - var(--letter-y,68%) + var(--glyph-shift-y,0em))) scale(1.08);
+}
+.cat-skin .cat-approved-art, .cat-skin .cat-portrait { transform-origin: var(--letter-x,55%) var(--letter-y,68%); animation-name: cat-centred-sway; }
+.cat-skin .cat-body { transform-origin: var(--body-disc-x,50%) var(--body-disc-y,45.94%); rotate: 0deg; animation-name: cat-centred-breathe; }
+.cat-skin .cat-portrait::after { mask-image: radial-gradient(ellipse var(--disc-r,24%) var(--disc-r,24%) at var(--letter-x,55%) var(--letter-y,68%), #000 92%, transparent 100%); }
+@keyframes cat-centred-sway { 0%,10%,45%,80%,100% { transform: rotate(0deg); } 18% { transform: rotate(-4deg); } 25% { transform: rotate(3deg); } 57% { transform: rotate(4deg); } 65% { transform: rotate(-3deg); } 72% { transform: rotate(1.5deg); } }
+@keyframes cat-centred-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.015); } }
+.shop-heading-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.shop-heading-row [hidden] { display: none; }
+.classic-cells-button { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: #fafaf7; color: var(--text); font: inherit; }
+.shop-cat-cell { position: relative; width: 90%; height: 90%; margin: 5%; background: transparent!important; font-size: clamp(32px, 11vw, 54px); }
+.shop-cat-cell .kitten { transform-origin: var(--letter-x,55%) var(--letter-y,68%); transform: translate(calc(55% - var(--letter-x,55%) + var(--glyph-shift-x,0em)),calc(68% - var(--letter-y,68%) + var(--glyph-shift-y,0em))); }
+.shop-cat-cell .cat-approved-art, .shop-cat-cell .cat-portrait { transform-origin: var(--letter-x,55%) var(--letter-y,68%); animation-name: cat-centred-sway; }
+.shop-cat-cell .cat-body { transform-origin: var(--body-disc-x,50%) var(--body-disc-y,45.94%); rotate: 0deg; animation-name: cat-centred-breathe; }
+.shop-cat-cell .cell-letter::before { content: none; }
+
+/* Catalogue thumbnails stay still; the field animates during try-on. */
+.shop-cat-cell .kitten * { animation: none !important; }
+
+/* Full-body collection: use the exact original game letter and its centre. */
+.cat-skin .grid .cell .cell-letter,
+.shop-cat-cell .cell-letter { position:relative;inset:auto;width:auto;transform:none;font:inherit;line-height:inherit;color:inherit;text-align:inherit; }
+.cat-skin .grid .kitten { transform:scale(1.08);transform-origin:50% 50%; }
+.shop-cat-cell .kitten { transform:none;transform-origin:50% 50%; }
+.cat-approved-art { animation:none; }

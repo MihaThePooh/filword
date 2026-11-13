@@ -24,7 +24,7 @@
     <div class="coins" id="coins" title="Монеты">
       <span class="coin"></span><span id="coin-count">0</span>
     </div>
-    <button class="shop" id="shop" type="button" aria-label="Магазин — фоны">
+    <button class="shop" id="shop" type="button" aria-label="Магазин">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
            stroke-linecap="round" stroke-linejoin="round">
         <path d="M1.6 4H3.7Q4.6 4 4.76 4.89L6.04 11.91Q6.2 12.8 7.1 12.8H19.5Q20.4 12.8 20.53 11.91L21.47 5.79Q21.6 4.9 20.7 4.9H7.5"/>
@@ -41,7 +41,7 @@
   </main>
   <div class="menu" id="menu" hidden>
     <div class="menu-sheet">
-      <button id="shopItem" type="button">Магазин — фоны<small>Обои и свои фото на всё поле</small></button>
+      <button id="shopItem" type="button">Магазин<small>Фоны и котики</small></button>
       <button id="achItem" type="button">Достижения<small>Награды за игру — монеты за звёзды</small></button>
       <button id="statsItem" type="button">Статистика<small>Слова, поля, монеты за всё время</small></button>
       <button class="install" id="install" type="button">Установить игру<small>Иконка «Филворд» на экране телефона</small></button>
@@ -54,8 +54,8 @@
   </div>
   <div class="shopwrap" id="shopwrap" hidden>
     <div class="shoppanel">
-      <h2>Магазин — фоны</h2>
-      <p class="sub">Нажми на фон — примеришь его на игру. Купленный остаётся навсегда.</p>
+      <div class="shop-heading-row"><button id="shopBack" class="action" type="button" hidden>← Назад</button><h2 id="shopTitle">Магазин</h2></div>
+      <p class="sub" id="shopDescription">Выбери, что хочешь изменить в игре.</p>
       <div class="shelf" id="shelf"></div>
     </div>
   </div>
