@@ -7,20 +7,22 @@
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v57';
+const CACHE = 'filword-v58';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
-const CORE = ['data/bg/coral-arabesque.webp', 'data/bg/blue-lace.webp', 'data/bg/blue-arabesque.webp', 'data/bg/light-flowers.webp', 'data/bg/gold-ornament.webp', 'data/bg/golden-arabesque.webp', 'data/bg/ornament-final.webp', 'data/bg/beige-ornament.webp', 'data/bg/brown-ornament.webp', 'data/bg/brown-brocade.webp', 'data/bg/dark-green-ornament.webp', 'data/bg/engraved-ornament.webp', 'data/bg/red-ornament.webp', 'data/bg/taupe-ornament.webp', 'data/bg/red-folk-mandala.webp', 'data/bg/light-textile.webp', 'data/bg/soft-texture.webp', 'data/bg/carpet-ornament.webp', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
+const CORE = ['data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
   'icons/icon-192.png', 'icons/icon-512.png',
   'src/game.js', 'src/board.js', 'src/rng.js', 'src/path.js', 'src/split.js',
   'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js', 'src/rewards.js', 'src/progress.js', 'src/loader.js', 'src/install.js', 'src/cloud.js', 'src/mode.js', 'src/shop.js', 'src/skins.js', 'src/cat-roster.js', 'src/cat-collection.js', 'src/stats.js', 'src/achievements.js', 'src/sheets.js',
   'src/backstack.js', 'src/timer.js', 'src/coinfx.js', 'src/awardpop.js', 'src/theme-boot.js', 'data/kids.json.gz', 'data/bonus.json.gz',
   // Bonus definitions too: after the first install everything works offline.
-  'data/bonus-defs.json.gz', 'data/skins/collection-v1/c21.webp', 'data/skins/collection-v1/c22.webp', 'data/skins/collection-v1/c23.webp', 'data/skins/collection-v1/c24.webp', 'data/skins/collection-v1/c25.webp', 'data/skins/collection-v1/c26.webp', 'data/skins/collection-v1/c27.webp', 'data/skins/collection-v1/c28.webp', 'data/skins/collection-v1/c29.webp', 'data/skins/collection-v1/c30.webp', 'data/skins/collection-v1/c31.webp', 'data/skins/collection-v1/c32.webp', 'data/skins/collection-v1/c33.webp', 'data/skins/collection-v1/c34.webp', 'data/skins/collection-v1/c35.webp', 'data/skins/collection-v1/c36.webp', 'data/skins/collection-v1/c37.webp', 'data/skins/collection-v1/c38.webp', 'data/skins/collection-v1/c39.webp', 'data/skins/collection-v1/c40.webp', 'data/skins/collection-v1/c41.webp', 'data/skins/collection-v1/c42.webp', 'data/skins/collection-v1/c43.webp', 'data/skins/collection-v1/c44.webp', 'data/skins/collection-v1/c45.webp', 'data/skins/collection-v1/c46.webp', 'data/skins/collection-v1/c47.webp', 'data/skins/collection-v1/c01.webp', 'data/skins/collection-v1/c02.webp', 'data/skins/collection-v1/c03.webp', 'data/skins/collection-v1/c04.webp', 'data/skins/collection-v1/c05.webp', 'data/skins/collection-v1/c06.webp', 'data/skins/collection-v1/c07.webp', 'data/skins/collection-v1/c08.webp', 'data/skins/collection-v1/c09.webp', 'data/skins/collection-v1/c10.webp', 'data/skins/collection-v1/c11.webp', 'data/skins/collection-v1/c12.webp', 'data/skins/collection-v1/c13.webp', 'data/skins/collection-v1/c14.webp', 'data/skins/collection-v1/c15.webp', 'data/skins/collection-v1/c16.webp', 'data/skins/collection-v1/c17.webp', 'data/skins/collection-v1/c18.webp', 'data/skins/collection-v1/c19.webp', 'data/skins/collection-v1/c20.webp', 'data/skins/collection-v1/v01.webp', 'data/skins/collection-v1/v03.webp', 'data/skins/collection-v1/v04.webp', 'data/skins/collection-v1/v09.webp', 'data/skins/collection-v1/v10.webp', 'data/skins/collection-v1/v11.webp', 'data/skins/collection-v1/v12.webp', 'data/skins/collection-v1/v14.webp', 'data/skins/collection-v1/v16.webp', 'data/skins/collection-v1/v17.webp', 'data/skins/collection-v1/v19.webp', 'data/skins/collection-v1/v22.webp', 'data/skins/collection-v1/v24.webp', 'data/skins/collection-v1/v26.webp', 'data/skins/collection-v1/v27.webp', 'data/skins/collection-v1/v32.webp', 'data/skins/collection-v1/v40.webp'];
+  'data/bonus-defs.json.gz', 'data/skins/collection-v1/c21.webp', 'data/skins/collection-v1/c22.webp', 'data/skins/collection-v1/c23.webp', 'data/skins/collection-v1/c24.webp', 'data/skins/collection-v1/c25.webp', 'data/skins/collection-v1/c26.webp', 'data/skins/collection-v1/c27.webp', 'data/skins/collection-v1/c28.webp', 'data/skins/collection-v1/c29.webp', 'data/skins/collection-v1/c30.webp', 'data/skins/collection-v1/c31.webp', 'data/skins/collection-v1/c32.webp', 'data/skins/collection-v1/c33.webp', 'data/skins/collection-v1/c34.webp', 'data/skins/collection-v1/c35.webp', 'data/skins/collection-v1/c36.webp', 'data/skins/collection-v1/c37.webp', 'data/skins/collection-v1/c38.webp', 'data/skins/collection-v1/c39.webp', 'data/skins/collection-v1/c40.webp', 'data/skins/collection-v1/c41.webp', 'data/skins/collection-v1/c42.webp', 'data/skins/collection-v1/c43.webp', 'data/skins/collection-v1/c44.webp', 'data/skins/collection-v1/c45.webp', 'data/skins/collection-v1/c46.webp', 'data/skins/collection-v1/c47.webp', 'data/skins/collection-v1/c01.webp', 'data/skins/collection-v1/c02.webp', 'data/skins/collection-v1/c03.webp', 'data/skins/collection-v1/c04.webp', 'data/skins/collection-v1/c05.webp', 'data/skins/collection-v1/c06.webp', 'data/skins/collection-v1/c07.webp', 'data/skins/collection-v1/c08.webp', 'data/skins/collection-v1/c09.webp', 'data/skins/collection-v1/c10.webp', 'data/skins/collection-v1/c11.webp', 'data/skins/collection-v1/c12.webp', 'data/skins/collection-v1/c12-large.webp', 'data/skins/collection-v1/c13.webp', 'data/skins/collection-v1/c14.webp', 'data/skins/collection-v1/c15.webp', 'data/skins/collection-v1/c16.webp', 'data/skins/collection-v1/c17.webp', 'data/skins/collection-v1/c18.webp', 'data/skins/collection-v1/c19.webp', 'data/skins/collection-v1/c20.webp', 'data/skins/collection-v1/v01.webp', 'data/skins/collection-v1/v03.webp', 'data/skins/collection-v1/v04.webp', 'data/skins/collection-v1/v09.webp', 'data/skins/collection-v1/v10.webp', 'data/skins/collection-v1/v11.webp', 'data/skins/collection-v1/v12.webp', 'data/skins/collection-v1/v14.webp', 'data/skins/collection-v1/v16.webp', 'data/skins/collection-v1/v17.webp', 'data/skins/collection-v1/v19.webp', 'data/skins/collection-v1/v22.webp', 'data/skins/collection-v1/v24.webp', 'data/skins/collection-v1/v26.webp', 'data/skins/collection-v1/v27.webp', 'data/skins/collection-v1/v32.webp', 'data/skins/collection-v1/v40.webp'];
+
+const BACKGROUNDS = ['data/bg/coral-arabesque.webp', 'data/bg/blue-lace.webp', 'data/bg/blue-arabesque.webp', 'data/bg/light-flowers.webp', 'data/bg/gold-ornament.webp', 'data/bg/golden-arabesque.webp', 'data/bg/ornament-final.webp', 'data/bg/beige-ornament.webp', 'data/bg/brown-ornament.webp', 'data/bg/brown-brocade.webp', 'data/bg/dark-green-ornament.webp', 'data/bg/engraved-ornament.webp', 'data/bg/red-ornament.webp', 'data/bg/taupe-ornament.webp', 'data/bg/red-folk-mandala.webp', 'data/bg/light-textile.webp', 'data/bg/soft-texture.webp', 'data/bg/carpet-ornament.webp', 'data/bg/red-chintz.webp', 'data/bg/golden-painting.webp', 'data/bg/floral-gzhel.webp', 'data/bg/khokhloma.webp', 'data/bg/red-scrolls.webp', 'data/bg/night-flowers.webp', 'data/bg/folk-painting.webp', 'data/bg/black-painting.webp', 'data/bg/scarlet-branch.webp', 'data/bg/blue-floral.webp', 'data/bg/burgundy-damask.webp', 'data/bg/roses.webp', 'data/bg/rug.webp', 'data/bg/chintz.webp', 'data/bg/floral-stripes.webp', 'data/bg/brown-damask.webp', 'data/bg/olive-damask.webp', 'data/bg/green-ornament.webp', 'data/bg/gold-damask.webp', 'data/bg/mint-damask.webp', 'data/bg/blue-damask.webp', 'data/bg/olive-stripes.webp', 'data/bg/pistachio-stripes.webp', 'data/bg/teal-stripes.webp', 'data/bg/red-carpet.webp', 'data/bg/medallion-rug.webp', 'data/bg/gzhel.webp', 'data/bg/red-embroidery.webp', 'data/bg/star-embroidery.webp', 'data/bg/ribbon-embroidery.webp', 'data/bg/linen-embroidery.webp', 'data/bg/black-embroidery.webp'];
 
 self.addEventListener('install', (event) => {
   // Pre-cache the essentials so offline works right after the first visit.
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll([...CORE, ...BACKGROUNDS])).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -37,6 +39,10 @@ self.addEventListener('fetch', (event) => {
   // The save is never answered from the cache: a stale copy would look like
   // the server's and could win over newer progress.
   if (new URL(req.url).pathname.startsWith('/api/')) return;
+  if (req.mode === 'navigate') {
+    event.respondWith(navigation(req));
+    return;
+  }
   if (new URL(req.url).pathname.includes('/data/')) {
     event.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => hit ?? fetchAndKeep(req)));
     return;
@@ -64,4 +70,21 @@ function fetchAndKeep(req) {
     }
     return res;
   });
+}
+
+async function navigation(req) {
+  const shell = new URL('index.html', self.registration.scope).href;
+  const hit = await caches.match(shell);
+  try {
+    // A gateway sign-in redirect must never replace the offline game shell.
+    const res = await fetch(req, { redirect: 'error' });
+    if (res.ok && res.headers.get('content-type')?.includes('text/html')) {
+      const cache = await caches.open(CACHE);
+      await cache.put(shell, res.clone());
+      return res;
+    }
+    return hit ?? res;
+  } catch {
+    return hit ?? Response.error();
+  }
 }

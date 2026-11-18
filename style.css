@@ -733,3 +733,8 @@ body.awarding .toast { opacity: 0; }
 .cat-skin .grid .kitten { transform:scale(1.08);transform-origin:50% 50%; }
 .shop-cat-cell .kitten { transform:none;transform-origin:50% 50%; }
 .cat-approved-art { animation:none; }
+
+/* Collection artwork replaces the visible letter; logical letters remain available. */
+.cat-cell .cell-letter, .shop-cat-cell .cell-letter { visibility: hidden; }
+.cat-viewer { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: rgba(22,20,28,.92); pointer-events: none; }
+.cat-viewer img { width: min(92vw, 85vh); height: min(92vw, 85vh); object-fit: contain; }

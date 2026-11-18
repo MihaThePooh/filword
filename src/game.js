@@ -1,5 +1,5 @@
 import { planCats, revealCat } from './cat-collection.js';
-import { CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
+import { CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
 // Game screen: draws the board, follows the finger, colours found words.
 
 import {
@@ -47,7 +47,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 57;
+export const VERSION = 58;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -348,7 +348,7 @@ function renderShop() {
   const title = document.getElementById('shopTitle');
   title.textContent = shopSection === 'home' ? 'Магазин' : shopSection === 'cats' ? 'Котики' : 'Фоны';
   document.getElementById('shopBack').hidden = shopSection === 'home';
-  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. Собирай коллекцию: котики иногда появляются на одной букве найденного слова. На поле каждый котик встречается только один раз.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
+  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. Иногда найденное слово приносит одного случайного котика из твоей коллекции: он заменяет одну букву, без надписи поверх. Каждый котик появляется на поле только один раз. На новом поле котики распределяются заново. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Примерка перед покупкой временная.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
   if (shopSection === 'home') {
     for (const [section,name] of [['backgrounds','Фоны'],['cats','Котики']]) {
       const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'sitem category-item'; tile.dataset.section = section;
@@ -588,6 +588,30 @@ function cellAt(x, y, zone = HIT_ZONE) {
   return row * size + col;
 }
 
+let catHold = null;
+let catViewer = null;
+function cancelCatHold() {
+  if (catHold) clearTimeout(catHold.timer);
+  catHold = null;
+}
+function holdCat(e, cell) {
+  cancelCatHold();
+  const kitten = cellEls[cell]?.querySelector('.kitten');
+  const item = kitten && CAT_ROSTER.find(cat => cat.id === kitten.dataset.cat);
+  if (!item?.src) return;
+  catHold = { x: e.clientX, y: e.clientY, pointer: e.pointerId };
+  catHold.timer = setTimeout(() => {
+    catViewer = document.createElement('div');
+    catViewer.className = 'cat-viewer';
+    catViewer.setAttribute('role', 'img');
+    catViewer.setAttribute('aria-label', item.name);
+    const img = document.createElement('img'); img.src = item.id === 'c12' ? 'data/skins/collection-v1/c12-large.webp' : item.src; img.alt = item.name;
+    catViewer.appendChild(img); document.body.appendChild(catViewer);
+    selection = []; tap = null; render();
+  }, 500);
+}
+window.addEventListener('blur', () => { cancelCatHold(); catViewer?.remove(); catViewer = null; });
+
 function onDown(e) {
   // No text selection, no "tap to search" from the browser: the board is a game, not text.
   e.preventDefault();
@@ -596,6 +620,7 @@ function onDown(e) {
   if (cell < 0) return;
   // Keep receiving moves even if the finger leaves the grid.
   gridEl.setPointerCapture(e.pointerId);
+  holdCat(e, cell);
   const taken = takenCells();
   // A press on a found word may be a tap that opens its definition.
   tap = taken.has(cell) ? { cell, x: e.clientX, y: e.clientY } : null;
@@ -604,6 +629,8 @@ function onDown(e) {
 }
 
 function onMove(e) {
+  if (catViewer) return;
+  if (catHold && Math.hypot(e.clientX - catHold.x, e.clientY - catHold.y) > 12) cancelCatHold();
   if (!selection.length) return;
   const cell = cellAt(e.clientX, e.clientY);
   if (cell < 0) return;
@@ -615,6 +642,8 @@ function onMove(e) {
 }
 
 function onUp(e) {
+  cancelCatHold();
+  if (catViewer) { catViewer.remove(); catViewer = null; tap = null; selection = []; render(); return; }
   if (tap) {
     const moved = Math.hypot(e.clientX - tap.x, e.clientY - tap.y);
     const cell = tap.cell;

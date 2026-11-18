@@ -4,7 +4,7 @@ import { keepSkins } from './skins.js';
 // The game still plays from localStorage: it is the working copy and what
 // keeps the game going offline. The server keeps the real save of the account,
 // so progress survives a new phone or a cleared browser. Playing requires an
-// account: no pass and no session - the page goes to the hub sign-in.
+// account for cloud sync; local play stays available without a session.
 //
 // Two devices may play the same account. Every save carries the number of the
 // server version it is based on; the server refuses a save made on top of an
@@ -202,16 +202,18 @@ async function push(version) {
 function flush() {
   timer = null;
   if (!owner || pushing) return pushing;
+  let signInNeeded = false;
   pushing = push(read(VERSION_KEY) ?? 0)
     .catch((err) => {
-      if (err instanceof SignInNeeded) location.replace(loginUrl());
+      if (err instanceof SignInNeeded) signInNeeded = true;
+      // Keep local play available when sign-in expires.
       // Offline or the server is down: the copy stays dirty, the next change
       // or coming back online sends it.
     })
     .finally(() => {
       pushing = null;
       // Changed while this push was running and its timer already fired.
-      if (read(DIRTY_KEY) === 1 && !timer && navigator.onLine) timer = setTimeout(flush, PUSH_DELAY);
+      if (!signInNeeded && read(DIRTY_KEY) === 1 && !timer && navigator.onLine) timer = setTimeout(flush, PUSH_DELAY);
     });
   return pushing;
 }
@@ -221,16 +223,19 @@ function flush() {
 export async function start({ replaced } = {}) {
   if (replaced) onReplaced = replaced;
   window.addEventListener('online', () => { if (read(DIRTY_KEY) === 1) flush(); });
+  owner = read(OWNER_KEY);
+  if (navigator.onLine === false) return;
   let server;
   try {
-    const r = await api('GET');
+    // A dead connection must not hold the local game on its loading screen.
+    let timeout;
+    const r = await Promise.race([api('GET'), new Promise((_, reject) => {
+      timeout = setTimeout(() => reject(new Error('cloud timeout')), 6000);
+    })]).finally(() => clearTimeout(timeout));
     if (!r.ok) throw new Error(`load failed: ${r.status}`);
     server = await r.json();
   } catch (err) {
-    if (err instanceof SignInNeeded) {
-      location.replace(loginUrl());
-      return new Promise(() => { /* the page is leaving */ });
-    }
+    // Authentication is needed for cloud sync, not for local play.
     // Offline: play the local copy, it goes to the server later.
     owner = read(OWNER_KEY);
     return;
