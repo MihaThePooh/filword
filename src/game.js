@@ -47,7 +47,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 61;
+export const VERSION = 62;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -347,7 +347,7 @@ function renderShop() {
   const title = document.getElementById('shopTitle');
   title.textContent = shopSection === 'home' ? 'Магазин' : shopSection === 'cats' ? 'Котики' : 'Фоны';
   document.getElementById('shopBack').hidden = shopSection === 'home';
-  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. Иногда найденное слово приносит одного случайного котика из твоей коллекции: он заменяет одну букву, без надписи поверх. Каждый котик появляется на поле только один раз. На новом поле котики распределяются заново. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Примерка перед покупкой временная.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
+  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. Иногда найденное слово приносит одного случайного котика из твоей коллекции: он заменяет одну букву, без надписи поверх. Каждый котик появляется на поле только один раз. На новом поле котики распределяются заново. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Нажми на котика в магазине, чтобы рассмотреть его крупно перед покупкой. «Назад» вернёт в каталог без покупки.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
   if (shopSection === 'home') {
     for (const [section,name] of [['backgrounds','Фоны'],['cats','Котики']]) {
       const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'sitem category-item'; tile.dataset.section = section;
@@ -412,7 +412,8 @@ function onShopTile(id) {
   renderShop();
 }
 
-// Try-on: the shop steps aside, the background goes on the whole game and a bar
+// Background try-on hides the shop; cat inspection keeps it beneath a modal.
+// A background goes on the whole game and a bar
 // at the bottom offers «Купить» or «Назад». Nothing is saved until bought, so a
 // reload or leaving the game simply drops the try-on. The phone's Back button
 // works as «Назад» (backstack.js through show).
@@ -425,16 +426,29 @@ function startTryOn(id, kind = 'background') {
   trying = id;
   tryingKind = kind;
   shopScroll = document.querySelector('#shopwrap .shoppanel').scrollTop;
-  hide(document.getElementById('shopwrap'));
-  if (kind === 'skin') { applySkin(stats, id); render(); }
-  else applyTheme(stats, id);
   const bar = document.getElementById('tryon');
+  document.getElementById('shopwrap').inert = kind === 'skin';
+  bar.classList.toggle('cat-preview', kind === 'skin');
+  bar.querySelector('.cat-preview-art')?.remove();
+  if (kind === 'skin') {
+    const image = makeCatImage(CAT_ROSTER.find(cat => cat.id === id));
+    image.className = 'cat-preview-art';
+    bar.prepend(image);
+    bar.setAttribute('role', 'dialog');
+    bar.setAttribute('aria-modal', 'true');
+    bar.setAttribute('aria-label', info.name);
+  } else {
+    hide(document.getElementById('shopwrap'));
+    applyTheme(stats, id);
+    bar.removeAttribute('role'); bar.removeAttribute('aria-modal'); bar.removeAttribute('aria-label');
+  }
   bar.querySelector('.tname').textContent = info.name;
   bar.querySelector('.tprice').innerHTML = `<span class="coin"></span>${info.price}`;
   const buyBtn = document.getElementById('tryBuy');
   buyBtn.disabled = info.short > 0;
   buyBtn.textContent = info.short > 0 ? `Не хватает ${info.short}` : 'Купить';
   show(bar, () => endTryOn(false));
+  if (kind === 'skin') document.getElementById('tryBack').focus({ preventScroll: true });
 }
 
 // Leave the try-on. bought - the background stays and the game goes on;
@@ -442,11 +456,12 @@ function startTryOn(id, kind = 'background') {
 function endTryOn(bought) {
   if (!trying) return;
   trying = null;
+  document.getElementById('shopwrap').inert = false;
   hide(document.getElementById('tryon'));
   applyTheme(stats);
   applySkin(stats);
   render();
-  if (bought) return;
+  if (bought && tryingKind !== 'skin') return;
   show(document.getElementById('shopwrap'));
   // display:none may forget the scroll; put the shop back at the tried card.
   document.querySelector('#shopwrap .shoppanel').scrollTop = shopScroll;
@@ -588,6 +603,12 @@ function cancelCatHold() {
   if (catHold) clearTimeout(catHold.timer);
   catHold = null;
 }
+function makeCatImage(item) {
+  const image = document.createElement('img');
+  image.src = item.id === 'c12' ? 'data/skins/collection-v1/c12-large.webp' : item.src;
+  image.alt = item.name;
+  return image;
+}
 function holdCat(e, cell) {
   cancelCatHold();
   const kitten = cellEls[cell]?.querySelector('.kitten');
@@ -599,7 +620,7 @@ function holdCat(e, cell) {
     catViewer.className = 'cat-viewer';
     catViewer.setAttribute('role', 'img');
     catViewer.setAttribute('aria-label', item.name);
-    const img = document.createElement('img'); img.src = item.id === 'c12' ? 'data/skins/collection-v1/c12-large.webp' : item.src; img.alt = item.name;
+    const img = makeCatImage(item);
     catViewer.appendChild(img); document.body.appendChild(catViewer);
     selection = []; tap = null; render();
   }, 500);

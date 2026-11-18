@@ -741,3 +741,8 @@ body.awarding .toast { opacity: 0; }
 
 .offline-status { position: fixed; z-index: 5; inset-inline: 12px; bottom: max(12px, env(safe-area-inset-bottom)); margin: 0 auto; pointer-events: none; padding: 10px; max-width: 34em; text-align: center; font-size: 13px; line-height: 1.4; background: #fff7df; color: #594715; border-radius: 12px; }
 .offline-status[hidden] { display: none; }
+
+/* Cat inspection is an overlay: its size never participates in board layout. */
+.tryon.cat-preview { background: rgba(22,20,28,.88); gap: 12px; padding-top: max(12px,env(safe-area-inset-top)); }
+.cat-preview-art { flex: 1; min-height: 0; width: min(92vw,80vh); max-width: 760px; object-fit: contain; user-select: none; pointer-events: none; }
+.cat-preview .tcard { flex: none; }
