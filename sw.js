@@ -7,10 +7,10 @@
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v56';
+const CACHE = 'filword-v57';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
-const CORE = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
+const CORE = ['data/bg/coral-arabesque.webp', 'data/bg/blue-lace.webp', 'data/bg/blue-arabesque.webp', 'data/bg/light-flowers.webp', 'data/bg/gold-ornament.webp', 'data/bg/golden-arabesque.webp', 'data/bg/ornament-final.webp', 'data/bg/beige-ornament.webp', 'data/bg/brown-ornament.webp', 'data/bg/brown-brocade.webp', 'data/bg/dark-green-ornament.webp', 'data/bg/engraved-ornament.webp', 'data/bg/red-ornament.webp', 'data/bg/taupe-ornament.webp', 'data/bg/red-folk-mandala.webp', 'data/bg/light-textile.webp', 'data/bg/soft-texture.webp', 'data/bg/carpet-ornament.webp', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
   'icons/icon-192.png', 'icons/icon-512.png',
   'src/game.js', 'src/board.js', 'src/rng.js', 'src/path.js', 'src/split.js',
   'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js', 'src/rewards.js', 'src/progress.js', 'src/loader.js', 'src/install.js', 'src/cloud.js', 'src/mode.js', 'src/shop.js', 'src/skins.js', 'src/cat-roster.js', 'src/cat-collection.js', 'src/stats.js', 'src/achievements.js', 'src/sheets.js',
