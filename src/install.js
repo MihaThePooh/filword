@@ -52,6 +52,12 @@ export function setupMenu() {
   let known = false;
   let offline = { phase: 'loading', completed: 0, total: 0 };
   const status = document.getElementById('offlineStatus');
+  // A newly claimed worker may serve this module to a page with older CSS.
+  // Establish the overlay before creating the board, even in that mixed state.
+  if (status) {
+    Object.assign(status.style, { position: 'fixed', insetInline: '12px',
+      bottom: 'max(12px, env(safe-area-inset-bottom))', zIndex: '5', pointerEvents: 'none' });
+  }
   const refresh = () => {
     const done = (standalone() || known) && !offer;
     const ready = offline.phase === 'ready';
