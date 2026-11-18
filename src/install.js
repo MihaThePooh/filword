@@ -5,6 +5,7 @@
 // install dialog may only be opened from a tap. No event (the player declined
 // recently, another browser) - the item turns into a hint about Chrome's menu.
 
+import { offlineStatus, retryOffline, startOffline } from './offline.js';
 import { HOME_URL } from './cloud.js';
 import { show, hide, toggle } from './sheets.js';
 
@@ -49,17 +50,30 @@ export function setupMenu() {
   // of vanishing. "Installed" only when it is visible: opened from the icon,
   // Chrome answered by related_applications in the manifest, or just installed.
   let known = false;
+  let offline = { phase: 'loading', completed: 0, total: 0 };
+  const status = document.getElementById('offlineStatus');
   const refresh = () => {
     const done = (standalone() || known) && !offer;
-    item.disabled = done;
-    item.classList.toggle('done', done);
-    item.innerHTML = `${done ? 'Игра установлена' : 'Установить игру'}<small>Иконка «Филворд» на экране телефона</small>`;
+    const ready = offline.phase === 'ready';
+    item.disabled = (done && ready) || offline.phase === 'loading';
+    item.classList.toggle('done', done && ready);
+    const progress = offline.total ? ` · ${Math.floor(100 * offline.completed / offline.total)}%` : '';
+    const title = ready ? (done ? 'Игра установлена' : 'Установить игру') : offline.phase === 'loading' ? 'Скачиваем всю игру' + progress : 'Повторить скачивание';
+    const detail = ready ? 'Вся игра скачана. Работает без интернета' : offline.phase === 'loading' ? 'Котики, фоны и словари. Пока не закрывай игру' : 'Не всё скачалось. Подключись к интернету и повтори';
+    item.innerHTML = `${title}<small>${detail}</small>`;
+    if (status) {
+      status.hidden = ready;
+      status.textContent = offline.phase === 'loading' ? 'Скачиваем игру для работы без интернета' + progress : 'Загрузка прервалась. В меню можно повторить скачивание';
+      status.dataset.phase = offline.phase;
+    }
   };
   const markInstalled = () => {
     known = true;
     offer = null;
     refresh();
   };
+  offlineStatus(value => { offline = value; refresh(); });
+  startOffline();
   refresh();
 
   // Came from the hub's "Установить" button (?install): open the menu on the
@@ -91,6 +105,7 @@ export function setupMenu() {
       .catch(() => { /* not supported - count as not installed */ });
   }
   item.addEventListener('click', () => {
+    if (offline.phase !== 'ready') { retryOffline(); return; }
     if (!offer) {
       item.querySelector('small').textContent =
         'Chrome сейчас не предлагает сам: ⋮ в углу → «Добавить на главный экран». Открыто из хаба — сначала ⋮ → «Открыть в Chrome».';

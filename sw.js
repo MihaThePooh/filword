@@ -1,16 +1,15 @@
 // Service worker: lets the game open without internet.
 //
-// Code - "network first": when online, take the fresh file from the server and
-// put a copy into the cache; offline, answer from the cache. So updates arrive
-// by themselves, and the last version works offline.
+// A complete version is cached before activation. Cold launches use that
+// version immediately; only the service-worker update needs the network.
 // Dictionaries (data/) - "cache first": they are big and change only with a
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v58';
+const CACHE = 'filword-v59';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
-const CORE = ['data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
+const CORE = ['src/offline.js', 'data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
   'icons/icon-192.png', 'icons/icon-512.png',
   'src/game.js', 'src/board.js', 'src/rng.js', 'src/path.js', 'src/split.js',
   'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js', 'src/rewards.js', 'src/progress.js', 'src/loader.js', 'src/install.js', 'src/cloud.js', 'src/mode.js', 'src/shop.js', 'src/skins.js', 'src/cat-roster.js', 'src/cat-collection.js', 'src/stats.js', 'src/achievements.js', 'src/sheets.js',
@@ -20,71 +19,84 @@ const CORE = ['data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonu
 
 const BACKGROUNDS = ['data/bg/coral-arabesque.webp', 'data/bg/blue-lace.webp', 'data/bg/blue-arabesque.webp', 'data/bg/light-flowers.webp', 'data/bg/gold-ornament.webp', 'data/bg/golden-arabesque.webp', 'data/bg/ornament-final.webp', 'data/bg/beige-ornament.webp', 'data/bg/brown-ornament.webp', 'data/bg/brown-brocade.webp', 'data/bg/dark-green-ornament.webp', 'data/bg/engraved-ornament.webp', 'data/bg/red-ornament.webp', 'data/bg/taupe-ornament.webp', 'data/bg/red-folk-mandala.webp', 'data/bg/light-textile.webp', 'data/bg/soft-texture.webp', 'data/bg/carpet-ornament.webp', 'data/bg/red-chintz.webp', 'data/bg/golden-painting.webp', 'data/bg/floral-gzhel.webp', 'data/bg/khokhloma.webp', 'data/bg/red-scrolls.webp', 'data/bg/night-flowers.webp', 'data/bg/folk-painting.webp', 'data/bg/black-painting.webp', 'data/bg/scarlet-branch.webp', 'data/bg/blue-floral.webp', 'data/bg/burgundy-damask.webp', 'data/bg/roses.webp', 'data/bg/rug.webp', 'data/bg/chintz.webp', 'data/bg/floral-stripes.webp', 'data/bg/brown-damask.webp', 'data/bg/olive-damask.webp', 'data/bg/green-ornament.webp', 'data/bg/gold-damask.webp', 'data/bg/mint-damask.webp', 'data/bg/blue-damask.webp', 'data/bg/olive-stripes.webp', 'data/bg/pistachio-stripes.webp', 'data/bg/teal-stripes.webp', 'data/bg/red-carpet.webp', 'data/bg/medallion-rug.webp', 'data/bg/gzhel.webp', 'data/bg/red-embroidery.webp', 'data/bg/star-embroidery.webp', 'data/bg/ribbon-embroidery.webp', 'data/bg/linen-embroidery.webp', 'data/bg/black-embroidery.webp'];
 
-self.addEventListener('install', (event) => {
-  // Pre-cache the essentials so offline works right after the first visit.
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll([...CORE, ...BACKGROUNDS])).then(() => self.skipWaiting()));
-});
+const FILES = [...new Set([...CORE, ...BACKGROUNDS])];
+const READY = new URL('__offline_ready__', self.registration.scope).href;
+let completed = 0;
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
-  // The save is never answered from the cache: a stale copy would look like
-  // the server's and could win over newer progress.
-  if (new URL(req.url).pathname.startsWith('/api/')) return;
-  if (req.mode === 'navigate') {
-    event.respondWith(navigation(req));
-    return;
-  }
-  if (new URL(req.url).pathname.includes('/data/')) {
-    event.respondWith(caches.match(req, { ignoreSearch: true }).then((hit) => hit ?? fetchAndKeep(req)));
-    return;
-  }
-  event.respondWith(
-    fetch(req)
-      .then((res) => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, copy));
-        }
-        return res;
-      })
-      // ignoreSearch: publish adds ?v=<stamp> to file names; offline any stamp will do.
-      .catch(() => caches.match(req, { ignoreSearch: true })
-        .then((hit) => hit ?? Response.error())),
-  );
-});
-
-function fetchAndKeep(req) {
-  return fetch(req).then((res) => {
-    if (res.ok) {
-      const copy = res.clone();
-      caches.open(CACHE).then((cache) => cache.put(req, copy));
-    }
-    return res;
-  });
+async function announce(status) {
+  const clients = await self.clients.matchAll({ includeUncontrolled: true });
+  for (const client of clients) client.postMessage({ type: 'offline-status', ...status });
 }
-
-async function navigation(req) {
-  const shell = new URL('index.html', self.registration.scope).href;
-  const hit = await caches.match(shell);
+async function fetchFile(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    // A gateway sign-in redirect must never replace the offline game shell.
-    const res = await fetch(req, { redirect: 'error' });
-    if (res.ok && res.headers.get('content-type')?.includes('text/html')) {
-      const cache = await caches.open(CACHE);
-      await cache.put(shell, res.clone());
-      return res;
-    }
-    return hit ?? res;
-  } catch {
-    return hit ?? Response.error();
-  }
+    const response = await fetch(url, { cache: 'reload', redirect: 'error', signal: controller.signal });
+    if (!response.ok) throw new Error('Incomplete offline download: ' + url);
+    return response;
+  } finally { clearTimeout(timer); }
 }
+async function prepare() {
+  const cache = await caches.open(CACHE);
+  let next = 0;
+  const download = async () => {
+    while (next < FILES.length) {
+      const file = FILES[next++];
+      if (!await cache.match(file)) {
+        let response;
+        try { response = await fetchFile(file); }
+        catch { response = await fetchFile(file); }
+        await cache.put(file, response);
+      }
+      completed++;
+      await announce({ phase: 'loading', completed, total: FILES.length });
+    }
+  };
+  const downloads = await Promise.allSettled(Array.from({ length: 4 }, download));
+  const failed = downloads.find(result => result.status === 'rejected');
+  if (failed) throw failed.reason;
+  // Written last: a partial or failed download can never claim readiness.
+  await cache.put(READY, new Response(JSON.stringify({ phase: 'ready', completed, total: FILES.length, cache: CACHE })));
+  await self.skipWaiting();
+}
+self.addEventListener('install', event => {
+  event.waitUntil(prepare().catch(async error => {
+    await announce({ phase: 'error', completed, total: FILES.length });
+    throw error;
+  }));
+});
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    await self.clients.claim();
+    const cache = await caches.open(CACHE);
+    const ready = await cache.match(READY);
+    if (!ready) throw new Error('Offline package missing');
+    await announce(await ready.json());
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => /^filword-v\d+$/.test(key) && key !== CACHE).map(key => caches.delete(key)));
+  })());
+});
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'offline-status') return;
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    const ready = await cache.match(READY);
+    const status = ready ? await ready.json() : { phase: 'loading', completed, total: FILES.length };
+    event.ports[0]?.postMessage(status);
+  })());
+});
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    // All installed start URLs, modes and query parameters share the same shell.
+    const hit = req.mode === 'navigate'
+      ? await cache.match(new URL('index.html', self.registration.scope).href)
+      : await cache.match(req, { ignoreSearch: true });
+    if (hit) return hit;
+    try { return await fetch(req, { redirect: 'error' }); }
+    catch { return Response.error(); }
+  })());
+});

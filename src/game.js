@@ -47,7 +47,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 58;
+export const VERSION = 59;
 const STATS_KEY = CFG.statsKey;
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
@@ -147,7 +147,6 @@ async function init() {
   coinFx.reset();
   applyTheme(stats);
   applySkin(stats);
-  warmBackgrounds();
   countEl.textContent = '';
   // Kids get bonus coins only for words of their own dictionary: the full
   // list of nouns has words a child should not meet.
@@ -496,11 +495,6 @@ function shopNote(tile, text) {
 // Warm up the shop in the background: once the game is up, quietly fetch every
 // background so the service worker caches it. Then the shop opens instantly and
 // works fully offline, without slowing the game's own start or bloating install.
-function warmBackgrounds() {
-  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
-  idle(() => { for (const b of BACKGROUNDS) new Image().src = bgSrc(b.id); });
-}
-
 function newBoard() {
   if (cycleDone(stats, CFG.cycle)) {
     showShuffleCard(stats, doShuffle);
@@ -958,8 +952,3 @@ function loadJson(key) {
 }
 
 init();
-
-// Offline support: the service worker keeps a copy of the game and dictionary.
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch((err) => console.warn('no offline mode', err));
-}

@@ -126,10 +126,20 @@ function loginUrl() {
 }
 
 // Several requests hitting an expired pass at once wait for one renewal.
+async function boundedFetch(url, options) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    const body = await response.arrayBuffer();
+    return new Response(body.byteLength ? body : null, { status: response.status, headers: response.headers });
+  }
+  finally { clearTimeout(timeout); }
+}
 let renewing = null;
 function renewPass() {
   if (!renewing) {
-    renewing = fetch(`${ID_URL}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
+    renewing = boundedFetch(`${ID_URL}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
       .then((r) => { renewing = null; return r.ok; }, () => { renewing = null; return false; });
   }
   return renewing;
@@ -149,13 +159,15 @@ async function api(method, body) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(body);
   }
-  let r = await fetch('/api/save', opts);
-  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await fetch('/api/save', opts);
+  let r = await boundedFetch('/api/save', opts);
+  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await boundedFetch('/api/save', opts);
   if (r.status === 401 || r.status === 403) throw new SignInNeeded();
   return r;
 }
 
 let owner = null;
+let revision = 0;
+let watchingConnection = false;
 let timer = null;
 let pushing = null;
 let onReplaced = () => location.reload();
@@ -181,6 +193,7 @@ function adopt(save) {
 
 async function push(version) {
   const local = localCopy();
+  const sentRevision = revision;
   const r = await api('PUT', { state: local.state || {}, stats: local.stats || {}, version });
   if (r.status === 409) {
     const { save } = await r.json();
@@ -196,7 +209,7 @@ async function push(version) {
   const { version: saved } = await r.json();
   write(VERSION_KEY, saved);
   // Changed again while the request was on its way - it goes with the next push.
-  if (!timer) write(DIRTY_KEY, null);
+  if (revision === sentRevision) write(DIRTY_KEY, null);
 }
 
 function flush() {
@@ -219,10 +232,16 @@ function flush() {
 }
 
 // Before the game reads localStorage: bring it in line with the server.
-// Resolves when the game may start; never resolves while leaving for sign-in.
+// Resolves when the local save is ready; uploads never hold the game open.
 export async function start({ replaced } = {}) {
   if (replaced) onReplaced = replaced;
-  window.addEventListener('online', () => { if (read(DIRTY_KEY) === 1) flush(); });
+  if (!watchingConnection) {
+    watchingConnection = true;
+    window.addEventListener('online', () => {
+      if (owner) { if (read(DIRTY_KEY) === 1) flush(); }
+      else start();
+    });
+  }
   owner = read(OWNER_KEY);
   if (navigator.onLine === false) return;
   let server;
@@ -250,12 +269,13 @@ export async function start({ replaced } = {}) {
   if (choice.act === 'push') {
     write(DIRTY_KEY, 1);
     write(VERSION_KEY, choice.version);
-    await flush();
+    flush();
   }
 }
 
 // The game saved locally: send it to the server a moment later, in one go.
 export function changed() {
+  revision++;
   write(DIRTY_KEY, 1);
   clearTimeout(timer);
   timer = setTimeout(flush, PUSH_DELAY);
