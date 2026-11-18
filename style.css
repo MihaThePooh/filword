@@ -739,5 +739,5 @@ body.awarding .toast { opacity: 0; }
 .cat-viewer { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: rgba(22,20,28,.92); pointer-events: none; }
 .cat-viewer img { width: min(92vw, 85vh); height: min(92vw, 85vh); object-fit: contain; }
 
-.offline-status { margin: 12px auto; padding: 10px; max-width: 34em; text-align: center; font-size: 13px; line-height: 1.4; background: #fff7df; color: #594715; border-radius: 12px; }
+.offline-status { position: fixed; z-index: 5; inset-inline: 12px; bottom: max(12px, env(safe-area-inset-bottom)); margin: 0 auto; pointer-events: none; padding: 10px; max-width: 34em; text-align: center; font-size: 13px; line-height: 1.4; background: #fff7df; color: #594715; border-radius: 12px; }
 .offline-status[hidden] { display: none; }
