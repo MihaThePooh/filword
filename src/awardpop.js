@@ -37,7 +37,7 @@ function play({ item, anchor, onCoins }, done) {
   el.className = 'award';
   el.setAttribute('role', 'status');
   const fresh = Math.max(1, item.star - item.from);
-  const stars = [0, 1, 2].map((k) => {
+  const stars = Array.from({ length: item.maxStars || 3 }, (_, k) => k).map((k) => {
     const cls = k < item.from ? 'got' : k < item.star ? 'new' : '';
     const delay = k < item.from || k >= item.star ? 0 : POP_IN + (k - item.from) * STAR_GAP;
     const rays = cls === 'new' ? '<i></i>'.repeat(8) : '';

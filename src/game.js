@@ -1,3 +1,4 @@
+import { setupHeaderContrast } from './header-contrast.js';
 import { planCats, revealCat } from './cat-collection.js';
 import { CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
 // Game screen: draws the board, follows the finger, colours found words.
@@ -47,8 +48,9 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 62;
+export const VERSION = 63;
 const STATS_KEY = CFG.statsKey;
+setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
 // between cells would otherwise pick a diagonal neighbour by accident.
 const HIT_ZONE = 0.8;
@@ -289,7 +291,7 @@ function setupAchievements() {
 function renderAchievements() {
   achRows = achievementRows(stats);
   document.getElementById('achlist').innerHTML = achRows.map((r) => {
-    const stars = '★'.repeat(r.stars) + '☆'.repeat(3 - r.stars);
+    const stars = '★'.repeat(r.stars) + '☆'.repeat(r.maxStars - r.stars);
     const starBtns = r.goals.map((_, k) => `<button type="button" class="astar${k < r.stars ? ' got' : ''}" `
       + `data-k="${k}" aria-label="Звезда ${k + 1}">${k < r.stars ? '★' : '☆'}</button>`).join('');
     return `<div class="arow" data-id="${r.id}">`
@@ -820,7 +822,7 @@ function celebrate() {
     setTimeout(() => {
       if (board !== solvedBoard) return;
       confetti();
-      showWinCard({ solved: stats.solved, words: board.words.length, ms: boardTimed ? clock.elapsed() : 0 },
+      showWinCard({ solved: stats.solved, words: board.words.length, bonus: bonusFound.length, ms: boardTimed ? clock.elapsed() : 0 },
         () => newBoard());
     }, wave + 500);
   }, 250); // the colour of the last word settles first

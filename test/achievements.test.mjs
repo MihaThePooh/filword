@@ -4,13 +4,13 @@ import { ACHIEVEMENTS, starsFor, evaluate, achievementRows, mergeAwards } from '
 
 const marathon = ACHIEVEMENTS.find((a) => a.id === 'marathon');
 
-test('catalog: three rising goals and three coin tiers each', () => {
+test('catalog: matching rising goals and rewards, with one full-collection milestone', () => {
   for (const a of ACHIEVEMENTS) {
-    assert.equal(a.stars.length, 3, a.id);
-    assert.equal(a.coins.length, 3, a.id);
+    assert.equal(a.stars.length, a.id === 'cat-collector' ? 1 : 3, a.id);
+    assert.equal(a.coins.length, a.stars.length, a.id);
     // «at least» goals rise, «at most» (time) goals fall
-    const [x, y, z] = a.less ? [...a.stars].reverse() : a.stars;
-    assert.ok(x < y && y < z, a.id);
+    const goals = a.less ? [...a.stars].reverse() : a.stars;
+    assert.ok(goals.every((v,i) => i === 0 || v > goals[i-1]), a.id);
     assert.ok(a.about && a.goal, a.id);
   }
 });
@@ -129,4 +129,23 @@ test('Снайпер: boards without bonus words, 1/3/7 for 300/500/700', () => 
   const got = awarded.find((x) => x.id === 'sniper');
   assert.equal(got.coins, 1500);
   assert.ok(stats.coins >= 1500);
+});
+
+
+test('full cat collection pays 15000 once, only for distinct catalogue cats', async () => {
+  const { CAT_ROSTER } = await import('../src/cat-roster.js');
+  const owned = CAT_ROSTER.map(c => c.id);
+  const partial = { coins: 120, skins: { owned: [...owned.slice(0,63), owned[0], 'fake-cat'] } };
+  assert.equal(evaluate(partial).awarded.some(a => a.id === 'cat-collector'), false);
+  const complete = { ...partial, skins: { owned } };
+  const first = evaluate(complete);
+  assert.equal(first.stats.coins, 15120);
+  assert.equal(first.stats.awardCoins['cat-collector'], 15000);
+  assert.equal(first.awarded.find(a => a.id === 'cat-collector').maxStars, 1);
+  assert.equal(evaluate(first.stats).awarded.length, 0);
+  assert.equal(complete.awardCoins, undefined);
+  const row = achievementRows(first.stats).find(a => a.id === 'cat-collector');
+  assert.equal(row.stars, 1); assert.equal(row.maxStars, 1);
+  assert.equal(row.progress, 'Коллекция собрана');
+  assert.deepEqual(row.goals, ['64 котика']);
 });

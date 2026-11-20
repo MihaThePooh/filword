@@ -8,6 +8,7 @@
 // difference between what the stars reached are worth now and what was paid,
 // and nothing is ever taken back.
 
+import { skinsOf, CAT_ROSTER } from './skins.js';
 import { shopOf } from './shop.js';
 import { plural } from './stats.js';
 import { fmtClock, fmtSpan } from './timer.js';
@@ -45,6 +46,9 @@ export const ACHIEVEMENTS = [
   { id: 'collector', name: 'Коллекционер', goal: form(['фон', 'фона', 'фонов']),
     about: 'Покупай фоны в магазине.',
     read: (s) => shopOf(s).owned.length, stars: [3, 10, 30], coins: [100, 300, 1000] },
+  { id: 'cat-collector', name: 'Кошачья семья', goal: form(['котик', 'котика', 'котиков']),
+    about: 'Собери всю коллекцию из 64 котиков. Награда 15 000 монет выдаётся один раз.',
+    read: (s) => skinsOf(s).owned.length, stars: [CAT_ROSTER.length], coins: [15000] },
   { id: 'veteran', name: 'Ветеран', goal: form(['шафл', 'шафла', 'шафлов']),
     about: 'Пройди весь круг полей: слова перемешаются, и круг начнётся заново — это шафл.',
     read: (s) => s.shuffles || 0, stars: [1, 5, 30], coins: [1000, 5000, 30000] },
@@ -82,7 +86,7 @@ export function starsFor(a, stats) {
 
 // Progress line and bar for the screen.
 function progressOf(a, value, next) {
-  if (next === null) return { progress: 'Все три звезды собраны', pct: 100 };
+  if (next === null) return { progress: a.stars.length === 1 ? 'Коллекция собрана' : 'Все три звезды собраны', pct: 100 };
   const show = a.show || String;
   if (a.less) {
     return value
@@ -110,7 +114,7 @@ export function evaluate(stats) {
       // Stars already paid for: those whose total price is covered.
       let from = 0;
       while (from < now && sum(a.coins, from + 1) <= before) from++;
-      awarded.push({ id: a.id, name: a.name, from, star: now, coins: due });
+      awarded.push({ id: a.id, name: a.name, from, star: now, maxStars: a.stars.length, coins: due });
     }
   }
   if (!awarded.length) return { stats: s, awarded };
@@ -139,12 +143,13 @@ export function achievementRows(stats) {
   return ACHIEVEMENTS.map((a) => {
     const stars = starsFor(a, s);
     const value = a.read(s);
-    const next = stars < 3 ? a.stars[stars] : null;
+    const next = stars < a.stars.length ? a.stars[stars] : null;
     return {
       id: a.id,
       name: a.name,
       about: a.about,
       stars,
+      maxStars: a.stars.length,
       value,
       next,
       coins: a.coins,

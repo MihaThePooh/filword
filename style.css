@@ -746,3 +746,24 @@ body.awarding .toast { opacity: 0; }
 .tryon.cat-preview { background: rgba(22,20,28,.88); gap: 12px; padding-top: max(12px,env(safe-area-inset-top)); }
 .cat-preview-art { flex: 1; min-height: 0; width: min(92vw,80vh); max-width: 760px; object-fit: contain; user-select: none; pointer-events: none; }
 .cat-preview .tcard { flex: none; }
+
+/* Preserve the glass, spacing and typography; only the ink follows the image. */
+body.themed header > [data-header-ink] {
+  --header-text: #101010;
+  --header-halo: rgba(255,255,255,.82);
+  color: var(--header-text);
+  text-shadow: -.65px 0 var(--header-halo), .65px 0 var(--header-halo),
+    0 -.65px var(--header-halo), 0 .65px var(--header-halo);
+}
+body.themed header > [data-header-ink="light"] {
+  --header-text: #fff;
+  --header-halo: rgba(0,0,0,.88);
+}
+body.themed header .solved { color: var(--header-text, var(--text)); }
+body.themed header > [data-header-ink] svg {
+  filter: drop-shadow(0 0 .65px var(--header-halo));
+}
+.win-counts { margin: 16px 0 0; color: var(--text); text-align: left; }
+.win-counts > div { display: flex; justify-content: space-between; gap: 22px; padding: 5px 0; }
+.win-counts dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+.win-counts .win-total { border-top: 1px solid var(--line); margin-top: 5px; padding-top: 10px; }

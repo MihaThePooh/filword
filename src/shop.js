@@ -1,3 +1,4 @@
+import { updateHeaderContrast } from './header-contrast.js';
 // The shop: backgrounds for the whole app, bought with coins.
 //
 // A background is cosmetic and belongs to the account: what you bought and
@@ -133,4 +134,5 @@ export function applyTheme(stats, previewId = null) {
   document.body.classList.toggle('themed', Boolean(id));
   if (id) document.body.style.setProperty('--bgimg', `url("${bgSrc(id)}")`);
   else document.body.style.removeProperty('--bgimg');
+  updateHeaderContrast();
 }

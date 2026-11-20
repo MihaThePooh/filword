@@ -145,7 +145,9 @@ export { plural };
 
 // The card in the middle of the screen. Resolves when it is closed;
 // onNext is called when the player taps "Следующее поле".
-export function showWinCard({ solved, words, ms }, onNext) {
+export function showWinCard({ solved, words, bonus = 0, ms }, onNext) {
+  const count = n => Number.isSafeInteger(n) && n >= 0 ? n : 0;
+  solved = count(solved); words = count(words); bonus = count(bonus);
   const overlay = document.createElement('div');
   overlay.className = 'win';
   const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)];
@@ -158,7 +160,10 @@ export function showWinCard({ solved, words, ms }, onNext) {
     </div>`;
   overlay.querySelector('.win-title').textContent = praise;
   const time = ms ? ` · ${fmtClock(ms)}` : '';
-  overlay.querySelector('.win-stats').textContent = `Поле №${solved} · ${words} ${plural(words, 'слово', 'слова', 'слов')}${time}`;
+  overlay.querySelector('.win-stats').innerHTML = `<div>Поле №${solved}${time}</div>`
+    + `<dl class="win-counts"><div><dt>Загаданных слов</dt><dd>${words}</dd></div>`
+    + `<div><dt>Бонусных найдено</dt><dd>${bonus}</dd></div>`
+    + `<div class="win-total"><dt>Всего найдено</dt><dd>${words + bonus}</dd></div></dl>`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('show'));
 
