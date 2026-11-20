@@ -1,5 +1,5 @@
 import { setupHeaderContrast } from './header-contrast.js';
-import { planCats, revealCat } from './cat-collection.js';
+import { syncCats, revealCat } from './cat-collection.js';
 import { CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
 // Game screen: draws the board, follows the finger, colours found words.
 
@@ -48,7 +48,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 63;
+export const VERSION = 64;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -349,7 +349,7 @@ function renderShop() {
   const title = document.getElementById('shopTitle');
   title.textContent = shopSection === 'home' ? 'Магазин' : shopSection === 'cats' ? 'Котики' : 'Фоны';
   document.getElementById('shopBack').hidden = shopSection === 'home';
-  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. Иногда найденное слово приносит одного случайного котика из твоей коллекции: он заменяет одну букву, без надписи поверх. Каждый котик появляется на поле только один раз. На новом поле котики распределяются заново. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Нажми на котика в магазине, чтобы рассмотреть его крупно перед покупкой. «Назад» вернёт в каталог без покупки.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
+  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. На каждом поле появляются все купленные котики — по одному на клетку, без повторов (до 64 во взрослой игре и до 25 в детской). Они открываются вместе с буквами найденного слова. Полная коллекция заполняет всё поле. На новом поле расположение случайное; при возвращении на текущее оно сохраняется. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Нажми на котика в магазине, чтобы рассмотреть его крупно перед покупкой. «Назад» вернёт в каталог без покупки.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
   if (shopSection === 'home') {
     for (const [section,name] of [['backgrounds','Фоны'],['cats','Котики']]) {
       const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'sitem category-item'; tile.dataset.section = section;
@@ -479,9 +479,7 @@ function buyTried() {
   showSpend(stats.coins - next.coins);
   stats = next;
   if (tryingKind === 'skin') {
-    const remaining = board.words.map((_,i)=>i).filter(i=>!found.has(i));
-    const unused = skinsOf(stats).owned.filter(id=>!boardCats.placed.some(([,cat])=>cat===id));
-    boardCats.plan = planCats(remaining.length, unused).map(([i,id])=>[remaining[i],id]);
+    boardCats = syncCats(board.words, skinsOf(stats).owned, boardCats, found.keys());
     saveState();
   }
   runAchievements();
@@ -552,8 +550,8 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, saved
   sheet.close();
   bonusFound = savedBonus ?? [];
   board = nextBoard;
-  boardCats = savedCats?.plan && savedCats?.placed ? savedCats : { plan: planCats(board.words.length, skinsOf(stats).owned), placed: [] };
   found = new Map([...(savedFound ?? [])].map(([i, c]) => [i, brighter(c)]));
+  boardCats = syncCats(board.words, skinsOf(stats).owned, savedCats, found.keys());
   // Boards saved before the list existed: hidden words first, then bonus ones.
   wordLog = savedLog ?? [...found.keys()].map((i) => ({ i })).concat(bonusFound.map((b) => ({ b })));
   renderWords();

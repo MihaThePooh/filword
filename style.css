@@ -761,7 +761,12 @@ body.themed header > [data-header-ink="light"] {
 }
 body.themed header .solved { color: var(--header-text, var(--text)); }
 body.themed header > [data-header-ink] svg {
-  filter: drop-shadow(0 0 .65px var(--header-halo));
+  color: var(--header-text);
+  stroke: currentColor;
+  filter: drop-shadow(-.65px 0 0 var(--header-halo))
+    drop-shadow(.65px 0 0 var(--header-halo))
+    drop-shadow(0 -.65px 0 var(--header-halo))
+    drop-shadow(0 .65px 0 var(--header-halo));
 }
 .win-counts { margin: 16px 0 0; color: var(--text); text-align: left; }
 .win-counts > div { display: flex; justify-content: space-between; gap: 22px; padding: 5px 0; }
