@@ -17,7 +17,10 @@ export function attachSwipe(panel, options) {
   handle.setAttribute('aria-label', 'Закрыть панель');
   handle.title = 'Потяни вниз, чтобы закрыть';
   handle.innerHTML = '<span aria-hidden="true"></span>';
-  panel.prepend(handle); panel.classList.add('swipe-panel');
+  const content = document.createElement('div');
+  content.className = 'sheet-content';
+  content.append(...panel.childNodes);
+  panel.append(handle, content); panel.classList.add('swipe-panel');
   let gesture = null, animation = null, generation = 0, finishing = false;
   const controller = { options, reset() {
     generation++; gesture = null; finishing = false;
@@ -49,7 +52,7 @@ export function attachSwipe(panel, options) {
     if (!isOpen() || finishing || gesture || target.closest('input,select,textarea,[contenteditable="true"]')) return;
     animation?.cancel(); animation = null;
     const grip = Boolean(target.closest('.sheet-grip'));
-    gesture = { x, y, distance: 0, id, kind, active: false, blocked: !grip && panel.scrollTop > 1,
+    gesture = { x, y, distance: 0, id, kind, active: false, blocked: !grip && content.scrollTop > 1,
       samples: [[performance.now(), y]] };
   }
   function move(x, y, event) {

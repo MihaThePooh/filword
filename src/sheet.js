@@ -41,7 +41,7 @@ export function createSheet() {
       defs.appendChild(li);
     }
     note.textContent = noteText;
-    sheet.scrollTop = 0;
+    sheet.querySelector('.sheet-content').scrollTop = 0;
     document.body.classList.add('sheet-open');
     openedAt = performance.now();
     opened(sheet, close);

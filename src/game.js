@@ -48,7 +48,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 65;
+export const VERSION = 66;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -354,7 +354,7 @@ function renderShop() {
     for (const [section,name] of [['backgrounds','Фоны'],['cats','Котики']]) {
       const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'sitem category-item'; tile.dataset.section = section;
       tile.innerHTML = (section === 'backgrounds' ? `<div class="sthumb" style="background-image:url('${bgSrc('blue-floral')}')"></div>` : '<div class="sthumb cat-thumb"><div class="cell shop-cat-cell"></div></div>') + `<div class="snm">${name}</div>`;
-      tile.addEventListener('click', () => { shopSection = section; renderShop(); document.querySelector('#shopwrap .shoppanel').scrollTop = 0; });
+      tile.addEventListener('click', () => { shopSection = section; renderShop(); document.querySelector('#shopwrap .shoppanel > .sheet-content').scrollTop = 0; });
       shelf.appendChild(tile); if (section === 'cats') paintCatSample(tile.querySelector('.shop-cat-cell'),0);
     }
     return;
@@ -427,7 +427,7 @@ function startTryOn(id, kind = 'background') {
   if (!info || trying) return;
   trying = id;
   tryingKind = kind;
-  shopScroll = document.querySelector('#shopwrap .shoppanel').scrollTop;
+  shopScroll = document.querySelector('#shopwrap .shoppanel > .sheet-content').scrollTop;
   const bar = document.getElementById('tryon');
   document.getElementById('shopwrap').inert = kind === 'skin';
   bar.classList.toggle('cat-preview', kind === 'skin');
@@ -466,7 +466,7 @@ function endTryOn(bought) {
   if (bought && tryingKind !== 'skin') return;
   show(document.getElementById('shopwrap'));
   // display:none may forget the scroll; put the shop back at the tried card.
-  document.querySelector('#shopwrap .shoppanel').scrollTop = shopScroll;
+  document.querySelector('#shopwrap .shoppanel > .sheet-content').scrollTop = shopScroll;
 }
 
 function buyTried() {
