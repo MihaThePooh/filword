@@ -1,3 +1,4 @@
+import { attachSwipe } from './swipe-sheet.js';
 // Smooth open and close for the menu and the bottom panels.
 //
 // They are switched with the hidden attribute, and display:none cannot be
@@ -14,6 +15,8 @@ const reduced = () => typeof matchMedia === 'function'
 
 // onBack - what the phone's Back button does while it is open (default: hide).
 export function show(el, onBack = () => hide(el)) {
+  const panel = el.querySelector('.shoppanel, .menu-sheet, .tcard');
+  if (panel) attachSwipe(panel, { dismiss: onBack, isOpen: () => !el.hidden && !el.classList.contains('closing') }).reset();
   clearTimeout(el._leave);
   el.classList.remove('closing');
   el.hidden = false;

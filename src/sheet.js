@@ -1,3 +1,4 @@
+import { attachSwipe } from './swipe-sheet.js';
 // Card with a word's definitions in the middle of the screen.
 // Opens by tap on a found word (on the board or in the list under it);
 // closes by tap anywhere outside the card or by Escape.
@@ -19,6 +20,7 @@ export function createSheet() {
     <a class="src" target="_blank" rel="noopener">Толкование: Викисловарь</a>`;
   document.body.append(backdrop, sheet);
 
+  const swipe = attachSwipe(sheet, { dismiss: () => close(), isOpen: () => document.body.classList.contains('sheet-open') });
   const dot = sheet.querySelector('.dot');
   const title = sheet.querySelector('.title');
   const defs = sheet.querySelector('.defs');
@@ -27,6 +29,7 @@ export function createSheet() {
 
   // note: shown instead of definitions when the game has none (bonus words).
   function open(word, colour, definitions, stressed, noteText = '') {
+    swipe.reset();
     dot.style.background = colour;
     title.textContent = stressed ?? word; // with the stress mark when known
     // The source article of this very word.

@@ -1,3 +1,4 @@
+import { attachSwipe } from './swipe-sheet.js';
 import { fmtClock } from './timer.js';
 import { plural } from './stats.js';
 // Celebration when a board is solved: a ripple over the cells,
@@ -171,6 +172,7 @@ export function showWinCard({ solved, words, bonus = 0, ms }, onNext) {
     overlay.classList.remove('show');
     setTimeout(() => overlay.remove(), 250);
   };
+  attachSwipe(overlay.querySelector('.win-card'), { dismiss: close, isOpen: () => overlay.classList.contains('show') });
   overlay.addEventListener('click', (e) => {
     if (e.target.closest('.win-next')) {
       close();
@@ -197,6 +199,7 @@ export function showShuffleCard(stats, onShuffle) {
     `Все ${stats.solved} ${plural(stats.solved, 'поле', 'поля', 'полей')} пройдены. Ты получишь ранг «шафл ${next}».`;
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('show'));
+  attachSwipe(overlay.querySelector('.win-card'), { dismiss: () => { overlay.classList.remove('show'); setTimeout(() => overlay.remove(), 250); }, isOpen: () => overlay.classList.contains('show') });
   overlay.querySelector('.win-next').addEventListener('click', () => {
     overlay.classList.remove('show');
     setTimeout(() => overlay.remove(), 250);

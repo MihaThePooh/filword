@@ -2,11 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { show, hide, toggle } from '../src/sheets.js';
 
-// A stand-in for a DOM element: just hidden and a class list.
+// A stand-in for an overlay without a draggable child panel.
 function fakeEl(hidden = true) {
   const cls = new Set();
   return {
     hidden,
+    querySelector: () => null,
     classList: {
       add: (c) => cls.add(c),
       remove: (c) => cls.delete(c),

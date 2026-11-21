@@ -772,3 +772,23 @@ body.themed header > [data-header-ink] svg {
 .win-counts > div { display: flex; justify-content: space-between; gap: 22px; padding: 5px 0; }
 .win-counts dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
 .win-counts .win-total { border-top: 1px solid var(--line); margin-top: 5px; padding-top: 10px; }
+
+/* A generous touch target around the small, familiar drag indicator. */
+.swipe-panel { overscroll-behavior-y: contain; }
+.sheet-grip {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  width: calc(100% + 32px); height: 36px; flex: none;
+  margin: -16px -16px 8px; padding: 0;
+  border: 0; border-radius: 20px 20px 0 0; background: #fff;
+  color: #8a8a85; cursor: grab; touch-action: none;
+}
+.sheet-grip span { display: block; width: 40px; height: 4px; border-radius: 4px; background: #c8c6bd; }
+.sheet-grip:focus-visible { outline: 2px solid #637f69; outline-offset: -5px; }
+.swipe-dragging { transition: none !important; cursor: grabbing; }
+.menu-sheet { max-height: calc(100dvh - 82px - env(safe-area-inset-top)); overflow-y: auto; }
+.menu-sheet > .sheet-grip { width: calc(100% + 12px); height: 32px; margin: -6px -6px 4px; top: 0; padding: 0; display: flex; }
+.menu-sheet > .sheet-grip:active { background: #fff; }
+.tcard > .sheet-grip { width: 100%; margin: 0 0 0; top: 0; border-radius: 16px 16px 0 0; }
+.sheet > .sheet-grip { width: calc(100% + 44px); margin: -20px -22px 8px; top: 0; }
+.win-card > .sheet-grip { width: calc(100% + 56px); margin: -28px -28px 8px; top: 0; border-radius: 24px 24px 0 0; }
