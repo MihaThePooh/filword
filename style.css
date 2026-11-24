@@ -839,3 +839,14 @@ body.themed header > [data-header-ink] svg {
 .champions-section{margin-top:12px}.champions-section>.sub{margin:4px 0 6px}
 #leaderwrap .sheet-content>div>h2{margin-bottom:4px}
 #leaderwrap [role=status]{margin:4px 0 8px}
+
+/* Larger nickname hint uses the same system face and remains inside its field. */
+.leader-nick-field{position:relative;flex:1;min-width:0}
+.leader-nick-field input,.leader-nick button{height:64px}
+.leader-nick-field input{font-size:22px;width:100%}
+.leader-nick-field input::placeholder{font:inherit;color:transparent}
+.leader-nick-hint{position:absolute;inset:0;display:grid;align-content:center;padding:5px;pointer-events:none;font-family:inherit;font-size:22px;line-height:25px;color:#697362;text-align:center}
+.leader-nick-hint>span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:22px;line-height:25px}
+.leader-nick-field:has(input:focus) .leader-nick-hint,.leader-nick-field:has(input:not(:placeholder-shown)) .leader-nick-hint{display:none}
+#leaderwrap,.champions-section{font-family:inherit}
+.champion-viewer{overflow:hidden;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}.champion-viewer img{max-width:none;max-height:none}

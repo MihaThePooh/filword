@@ -26,9 +26,17 @@ function portrait(cat) {
   const img=node('img');img.src=cat.src;img.alt=cat.name;button.append(img);
   let timer,viewer,start;
   const close=()=>{clearTimeout(timer);viewer?.remove();viewer=null};
-  const zoom=()=>{viewer=node('div',undefined,'cat-viewer');const large=node('img');large.src=cat.large||cat.src;large.alt=cat.name;viewer.append(large);document.body.append(viewer)};
+  const zoom=()=>{
+    viewer=node('div',undefined,'cat-viewer champion-viewer');const large=node('img');large.src=cat.src;large.alt=cat.name;
+    const full=new Image();full.src=cat.large||cat.src;full.decode().then(()=>{if(large.isConnected)large.src=full.src}).catch(()=>{});
+    // Enlarge the actual subject up to twice its old size, keeping every paw visible.
+    const bounds={'prize-gold':[.61,.59,.52,.485],'prize-silver':[.54,.59,.534,.486],'prize-bronze':[.68,.38,.498,.533]}[cat.id]||[1,1];
+    const size=Math.min(Math.min(innerWidth*.92,innerHeight*.85)*2,(innerWidth-24)/bounds[0],(innerHeight-32)/bounds[1]);
+    large.style.width=large.style.height=size+'px';large.style.transform=`translate(${(.5-(bounds[2]??.5))*size}px,${(.5-(bounds[3]??.5))*size}px)`;viewer.append(large);document.body.append(viewer);
+  };
   button.onpointerdown=e=>{start=[e.clientX,e.clientY];timer=setTimeout(zoom,500);button.setPointerCapture(e.pointerId)};
-  button.onpointermove=e=>{if(start&&Math.hypot(e.clientX-start[0],e.clientY-start[1])>12&&!viewer)clearTimeout(timer)};
+  button.addEventListener('touchmove',e=>{if(viewer){e.preventDefault();e.stopPropagation()}},{passive:false});
+  button.onpointermove=e=>{if(viewer){e.stopPropagation();return}if(start&&Math.hypot(e.clientX-start[0],e.clientY-start[1])>12&&!viewer)clearTimeout(timer)};
   button.onpointerup=close;button.onpointercancel=close;button.onlostpointercapture=close;
   button.oncontextmenu=e=>e.preventDefault();button.onblur=close;
   button.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat){e.preventDefault();zoom()}};
@@ -51,8 +59,10 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
       if(!response.ok)throw Error(response.status===401?'Войди в аккаунт, чтобы увидеть рейтинг.':'Рейтинг пока недоступен. Попробуй ещё раз.');
       const data=await response.json();status.textContent='Места определяются по общему числу закрытых полей взрослой и детской версии. При равенстве выше более ранний результат. Рейтинг появляется после первого закрытого поля. Если ты не задавал свой ник, возьмётся небольшая часть твоей почты. Остальная часть будет закрыта звёздочками и не видна другим игрокам.';
       const form=node('form',undefined,'leader-nick');const input=node('input');input.maxLength=24;input.setAttribute('aria-label','Твой ник');
-      input.placeholder=`Твой ник сейчас: ${data.rows.find(r=>r.self)?.nickname||'не задан'}`;input.title=input.placeholder;
-      const save=node('button','Сохранить');save.type='submit';form.append(input,save);content.append(form);
+      const currentNick=data.rows.find(r=>r.self)?.nickname||'не задан';
+      input.placeholder=`Твой ник сейчас: ${currentNick}`;input.title=input.placeholder;
+      const field=node('div',undefined,'leader-nick-field');const hint=node('span',undefined,'leader-nick-hint');hint.setAttribute('aria-hidden','true');hint.append(node('span','Твой ник сейчас:'),node('span',currentNick));field.append(input,hint);
+      const save=node('button','Сохранить');save.type='submit';form.append(field,save);content.append(form);
       form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{const r=await accountApi('/api/profile','PUT',{nickname:input.value});if(!r.ok){const body=await r.json();throw Error(body.error||'Не удалось сохранить ник')}await open()}catch(err){status.textContent=err.message}finally{save.disabled=false}};
       const table=node('table',undefined,'leader-table');table.setAttribute('aria-label','Рейтинг игроков');const body=node('tbody');table.append(body);
       for(const row of rankingRows(data.rows,data.total)) {
