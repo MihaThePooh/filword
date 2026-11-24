@@ -49,9 +49,10 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
     try {
       await syncNow();const response=await accountApi('/api/leaderboard');
       if(!response.ok)throw Error(response.status===401?'Войди в аккаунт, чтобы увидеть рейтинг.':'Рейтинг пока недоступен. Попробуй ещё раз.');
-      const data=await response.json();status.textContent='Места определяются по общему числу закрытых полей взрослой и детской версии. При равенстве выше более ранний результат. Рейтинг появляется после первого поля.';
-      const form=node('form',undefined,'leader-nick');const label=node('label','Твой ник');const input=node('input');input.maxLength=24;input.placeholder='По умолчанию — часть почты со звёздочками';input.value=data.rows.find(r=>r.self)?.nickname||'';label.append(input);
-      const save=node('button','Сохранить');save.type='submit';form.append(label,save);content.append(form,node('p','Пустой ник вернёт имя из почты. Полный адрес и домен другим игрокам не видны.','sub'));
+      const data=await response.json();status.textContent='Места определяются по общему числу закрытых полей взрослой и детской версии. При равенстве выше более ранний результат. Рейтинг появляется после первого закрытого поля. Если ты не задавал свой ник, возьмётся небольшая часть твоей почты. Остальная часть будет закрыта звёздочками и не видна другим игрокам.';
+      const form=node('form',undefined,'leader-nick');const input=node('input');input.maxLength=24;input.setAttribute('aria-label','Твой ник');
+      input.placeholder=`Твой ник сейчас: ${data.rows.find(r=>r.self)?.nickname||'не задан'}`;input.title=input.placeholder;
+      const save=node('button','Сохранить');save.type='submit';form.append(input,save);content.append(form);
       form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{const r=await accountApi('/api/profile','PUT',{nickname:input.value});if(!r.ok){const body=await r.json();throw Error(body.error||'Не удалось сохранить ник')}await open()}catch(err){status.textContent=err.message}finally{save.disabled=false}};
       const table=node('table',undefined,'leader-table');table.setAttribute('aria-label','Рейтинг игроков');const body=node('tbody');table.append(body);
       for(const row of rankingRows(data.rows,data.total)) {
@@ -74,14 +75,14 @@ function renderPrizes(target,stats,setStats,capacity) {
   const earned=championsOf(stats).owned;
   const box=node('section',undefined,'champions-section');const heading=node('h3','Чемпионы');
   const stars=node('span','★'.repeat(earned.length)+'☆'.repeat(3-earned.length),'astars');stars.setAttribute('aria-label',`Получено ${earned.length} из 3 звёзд`);heading.append(stars);box.append(heading);
-  box.append(node('p','Призы навсегда за первое достижение места: бронза — третье, серебро — второе, золото — первое. Каждый этап даёт котика, звезду и монеты один раз. Первое место сразу открывает все три этапа: 55 000 монет. Награды приходят после синхронизации.','sub'));
+  box.append(node('p','Призы выдаются навсегда за первое достижение места: бронза — третье, серебро — второе, золото — первое. Каждый этап даёт котика, звезду и монеты один раз. Первое место сразу открывает все три этапа: 55 000 монет.','sub'));
   if(capacity===25)box.append(node('p','Призовые монеты поступают во взрослую версию игры. Котиков можно добавить в обеих версиях.','sub'));
-  box.append(node('p','Любого из выигранных котиков можно поставить на поле. Нажми «Добавить» и выбери обычного котика, которого хочешь заменить. Если есть свободное место, призовой котик добавится сразу. Прежний котик останется в коллекции. Удерживай котика, чтобы рассмотреть его на весь экран.','sub'));
-  for(const cat of PRIZE_CATS){
+  box.append(node('p','Любого из выигранных котиков можно поставить на поле. Нажми «Добавить на поле» и выбери обычного котика, которого хочешь заменить. Если есть свободное место, призовой котик добавится сразу. Прежний котик останется в коллекции. Удерживай котика, чтобы рассмотреть его на весь экран.','sub'));
+  for(const cat of [...PRIZE_CATS].sort((a,b)=>a.rank-b.rank)){
     const row=node('div',undefined,'champion-card');row.append(portrait(cat));const description=node('div',cat.name);description.append(node('small',`Место ${cat.rank} · ${amount(cat.coins)} монет`));row.append(description);
     if(earned.includes(cat.id)){
       description.append(node('small','Получен навсегда'));
-      const equipped=equippedCats(stats,skinsOf(stats).owned,capacity);const button=node('button',equipped.includes(cat.id)?'На поле':'Добавить');button.disabled=equipped.includes(cat.id);button.type='button';
+      const equipped=equippedCats(stats,skinsOf(stats).owned,capacity);const button=node('button',equipped.includes(cat.id)?'На поле':'Добавить на поле');button.disabled=equipped.includes(cat.id);button.type='button';
       button.onclick=()=>{
         if(equipped.length<capacity){const next=equipPrize(stats,skinsOf(stats).owned,cat.id,null,capacity);setStats(next,null,cat.id);box.remove();renderPrizes(target,next,setStats,capacity);return}
         let chooser=box.querySelector('.champion-replace');chooser?.remove();chooser=node('div',undefined,'champion-replace');chooser.append(node('h4','Кого заменить?'),node('p','Выбранный котик останется в коллекции. Остальные котики на поле сохранят свои места.','sub'));
