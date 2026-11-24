@@ -11,7 +11,7 @@ import { keepSkins } from './skins.js';
 // old version (409). Then the save with more progress wins - a week of play on
 // one phone is never wiped by an evening on another.
 
-import { MODES } from './mode.js';
+import { MODES, currentMode } from './mode.js';
 import { shopOf, mergeOwned } from './shop.js';
 
 // Adopted stats, but with the backgrounds bought on this phone kept too.
@@ -87,6 +87,24 @@ export function decide(local, server) {
   return moreProgress(save.stats, local.stats) ? { act: 'adopt' } : { act: 'push', version: save.version };
 }
 
+
+// Recover each mode independently: an empty adult copy must not erase its cloud
+// progress, and newer offline kids progress must survive the same sign-in.
+export function recoverModes(local,server) {
+  if(!server.save || !(local.state||local.stats) || (local.owner && local.owner!==server.owner))return null;
+  const localStats=unpack(local.stats),remoteStats=unpack(server.save.stats);
+  const localState=unpack(local.state),remoteState=unpack(server.save.state);
+  const behind=(a,b)=>{
+    const x=progressOf(a),y=progressOf(b);
+    return y[0]>x[0] || (y[0]===x[0] && y[1]>x[1]);
+  };
+  if(!localStats.some((s,i)=>behind(s,remoteStats[i])))return null;
+  const chosen=localStats.map((s,i)=>behind(s,remoteStats[i])||!s?1:0);
+  return {version:server.save.version,
+    stats:pack(...chosen.map((remote,i)=>remote?remoteStats[i]:localStats[i])),
+    state:pack(...chosen.map((remote,i)=>remote?remoteState[i]:(localState[i]||remoteState[i])))};
+}
+
 // --- browser part ---
 
 function read(key) {
@@ -125,11 +143,25 @@ function loginUrl() {
   return `${HOME_URL}/?app=filword&next=${encodeURIComponent(location.href)}`;
 }
 
-function showSignInNotice() {
+const LAST_ENTRY_KEY = 'filword-last-confirmed-entry';
+const hasPlayableCopy=()=>Boolean(read(currentMode()==='kids'?KIDS_STATE_KEY:STATE_KEY));
+function showSignInNotice(networkProblem=false) {
   if (typeof document === 'undefined' || document.getElementById('cloud-auth-needed')) return;
-  const notice=document.createElement('p');notice.id='cloud-auth-needed';notice.className='cloud-auth-needed';notice.setAttribute('role','alert');
-  notice.textContent='Сохранённый прогресс не загружен: войди в аккаунт для синхронизации.';
-  const link=document.createElement('a');link.href=loginUrl();link.textContent='Войти';notice.append(link);document.body.append(notice);
+  const notice=document.createElement('dialog');notice.id='cloud-auth-needed';notice.className='cloud-auth-needed';
+  const card=document.createElement('div');card.className='cloud-entry-card';
+  const title=document.createElement('h2');title.textContent=networkProblem?'Не удалось загрузить сохранение':'Войди в аккаунт повторно';
+  const text=document.createElement('p');text.textContent=networkProblem
+    ?'Проверь подключение к интернету и повтори загрузку. Сохранённый прогресс не заменяется новой игрой.'
+    :'Нужно подтвердить вход, чтобы загрузить твои поля, статистику и монеты. После входа ты вернёшься в филворд.';
+  card.append(title,text);
+  const previous=read(LAST_ENTRY_KEY);
+  if(previous?.owner && previous.owner===read(OWNER_KEY) && Number.isFinite(previous.at)) {
+    const when=document.createElement('p');when.className='cloud-entry-date';
+    when.textContent='Последний подтверждённый вход на этом устройстве: '+new Intl.DateTimeFormat('ru-RU',{timeZone:'Europe/Moscow',dateStyle:'long',timeStyle:'short'}).format(previous.at)+' (МСК).';card.append(when);
+  }
+  if(!networkProblem){const link=document.createElement('a');link.href=loginUrl();link.textContent='Войти в свой аккаунт';card.append(link);}
+  const retry=document.createElement('button');retry.type='button';retry.textContent=networkProblem?'Повторить загрузку':'Я уже вошёл — загрузить игру';retry.onclick=()=>location.reload();card.append(retry);
+  notice.append(card);notice.addEventListener('cancel',e=>e.preventDefault());document.body.append(notice);notice.showModal();
 }
 
 // Several requests hitting an expired pass at once wait for one renewal.
@@ -210,6 +242,8 @@ async function push(version,attempt=0) {
   const r = await api('PUT', { state: local.state || {}, stats: local.stats || {}, version, championsVersion:1 });
   if (r.status === 409) {
     const { save } = await r.json();
+    const recovered=recoverModes(localCopy(),{owner,save});
+    if(recovered){adopt(recovered);write(DIRTY_KEY,1);await push(save.version ,attempt+1);onReplaced();return;}
     if (save && moreProgress(save.stats, localCopy().stats)) {
       adopt(save);
       onReplaced();
@@ -252,32 +286,50 @@ export async function start({ replaced } = {}) {
   if (replaced) onReplaced = replaced;
   if (!watchingConnection) {
     watchingConnection = true;
+    let checkingSession=false;
+    const recheckSession=async()=>{
+      if(checkingSession||document.hidden||navigator.onLine===false||document.getElementById('cloud-auth-needed'))return;
+      checkingSession=true;
+      try{const response=await api('GET');if(response.ok){const data=await response.json();if(data.owner===read(OWNER_KEY))write(LAST_ENTRY_KEY,{owner:data.owner,at:Date.now()})}}catch(err){if(err instanceof SignInNeeded)showSignInNotice()}
+      finally{checkingSession=false}
+    };
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)recheckSession()});
+    window.addEventListener('pageshow',e=>{if(e.persisted)recheckSession()});
     window.addEventListener('online', () => {
       if (owner) { if (read(DIRTY_KEY) === 1) flush(); }
       else start();
     });
   }
   owner = read(OWNER_KEY);
-  if (navigator.onLine === false) return;
+  if (navigator.onLine === false) {
+    if(hasPlayableCopy())return;
+    showSignInNotice(true);return new Promise(()=>{});
+  }
   let server;
   try {
     // A dead connection must not hold the local game on its loading screen.
     let timeout;
-    const r = await Promise.race([api('GET'), new Promise((_, reject) => {
+    const request=api('GET').catch(err=>{if(err instanceof SignInNeeded)showSignInNotice();throw err;});
+    const cached=Boolean(hasPlayableCopy());
+    const r = await (cached ? Promise.race([request, new Promise((_, reject) => {
       timeout = setTimeout(() => reject(new Error('cloud timeout')), 6000);
-    })]).finally(() => clearTimeout(timeout));
+    })]).finally(() => clearTimeout(timeout)) : request);
     if (!r.ok) throw new Error(`load failed: ${r.status}`);
     server = await r.json();
   } catch (err) {
     // Authentication is needed for cloud sync, not for local play.
     // Offline: play the local copy, it goes to the server later.
     owner = read(OWNER_KEY);
-    if (err instanceof SignInNeeded) showSignInNotice();
+    if (err instanceof SignInNeeded) {showSignInNotice();return new Promise(()=>{});}
+    if(!hasPlayableCopy()){showSignInNotice(true);return new Promise(()=>{});}
     return;
   }
   document.getElementById('cloud-auth-needed')?.remove();
   owner = server.owner;
+  write(LAST_ENTRY_KEY,{owner,at:Date.now()});
   if (read(OWNER_KEY) === owner && server.save?.stats?.champions) acceptChampions(server.save.stats.champions);
+  const recovered=recoverModes(localCopy(),server);
+  if(recovered){adopt(recovered);write(DIRTY_KEY,1);write(OWNER_KEY,owner);flush();return;}
   const choice = decide(localCopy(), server);
   if (choice.act === 'adopt') adopt(server.save);
   if (choice.act === 'fresh') {
