@@ -125,6 +125,13 @@ function loginUrl() {
   return `${HOME_URL}/?app=filword&next=${encodeURIComponent(location.href)}`;
 }
 
+function showSignInNotice() {
+  if (typeof document === 'undefined' || document.getElementById('cloud-auth-needed')) return;
+  const notice=document.createElement('p');notice.id='cloud-auth-needed';notice.className='cloud-auth-needed';notice.setAttribute('role','alert');
+  notice.textContent='Сохранённый прогресс не загружен: войди в аккаунт для синхронизации.';
+  const link=document.createElement('a');link.href=loginUrl();link.textContent='Войти';notice.append(link);document.body.append(notice);
+}
+
 // Several requests hitting an expired pass at once wait for one renewal.
 async function boundedFetch(url, options) {
   const controller = new AbortController();
@@ -226,7 +233,7 @@ function flush() {
   let signInNeeded = false;
   pushing = push(read(VERSION_KEY) ?? 0)
     .catch((err) => {
-      if (err instanceof SignInNeeded) signInNeeded = true;
+      if (err instanceof SignInNeeded) {signInNeeded = true;showSignInNotice();}
       // Keep local play available when sign-in expires.
       // Offline or the server is down: the copy stays dirty, the next change
       // or coming back online sends it.
@@ -265,8 +272,10 @@ export async function start({ replaced } = {}) {
     // Authentication is needed for cloud sync, not for local play.
     // Offline: play the local copy, it goes to the server later.
     owner = read(OWNER_KEY);
+    if (err instanceof SignInNeeded) showSignInNotice();
     return;
   }
+  document.getElementById('cloud-auth-needed')?.remove();
   owner = server.owner;
   if (read(OWNER_KEY) === owner && server.save?.stats?.champions) acceptChampions(server.save.stats.champions);
   const choice = decide(localCopy(), server);

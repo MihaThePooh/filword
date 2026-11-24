@@ -50,8 +50,10 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
   const item=node('button','Таблица лидеров');item.type='button';item.id='leaderItem';
   item.append(node('small','Поля за всё время и призовые котики'));
   document.querySelector('#statsItem').after(item);
+  let nickObserver;
   const status=node('p',undefined,'sub');status.setAttribute('role','status');
   async function open() {
+    nickObserver?.disconnect();
     hide(document.querySelector('#menu'));content.replaceChildren(node('h2','Таблица лидеров'),status);
     show(wrap);status.textContent='Сохраняем прогресс и загружаем рейтинг…';
     try {
@@ -61,8 +63,17 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
       const form=node('form',undefined,'leader-nick');const input=node('input');input.maxLength=24;input.setAttribute('aria-label','Твой ник');
       const currentNick=data.rows.find(r=>r.self)?.nickname||'не задан';
       input.placeholder=`Твой ник сейчас: ${currentNick}`;input.title=input.placeholder;
-      const field=node('div',undefined,'leader-nick-field');const hint=node('span',undefined,'leader-nick-hint');hint.setAttribute('aria-hidden','true');hint.append(node('span','Твой ник сейчас:'),node('span',currentNick));field.append(input,hint);
+      const field=node('div',undefined,'leader-nick-field');const hint=node('span',undefined,'leader-nick-hint');hint.setAttribute('aria-hidden','true');hint.textContent=input.placeholder;field.append(input,hint);
       const save=node('button','Сохранить');save.type='submit';form.append(field,save);content.append(form);
+      const fitHint=()=>{
+        const available=hint.clientWidth-16;if(available<10)return;
+        const ctx=document.createElement('canvas').getContext('2d');ctx.font=`17px ${getComputedStyle(hint).fontFamily}`;
+        const width=ctx.measureText(hint.textContent).width;
+        let size=Math.max(12,Math.min(17,17*available/width));
+        hint.style.fontSize=size.toFixed(2)+'px';
+        while(hint.scrollWidth>hint.clientWidth && size>12){size=Math.max(12,size-.25);hint.style.fontSize=size.toFixed(2)+'px';}
+      };
+      nickObserver=new ResizeObserver(fitHint);nickObserver.observe(field);requestAnimationFrame(fitHint);
       form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{const r=await accountApi('/api/profile','PUT',{nickname:input.value});if(!r.ok){const body=await r.json();throw Error(body.error||'Не удалось сохранить ник')}await open()}catch(err){status.textContent=err.message}finally{save.disabled=false}};
       const table=node('table',undefined,'leader-table');table.setAttribute('aria-label','Рейтинг игроков');const body=node('tbody');table.append(body);
       for(const row of rankingRows(data.rows,data.total)) {
