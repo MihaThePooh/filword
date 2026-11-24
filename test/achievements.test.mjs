@@ -18,12 +18,12 @@ test('catalog: matching rising goals and rewards, with one full-collection miles
 test('goals and prices as agreed on 02.11.2026 (second round)', () => {
   const by = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
   assert.deepEqual([by.marathon.stars, by.marathon.coins], [[100, 350, 1000], [300, 500, 1000]]);
-  assert.deepEqual([by.hunter.stars, by.hunter.coins], [[25, 30, 35], [200, 300, 500]]);
+  assert.deepEqual([by.hunter.stars, by.hunter.coins], [[25, 35, 45], [200, 300, 500]]);
   assert.deepEqual([by.clean.stars, by.clean.coins], [[10, 150, 500], [100, 300, 1000]]);
   assert.deepEqual([by.rich.stars, by.rich.coins], [[5000, 15000, 30000], [300, 700, 1000]]);
   assert.deepEqual([by.bonus.stars, by.bonus.coins], [[100, 350, 1000], [300, 700, 1500]]);
   assert.deepEqual([by.collector.stars, by.collector.coins], [[3, 10, 30], [100, 300, 1000]]);
-  assert.deepEqual([by.veteran.stars, by.veteran.coins], [[1, 5, 30], [1000, 5000, 30000]]);
+  assert.deepEqual([by.veteran.stars, by.veteran.coins], [[1, 2, 5], [1000, 5000, 30000]]);
 });
 
 test('starsFor counts reached thresholds', () => {
@@ -78,7 +78,7 @@ test('achievementRows: progress text with the right word form, bar, goals', () =
   assert.equal(m.progress, '22 / 100 полей');
   assert.deepEqual(m.goals, ['100 полей', '350 полей', '1000 полей']);
   const v = achievementRows({}).find((r) => r.id === 'veteran');
-  assert.deepEqual(v.goals, ['1 шафл', '5 шафлов', '30 шафлов']);
+  assert.deepEqual(v.goals, ['1 шафл', '2 шафла', '5 шафлов']);
   const c = achievementRows({}).find((r) => r.id === 'collector');
   assert.equal(c.goals[0], '3 фона');
   const done = achievementRows({ solved: 5000 }).find((r) => r.id === 'marathon');
@@ -148,4 +148,18 @@ test('full cat collection pays 15000 once, only for distinct catalogue cats', as
   assert.equal(row.stars, 1); assert.equal(row.maxStars, 1);
   assert.equal(row.progress, 'Коллекция собрана');
   assert.deepEqual(row.goals, ['64 котика']);
+});
+
+
+test('new hunter/veteran thresholds preserve previous payments and do not repay', () => {
+  const paid = { coins: 10, maxWords: 35, shuffles: 2, awardCoins: {hunter:1000,veteran:1000} };
+  const first = evaluate(paid);
+  assert.equal(first.stats.coins, 5010);
+  assert.equal(first.stats.awardCoins.hunter,1000);
+  assert.equal(first.stats.awardCoins.veteran,6000);
+  assert.equal(evaluate(first.stats).awarded.length,0);
+  const last = evaluate({...first.stats,shuffles:5,maxWords:45});
+  assert.equal(last.stats.coins,35010);
+  assert.equal(last.awarded.some(a=>a.id==='hunter'),false);
+  assert.equal(evaluate(last.stats).awarded.length,0);
 });

@@ -22,7 +22,7 @@ export const ACHIEVEMENTS = [
   { id: 'hunter', name: 'Охотник', goal: (n) => `${form(['слово', 'слова', 'слов'])(n)} на одном поле`,
     about: 'Найди много слов на одном поле: загаданные и бонусные считаются вместе. '
       + 'Рекорд держится на бонусных словах — ищи их.',
-    read: (s) => s.maxWords || 0, stars: [25, 30, 35], coins: [200, 300, 500] },
+    read: (s) => s.maxWords || 0, stars: [25, 35, 45], coins: [200, 300, 500] },
   { id: 'bonus', name: 'Собиратель', goal: form(['бонусное слово', 'бонусных слова', 'бонусных слов']),
     about: 'Бонусное слово — настоящее слово из словаря, которое не загадано на поле. '
       + 'За каждое ещё и монеты сверху.',
@@ -51,7 +51,7 @@ export const ACHIEVEMENTS = [
     read: (s) => skinsOf(s).owned.length, stars: [CAT_ROSTER.length], coins: [15000] },
   { id: 'veteran', name: 'Ветеран', goal: form(['шафл', 'шафла', 'шафлов']),
     about: 'Пройди весь круг полей: слова перемешаются, и круг начнётся заново — это шафл.',
-    read: (s) => s.shuffles || 0, stars: [1, 5, 30], coins: [1000, 5000, 30000] },
+    read: (s) => s.shuffles || 0, stars: [1, 2, 5], coins: [1000, 5000, 30000] },
 ];
 
 // What each star used to pay, for saves made before awardCoins existed:
