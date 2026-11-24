@@ -51,3 +51,7 @@ test("someone else's copy on this device is never uploaded to my account", () =>
   assert.deepEqual(decide(theirs, { save: save(2, 5), owner: ME }), { act: 'adopt' });
   assert.deepEqual(decide(theirs, { save: null, owner: ME }), { act: 'fresh' });
 });
+
+test('lifetime boards remain ahead after a shuffle resets the current cycle',()=>{
+ assert.equal(moreProgress({totalSolved:2110,solved:1},{solved:2000}),true);
+});

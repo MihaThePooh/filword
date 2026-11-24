@@ -1,8 +1,12 @@
+import { PRIZE_CATS, equippedCats } from './champions.js';
 import { CAT_ROSTER } from './cat-roster.js';
 export { CAT_ROSTER };
+export const ALL_CATS = [...CAT_ROSTER,...PRIZE_CATS];
+export const fieldCats = (stats,capacity=64) => equippedCats(stats,skinsOf(stats).owned,capacity);
 // Cell cosmetics have their own inventory: buying a skin never changes the wallpaper.
 export const CELL_SKINS = CAT_ROSTER.map(cat => ({ id: cat.id, name: cat.name, price: 500 }));
-const catalog = new Map(CELL_SKINS.map(item => [item.id, item]));
+const regularIds = new Set(CAT_ROSTER.map(cat=>cat.id));
+const catalog = new Map([...CELL_SKINS,...PRIZE_CATS].map(item => [item.id, item]));
 // Spread the related base portraits through the themed cats. Keep this order
 // stable when returning from try-on so the catalogue never jumps under a finger.
 export function catShopOrder() {
@@ -18,19 +22,19 @@ let previewCat = null;
 export function skinsOf(stats) {
   const s = stats?.skins;
   const legacy = Array.isArray(s?.owned) && s.owned.includes('ginger-cats');
-  const owned = legacy ? CAT_ROSTER.map(c => c.id) : [...new Set((Array.isArray(s?.owned) ? s.owned : []).filter(id => catalog.has(id)))];
-  return { owned, active: owned.length && s?.active ? 'cats' : null };
+  const owned = legacy ? CAT_ROSTER.map(c => c.id) : [...new Set((Array.isArray(s?.owned) ? s.owned : []).filter(id => regularIds.has(id)))];
+  return { ...s, owned, active: (owned.length || stats?.champions?.owned?.length) && s?.active ? 'cats' : null };
 }
 export const ownsSkin = (stats, id) => skinsOf(stats).owned.includes(id);
 export const activeSkin = stats => skinsOf(stats).active;
 export function trySkin(stats, id) {
   const item = catalog.get(id);
-  return item ? { ...item, owned: ownsSkin(stats, id), short: Math.max(0, item.price - (stats?.coins ?? 0)) } : null;
+  return item && Number.isFinite(item.price) ? { ...item, owned: ownsSkin(stats, id), short: Math.max(0, item.price - (stats?.coins ?? 0)) } : null;
 }
 export function buySkin(stats, id) {
   const item = trySkin(stats, id);
   if (!item || item.owned || item.short) return null;
-  return { ...stats, coins: stats.coins - item.price, skins: { owned: [...skinsOf(stats).owned, id], active: 'cats' } };
+  return { ...stats, coins: stats.coins - item.price, skins: { ...skinsOf(stats), owned: [...skinsOf(stats).owned, id], ...(Array.isArray(stats?.skins?.equipped) ? {equipped:[...new Set([...stats.skins.equipped,id])].slice(0,64)}:{}), active: 'cats' } };
 }
 export function wearSkin(stats, id) {
   const skins = skinsOf(stats);
@@ -45,7 +49,7 @@ export function keepSkins(stats, previous) {
 export function applySkin(stats, preview = undefined) {
   if (typeof document === 'undefined') return;
   const worn = skinsOf(stats);
-  const ids = preview === undefined ? (worn.active ? worn.owned : []) : (catalog.has(preview) ? [preview] : []);
+  const ids = preview === undefined ? (worn.active ? fieldCats(stats) : []) : (catalog.has(preview) ? [preview] : []);
   document.body.classList.toggle('cat-skin', ids.length > 0);
   previewCat = preview === undefined ? null : ids[0] ?? null;
 }
@@ -82,7 +86,7 @@ export function shuffleCats(count = 64, random = Math.random, pool = currentPool
   return order.slice(0, count);
 }
 export function catMarkup(index = 0) {
-  const item = CAT_ROSTER[((Math.trunc(index) % CAT_ROSTER.length) + CAT_ROSTER.length) % CAT_ROSTER.length];
+  const item = ALL_CATS[((Math.trunc(index) % ALL_CATS.length) + ALL_CATS.length) % ALL_CATS.length];
   if (item.src) return `<span class="kitten approved-cat" data-cat="${item.id}" aria-hidden="true"><span class="cat-approved-art" style="background-image:url('${item.src}')"></span></span>`;
   return variantMarkup(item.variantIndex).replace(`data-cat="${item.variantIndex}"`, `data-cat="${item.id}"`);
 }
@@ -113,9 +117,9 @@ export function paintLetter(el, letter, catId = null) {
     el.removeAttribute('aria-label');
     return;
   }
-  const index = CAT_ROSTER.findIndex(cat => cat.id === id);
+  const index = ALL_CATS.findIndex(cat => cat.id === id);
   el.dataset.catIndex = index;
-  const item = CAT_ROSTER[index];
+  const item = ALL_CATS[index];
   const expected = item.id;
   el.style.setProperty('--letter-x', item.disc.x + '%');
   el.style.setProperty('--letter-y', item.disc.y + '%');
@@ -138,7 +142,7 @@ export function paintLetter(el, letter, catId = null) {
 
 export function paintCatSample(el, index, letter = 'А') {
   el.dataset.catIndex = index;
-  const item = CAT_ROSTER[index];
+  const item = ALL_CATS[index];
   el.style.setProperty('--letter-x', item.disc.x + '%');
   el.style.setProperty('--letter-y', item.disc.y + '%');
   el.style.setProperty('--body-disc-x', (item.disc.bodyX ?? 50) + '%');

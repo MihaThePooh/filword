@@ -1,6 +1,8 @@
+import { setupLeaderboard } from './leaderboard.js';
+import { replacePlannedCat } from './champions.js';
 import { setupHeaderContrast } from './header-contrast.js';
 import { syncCats, revealCat } from './cat-collection.js';
-import { CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
+import { ALL_CATS, fieldCats, CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
 // Game screen: draws the board, follows the finger, colours found words.
 
 import {
@@ -48,7 +50,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 67;
+export const VERSION = 68;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -93,6 +95,17 @@ async function init() {
   document.addEventListener('visibilitychange', () => document.body.classList.toggle('cat-resting', document.hidden));
   setupStats();
   setupAchievements();
+  leaderboardUI=setupLeaderboard({getStats:()=>({...stats,champions:loadJson(cloud.STATS_KEY)?.champions}),capacity:BOARD_SIZE*BOARD_SIZE,setStats:(next,oldId,newId)=>{
+    stats=next;
+    if(oldId) boardCats=replacePlannedCat(boardCats,oldId,newId);
+    boardCats=syncCats(board.words,fieldCats(stats,BOARD_SIZE*BOARD_SIZE),boardCats,found.keys());
+    applySkin(stats);saveStats();saveState();render();
+  }});
+  window.addEventListener('champions-updated',()=>{
+    if(MODE !== 'adult')return;
+    stats={...stats,...loadJson(STATS_KEY)};
+    if(coinFx){coinFx.reset();renderHeader();}
+  });
   document.getElementById('logout').addEventListener('click', (e) => { e.preventDefault(); cloud.logout(); });
   // The save is fetched while the dictionary loads; the board waits for both.
   const synced = cloud.start();
@@ -265,6 +278,7 @@ function noteBoardRecord() {
 // next star. A tap unfolds it like an accordion: what it is, how to get it,
 // and three stars - a tap on a star tells its goal and reward.
 let achRows = [];
+let leaderboardUI;
 
 function setupAchievements() {
   const wrap = document.getElementById('achwrap');
@@ -304,6 +318,7 @@ function renderAchievements() {
       + '<div class="astarinfo">Нажми на звезду — покажу, за что она и сколько даёт.</div>'
       + '</div></div></div>';
   }).join('');
+  leaderboardUI?.renderAchievement(document.getElementById('achlist'));
 }
 
 function showStarInfo(row, k) {
@@ -349,7 +364,7 @@ function renderShop() {
   const title = document.getElementById('shopTitle');
   title.textContent = shopSection === 'home' ? 'Магазин' : shopSection === 'cats' ? 'Котики' : 'Фоны';
   document.getElementById('shopBack').hidden = shopSection === 'home';
-  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. На каждом поле появляются все купленные котики — по одному на клетку, без повторов (до 64 во взрослой игре и до 25 в детской). Они открываются вместе с буквами найденного слова. Полная коллекция заполняет всё поле. На новом поле расположение случайное; при возвращении на текущее оно сохраняется. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Нажми на котика в магазине, чтобы рассмотреть его крупно перед покупкой. «Назад» вернёт в каталог без покупки.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
+  document.getElementById('shopDescription').textContent = shopSection === 'cats' ? 'Каждый котик — 500 монет. В начале поля котиков нет. На каждом поле появляется выбранный состав котиков — по одному на клетку, без повторов (до 64 во взрослой игре и до 25 в детской). Обычно в нём все купленные котики. Призовых добавляй в достижении «Чемпионы»: при полном составе выберешь замену, а прежний котик останется в коллекции. Они открываются вместе с буквами найденного слова. Полная коллекция заполняет всё поле. На новом поле расположение случайное; при возвращении на текущее оно сохраняется. Зажми котика на поле, чтобы рассмотреть на весь экран. После открытия можно отвести палец в сторону; отпусти, чтобы закрыть. Нажми на котика в магазине, чтобы рассмотреть его крупно перед покупкой. «Назад» вернёт в каталог без покупки.' : shopSection === 'backgrounds' ? 'Примерь фон перед покупкой. Купленное остаётся навсегда.' : 'Выбери, что хочешь изменить в игре.';
   if (shopSection === 'home') {
     for (const [section,name] of [['backgrounds','Фоны'],['cats','Котики']]) {
       const tile = document.createElement('button'); tile.type = 'button'; tile.className = 'sitem category-item'; tile.dataset.section = section;
@@ -479,7 +494,7 @@ function buyTried() {
   showSpend(stats.coins - next.coins);
   stats = next;
   if (tryingKind === 'skin') {
-    boardCats = syncCats(board.words, skinsOf(stats).owned, boardCats, found.keys());
+    boardCats = syncCats(board.words, fieldCats(stats,BOARD_SIZE*BOARD_SIZE), boardCats, found.keys());
     saveState();
   }
   runAchievements();
@@ -551,7 +566,7 @@ function showBoard(nextBoard, savedFound, savedHint, savedBonus, savedLog, saved
   bonusFound = savedBonus ?? [];
   board = nextBoard;
   found = new Map([...(savedFound ?? [])].map(([i, c]) => [i, brighter(c)]));
-  boardCats = syncCats(board.words, skinsOf(stats).owned, savedCats, found.keys());
+  boardCats = syncCats(board.words, fieldCats(stats,BOARD_SIZE*BOARD_SIZE), savedCats, found.keys());
   // Boards saved before the list existed: hidden words first, then bonus ones.
   wordLog = savedLog ?? [...found.keys()].map((i) => ({ i })).concat(bonusFound.map((b) => ({ b })));
   renderWords();
@@ -605,14 +620,14 @@ function cancelCatHold() {
 }
 function makeCatImage(item) {
   const image = document.createElement('img');
-  image.src = item.id === 'c12' ? 'data/skins/collection-v1/c12-large.webp' : item.src;
+  image.src = item.large || (item.id === 'c12' ? 'data/skins/collection-v1/c12-large.webp' : item.src);
   image.alt = item.name;
   return image;
 }
 function holdCat(e, cell) {
   cancelCatHold();
   const kitten = cellEls[cell]?.querySelector('.kitten');
-  const item = kitten && CAT_ROSTER.find(cat => cat.id === kitten.dataset.cat);
+  const item = kitten && ALL_CATS.find(cat => cat.id === kitten.dataset.cat);
   if (!item?.src) return;
   catHold = { x: e.clientX, y: e.clientY, pointer: e.pointerId };
   catHold.timer = setTimeout(() => {

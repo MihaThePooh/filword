@@ -50,7 +50,7 @@ export function unpack(saved) {
 // Which save went further: boards solved first, then words found overall.
 // Both versions count: an evening of the kids game is progress too.
 export function progressOf(stats) {
-  const one = (s) => [s?.solved || 0, (s?.used || []).length, s?.coins || 0];
+  const one = (s) => [(s?.totalSolved || 0) + (s?.solved || 0), (s?.used || []).length, s?.coins || 0];
   const main = one(stats);
   const kids = one(stats?.kids);
   return main.map((v, i) => v + kids[i]);
@@ -153,17 +153,22 @@ class SignInNeeded extends Error {}
 // page to the hub, the hub (session alive) sent it straight back, and round
 // it went until the old pass expired on its own (30.10.2026).
 // Still 401 or 403 after a renewal - a sign-in is needed.
-async function api(method, body) {
+export async function accountApi(path, method='GET', body) {
+  const prefix=typeof document==='undefined'?'':document.querySelector('meta[name=filword-api-prefix]')?.content||'';
+  path=prefix+path;
   const opts = { method, credentials: 'same-origin', cache: 'no-store', headers: {} };
+  if(typeof window!=='undefined' && window.filwordPreviewPlayer) opts.headers['X-Preview-Player']=window.filwordPreviewPlayer;
   if (body) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(body);
   }
-  let r = await boundedFetch('/api/save', opts);
-  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await boundedFetch('/api/save', opts);
+  let r = await boundedFetch(path, opts);
+  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await boundedFetch(path, opts);
   if (r.status === 401 || r.status === 403) throw new SignInNeeded();
   return r;
 }
+
+const api = (method,body) => accountApi('/api/save',method,body);
 
 let owner = null;
 let revision = 0;
@@ -191,10 +196,11 @@ function adopt(save) {
   write(DIRTY_KEY, null);
 }
 
-async function push(version) {
+async function push(version,attempt=0) {
+  if(attempt>=3)throw new Error("Сохранение изменилось на другом устройстве. Повтори синхронизацию.");
   const local = localCopy();
   const sentRevision = revision;
-  const r = await api('PUT', { state: local.state || {}, stats: local.stats || {}, version });
+  const r = await api('PUT', { state: local.state || {}, stats: local.stats || {}, version, championsVersion:1 });
   if (r.status === 409) {
     const { save } = await r.json();
     if (save && moreProgress(save.stats, localCopy().stats)) {
@@ -202,11 +208,13 @@ async function push(version) {
       onReplaced();
       return;
     }
-    await push(save ? save.version : 0);
+    if (save?.stats?.champions) acceptChampions(save.stats.champions);
+    await push(save ? save.version : 0,attempt+1);
     return;
   }
   if (!r.ok) throw new Error(`save failed: ${r.status}`);
-  const { version: saved } = await r.json();
+  const { version: saved, champions } = await r.json();
+  if (champions) acceptChampions(champions);
   write(VERSION_KEY, saved);
   // Changed again while the request was on its way - it goes with the next push.
   if (revision === sentRevision) write(DIRTY_KEY, null);
@@ -260,6 +268,7 @@ export async function start({ replaced } = {}) {
     return;
   }
   owner = server.owner;
+  if (read(OWNER_KEY) === owner && server.save?.stats?.champions) acceptChampions(server.save.stats.champions);
   const choice = decide(localCopy(), server);
   if (choice.act === 'adopt') adopt(server.save);
   if (choice.act === 'fresh') {
@@ -292,4 +301,28 @@ export async function logout() {
   }
   await fetch(`${ID_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   location.replace(`${HOME_URL}/`);
+}
+
+
+// Merge the server's cumulative receipt into the latest local state, including
+// changes made while the save request was in flight. Never replace that state.
+export function mergeChampions(stats,award) {
+  const prior=stats?.champions?.credit||0;
+  const delta=Math.max(0,award.credit-prior);
+  return {...stats,champions:award,coins:(stats?.coins||0)+delta,
+    coinsEarned:(stats?.coinsEarned||0)+delta};
+}
+function acceptChampions(award) {
+  const stats=read(STATS_KEY)||{};
+  if(JSON.stringify(stats.champions)===JSON.stringify(award))return;
+  write(STATS_KEY,mergeChampions(stats,award));
+  window.dispatchEvent(new CustomEvent('champions-updated'));
+}
+export async function syncNow() {
+  clearTimeout(timer);timer=null;
+  if(pushing) await pushing;
+  // A rival's save may have granted a prize since our last upload.
+  if(owner && read(STATS_KEY)) write(DIRTY_KEY,1);
+  if(read(DIRTY_KEY)===1) await flush();
+  if(read(DIRTY_KEY)===1) throw new Error('Не удалось сохранить игру. Проверь подключение.');
 }

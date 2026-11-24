@@ -791,3 +791,23 @@ body.themed header > [data-header-ink] svg {
 .tcard > .sheet-content { padding: 0; }
 .sheet > .sheet-content { padding: 4px 22px 18px; }
 .win-card > .sheet-content { padding: 4px 28px 20px; }
+
+/* Account ranking shares the sheet typography and spacing with statistics. */
+.leader-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+.leader-table td{padding:12px 5px;border-bottom:1px solid #e4e8e1;vertical-align:middle;overflow-wrap:anywhere}
+.leader-table td:first-child{width:54px;text-align:center;font-weight:650}
+.leader-table td:last-child{width:40%;text-align:right}.leader-table td:last-child small{white-space:nowrap}
+.leader-table small{display:block;font-size:12px;color:#5e685b;line-height:1.5;font-weight:400}
+.leader-self{background:#edf4e8}.leader-self td:first-child{box-shadow:inset 3px 0 #729166}.leader-self td:nth-child(2){font-weight:700}
+.leader-table .leader-gap{text-align:center;color:#727b6d;border:0;padding:5px}
+.leader-total{font-size:13px;color:#5e685b;padding-top:8px}.leader-nick{display:flex;gap:8px;align-items:end}
+.leader-nick label{flex:1;min-width:0;font-size:14px}.leader-nick input{display:block;width:100%;font:inherit;padding:9px;border:1px solid #cdd6c7;border-radius:8px;margin-top:4px}
+.leader-nick button,.champions-section button{font:inherit;border:1px solid #cdd6c7;background:#f4f7f0;color:#343d2e;border-radius:8px;padding:9px;cursor:pointer}
+.champion-portrait{width:46px;height:52px;padding:0!important;background:transparent!important;border:0!important;touch-action:pan-y;user-select:none}
+.champion-portrait img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.champion-card{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #e4e8e1;font-size:14px}
+.champion-card>.champion-portrait{width:65px;height:70px;flex-shrink:0}.champion-card>div{flex:1}.champion-card small{display:block;font-size:12px;color:#626c5c}
+.champion-card button:disabled{opacity:.65;cursor:default}.champions-section{margin-top:24px}.champions-section h3{margin-bottom:8px}
+.champion-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.champion-choices img{width:100%;aspect-ratio:1;object-fit:contain}.champion-choices small{font-size:11px}
+.champion-replace{padding:12px 0}.champion-replace h4{margin:8px 0}
+@media(max-width:350px){.leader-table{font-size:13px}.leader-table small{font-size:11px}.leader-table td:first-child{width:43px}.leader-table td{padding:10px 3px}.champion-card{gap:6px}}
