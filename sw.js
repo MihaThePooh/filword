@@ -6,7 +6,7 @@
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v67';
+const CACHE = 'filword-v73';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
 const CORE = ['src/swipe-sheet.js', 'src/header-contrast.js', 'src/offline.js', 'data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
@@ -74,6 +74,17 @@ self.addEventListener('activate', event => {
     await announce(await ready.json());
     const keys = await caches.keys();
     await Promise.all(keys.filter(key => /^filword-v\d+$/.test(key) && key !== CACHE).map(key => caches.delete(key)));
+    // An already open old page may otherwise keep showing a blank local game
+    // after the new worker activates. Reload only when identity is unavailable.
+    const authCheck=new AbortController();const authTimeout=setTimeout(()=>authCheck.abort(),3000);
+    try{
+      const response=await fetch(new URL('api/save',self.registration.scope),{credentials:'same-origin',cache:'no-store',signal:authCheck.signal});
+      if(response.status===401||response.status===403){
+        const windows=await self.clients.matchAll({type:'window'});
+        for(const client of windows)client.navigate(client.url).catch(()=>{});
+      }
+    }catch{}finally{clearTimeout(authTimeout)}
+
   })());
 });
 self.addEventListener('message', event => {
