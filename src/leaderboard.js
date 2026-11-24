@@ -56,7 +56,8 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
       const table=node('table',undefined,'leader-table');table.setAttribute('aria-label','Рейтинг игроков');const body=node('tbody');table.append(body);
       for(const row of rankingRows(data.rows,data.total)) {
         const tr=node('tr',undefined,row.self?'leader-self':'');
-        if(row.gap){const td=node('td','…','leader-gap');td.colSpan=3;tr.append(td)}else{
+        if(row.gap){tr.classList.add('leader-gap-row');const td=node('td','•••','leader-gap');td.colSpan=3;td.setAttribute('aria-label','Пропущенные места');tr.append(td)}else{
+          if(row.rank<=3)tr.classList.add('leader-medal');
           const rank=node('td');const medal=PRIZE_CATS.find(c=>c.rank===row.rank);rank.append(medal?portrait(medal):node('span',String(row.rank)));
           const name=node('td',row.nickname);name.append(node('small',(row.self?'Это ты · ':'')+ageLabel(row)));
           const score=node('td',`${amount(row.shuffles)} ${plural(row.shuffles,'шафл','шафла','шафлов')}`);
@@ -70,11 +71,12 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
   return {open,renderAchievement(target){renderPrizes(target,getStats(),setStats,capacity)}};
 }
 function renderPrizes(target,stats,setStats,capacity) {
-  const box=node('section',undefined,'champions-section');box.append(node('h3','Чемпионы'));
+  const earned=championsOf(stats).owned;
+  const box=node('section',undefined,'champions-section');const heading=node('h3','Чемпионы');
+  const stars=node('span','★'.repeat(earned.length)+'☆'.repeat(3-earned.length),'astars');stars.setAttribute('aria-label',`Получено ${earned.length} из 3 звёзд`);heading.append(stars);box.append(heading);
   box.append(node('p','Призы навсегда за первое достижение места: бронза — третье, серебро — второе, золото — первое. Каждый этап даёт котика, звезду и монеты один раз. Первое место сразу открывает все три этапа: 55 000 монет. Награды приходят после синхронизации.','sub'));
-  const earned=championsOf(stats).owned;if(capacity===25)box.append(node('p','Призовые монеты поступают во взрослую версию игры. Котиков можно добавить в обеих версиях.','sub'));
-  box.append(node('div','★'.repeat(earned.length)+'☆'.repeat(3-earned.length),'astars'));
-  box.append(node('p','Удерживай котика, чтобы рассмотреть. «На поле» добавляет его в состав. Заменённый котик остаётся в твоей коллекции.','sub'));
+  if(capacity===25)box.append(node('p','Призовые монеты поступают во взрослую версию игры. Котиков можно добавить в обеих версиях.','sub'));
+  box.append(node('p','Любого из выигранных котиков можно поставить на поле. Нажми «Добавить» и выбери обычного котика, которого хочешь заменить. Если есть свободное место, призовой котик добавится сразу. Прежний котик останется в коллекции. Удерживай котика, чтобы рассмотреть его на весь экран.','sub'));
   for(const cat of PRIZE_CATS){
     const row=node('div',undefined,'champion-card');row.append(portrait(cat));const description=node('div',cat.name);description.append(node('small',`Место ${cat.rank} · ${amount(cat.coins)} монет`));row.append(description);
     if(earned.includes(cat.id)){
