@@ -891,3 +891,15 @@ body header .count,body header .solved{max-width:100%;width:100%}
 @media(max-width:350px){body header:has(.large-wallet) .coin-total{font-size:11px}body header:has(.large-wallet) .coin-total>.coin{width:12px;height:12px}body header:has(.large-wallet) .solved{font-size:10px}body header:has(.large-wallet) .count{font-size:13px}}
 
 @media(max-width:350px){body header .count{font-size:14px}body header:has(.large-wallet) .count{font-size:13px}}
+
+/* Keep fields and shuffle together, separated by a spaced middle dot. */
+body .coins{flex-direction:row;padding:3px 6px}
+.coin-total{font-size:14px;gap:3px}.coin-total>.coin{width:14px;height:14px}
+@media(max-width:369px){
+ body header{grid-template-columns:40px minmax(0,1fr) 40px 44px}
+ body header>.progress-card{grid-column:1/-1;grid-row:2;height:44px}
+ body header>.coins{grid-column:2;grid-row:1;justify-self:end}
+ body header>.burger{grid-column:1;grid-row:1}
+ body header>.shop{grid-column:3;grid-row:1}
+ body header>.action{grid-column:4;grid-row:1}
+}

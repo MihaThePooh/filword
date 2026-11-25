@@ -51,7 +51,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 76;
+export const VERSION = 77;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -91,6 +91,7 @@ async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
   setupAccount();
+  new ResizeObserver(fitProgressHeader).observe(solvedEl.parentElement);
   const fitWallet=()=>document.getElementById('coins').classList.toggle('large-wallet',coinEl.textContent.replace(/\D/g,'').length>5);
   new MutationObserver(fitWallet).observe(coinEl,{childList:true,characterData:true,subtree:true});fitWallet();
   setupModeSwitch();
@@ -947,6 +948,11 @@ function cellPainter() {
   };
 }
 
+function fitProgressHeader(){
+  let size=12;solvedEl.style.fontSize=size+'px';
+  while(solvedEl.scrollWidth>solvedEl.clientWidth && size>10){size-=.25;solvedEl.style.fontSize=size+'px';}
+}
+
 function renderHeader() {
   const total = board.words.length;
   countEl.innerHTML = found.size === total
@@ -960,9 +966,9 @@ function renderHeader() {
     actionEl.innerHTML = `${BULB_SVG}<span>${left}</span>`;
     actionEl.disabled = left === 0;
   }
-  solvedEl.textContent = `Поля ${stats.solved}/${CFG.cycle}`;
-  document.getElementById('shuffle-count').textContent=`Шафл ${stats.shuffles||0}`;
+  solvedEl.textContent = `Поля ${stats.solved}/${CFG.cycle} · Шафл ${stats.shuffles||0}`;
   actionEl.classList.toggle('new-board',found.size===total);
+  fitProgressHeader();
 }
 
 function saveState() {
