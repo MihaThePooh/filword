@@ -1,3 +1,4 @@
+import { setupAccount } from './account.js';
 import { setupLeaderboard } from './leaderboard.js';
 import { replacePlannedCat } from './champions.js';
 import { setupHeaderContrast } from './header-contrast.js';
@@ -50,7 +51,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 74;
+export const VERSION = 76;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -89,6 +90,9 @@ let used = new Set(); // every word ever found - never shown again
 async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
+  setupAccount();
+  const fitWallet=()=>document.getElementById('coins').classList.toggle('large-wallet',coinEl.textContent.replace(/\D/g,'').length>5);
+  new MutationObserver(fitWallet).observe(coinEl,{childList:true,characterData:true,subtree:true});fitWallet();
   setupModeSwitch();
   setupShop();
   setupTryOn();
@@ -956,8 +960,9 @@ function renderHeader() {
     actionEl.innerHTML = `${BULB_SVG}<span>${left}</span>`;
     actionEl.disabled = left === 0;
   }
-  const rank = stats.shuffles ? ` · шафл ${stats.shuffles}` : '';
-  solvedEl.textContent = `Полей ${stats.solved}/${CFG.cycle}${rank}`;
+  solvedEl.textContent = `Поля ${stats.solved}/${CFG.cycle}`;
+  document.getElementById('shuffle-count').textContent=`Шафл ${stats.shuffles||0}`;
+  actionEl.classList.toggle('new-board',found.size===total);
 }
 
 function saveState() {

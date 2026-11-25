@@ -870,3 +870,24 @@ dialog.cloud-auth-needed::backdrop{background:var(--bg)}
 .cloud-entry-card .cloud-entry-date{font-size:13px;color:var(--muted)}
 .cloud-entry-card a,.cloud-entry-card button{display:block;box-sizing:border-box;width:100%;margin:10px 0 0;padding:13px 14px;text-align:center;border:1px solid var(--line);border-radius:10px;color:var(--text);background:#edf3e7;font:inherit;font-weight:600;text-decoration:none}
 .cloud-entry-card button{background:transparent;cursor:pointer}
+
+.account-email{font-size:18px;line-height:1.4;overflow-wrap:anywhere;margin:8px 0 14px;color:var(--text)}
+.account-refresh{font:inherit;border:1px solid var(--line);border-radius:10px;background:#edf3e7;color:var(--text);padding:11px 14px;margin:6px 0}
+#accountItem small{overflow-wrap:anywhere}
+
+/* Keep progress and shuffle legible without increasing header height. */
+body header{display:grid;grid-template-columns:40px minmax(0,1fr) max-content 40px 44px;gap:4px}
+body .burger,body .shop{width:40px}
+body header>div:not(.coins){padding:4px 6px}
+body .coins{margin:0;padding:3px 8px;border-radius:12px;flex-direction:column;gap:0}
+.coin-total{display:flex;align-items:center;gap:4px;font-size:16px;line-height:20px;font-variant-numeric:tabular-nums}
+.coin-total>.coin{flex-shrink:0;width:16px;height:16px}
+.shuffle-count{display:block;font-size:11px;line-height:14px;font-weight:400;white-space:nowrap}
+body header>.action{width:44px;min-width:0;padding:0 5px;gap:3px;justify-content:center}
+body header>.action.new-board{font-size:11px;line-height:13px;white-space:normal;padding:4px;text-align:center}
+@media(max-width:350px){body .coins{padding:3px 4px}.coin-total{font-size:14px;gap:3px}.coin-total>.coin{width:14px;height:14px}body header>div:not(.coins){padding:4px}.solved{font-size:11px}.count{font-size:15px}}
+
+body header .count,body header .solved{max-width:100%;width:100%}
+@media(max-width:350px){body header:has(.large-wallet) .coin-total{font-size:11px}body header:has(.large-wallet) .coin-total>.coin{width:12px;height:12px}body header:has(.large-wallet) .solved{font-size:10px}body header:has(.large-wallet) .count{font-size:13px}}
+
+@media(max-width:350px){body header .count{font-size:14px}body header:has(.large-wallet) .count{font-size:13px}}
