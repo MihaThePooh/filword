@@ -907,3 +907,6 @@ body header.wallet-below{grid-template-columns:40px minmax(0,1fr) 40px 44px}
 body header.wallet-below>.shop{grid-column:3}
 body header.wallet-below>.action{grid-column:4}
 body header.wallet-below>.coins{grid-column:2/-1;grid-row:2;justify-self:end;border-radius:12px 0 0 12px}
+
+/* Center the visible digit shapes, compensating for the font's baseline. */
+body header #coin-count{transform:translateY(2px)}
