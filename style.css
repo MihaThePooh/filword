@@ -802,3 +802,7 @@ dialog.cloud-auth-needed::backdrop{background:var(--bg)}
 .cloud-entry-card .cloud-entry-date{font-size:13px;color:var(--muted)}
 .cloud-entry-card a,.cloud-entry-card button{display:block;box-sizing:border-box;width:100%;margin:10px 0 0;padding:13px 14px;text-align:center;border:1px solid var(--line);border-radius:10px;color:var(--text);background:#edf3e7;font:inherit;font-weight:600;text-decoration:none}
 .cloud-entry-card button{background:transparent;cursor:pointer}
+
+.account-email{font-size:18px;line-height:1.4;overflow-wrap:anywhere;margin:8px 0 14px;color:var(--text)}
+.account-refresh{font:inherit;border:1px solid var(--line);border-radius:10px;background:#edf3e7;color:var(--text);padding:11px 14px;margin:6px 0}
+#accountItem small{overflow-wrap:anywhere}

@@ -154,6 +154,8 @@ function showSignInNotice(networkProblem=false) {
     ?'Проверь подключение к интернету и повтори загрузку. Сохранённый прогресс не заменяется новой игрой.'
     :'Нужно подтвердить вход, чтобы загрузить твои поля, статистику и монеты. После входа ты вернёшься в филворд.';
   card.append(title,text);
+  const identity=read('filword-account-identity');
+  if(identity?.owner===read(OWNER_KEY)&&identity?.email){const mail=document.createElement('p');mail.className='account-email';mail.textContent='Последний аккаунт на устройстве: '+identity.email;card.append(mail);}
   const previous=read(LAST_ENTRY_KEY);
   if(previous?.owner && previous.owner===read(OWNER_KEY) && Number.isFinite(previous.at)) {
     const when=document.createElement('p');when.className='cloud-entry-date';
@@ -320,13 +322,14 @@ export async function start({ replaced } = {}) {
   owner = server.owner;
   write(LAST_ENTRY_KEY,{owner,at:Date.now()});
   const recovered=recoverModes(localCopy(),server);
-  if(recovered){adopt(recovered);write(DIRTY_KEY,1);write(OWNER_KEY,owner);flush();return;}
+  if(recovered){adopt(recovered);write(DIRTY_KEY,1);write(OWNER_KEY,owner);window.dispatchEvent(new Event('filword-account-ready'));flush();return;}
   const choice = decide(localCopy(), server);
   if (choice.act === 'adopt') adopt(server.save);
   if (choice.act === 'fresh') {
-    [...SAVE_KEYS, VERSION_KEY, DIRTY_KEY].forEach((k) => write(k, null));
+    [...SAVE_KEYS, VERSION_KEY, DIRTY_KEY, 'filword-account-identity'].forEach((k) => write(k, null));
   }
   write(OWNER_KEY, owner);
+  window.dispatchEvent(new Event('filword-account-ready'));
   if (choice.act === 'push') {
     write(DIRTY_KEY, 1);
     write(VERSION_KEY, choice.version);
@@ -349,8 +352,32 @@ export async function logout() {
   timer = null;
   if (read(DIRTY_KEY) === 1) await flush();
   if (read(DIRTY_KEY) !== 1) {
-    [...SAVE_KEYS, VERSION_KEY, DIRTY_KEY, OWNER_KEY].forEach((k) => write(k, null));
+    [...SAVE_KEYS, VERSION_KEY, DIRTY_KEY, OWNER_KEY, 'filword-account-identity'].forEach((k) => write(k, null));
   }
   await fetch(`${ID_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   location.replace(`${HOME_URL}/`);
+}
+
+
+// Email is shown only to the account holder, never sent to the ranking API.
+export async function accountDetails() {
+  const cached=read('filword-account-identity');
+  const prior=cached?.owner===read(OWNER_KEY)?cached:null;
+  if(navigator.onLine===false)return {email:prior?.email,state:'offline'};
+  try{
+    const save=await api('GET');if(!save.ok)throw new Error('save_unavailable');
+    const data=await save.json();
+    const options={credentials:'include',cache:'no-store'};
+    let response=await boundedFetch(`${ID_URL}/api/me`,options);
+    if(response.status===401 && await renewPass())response=await boundedFetch(`${ID_URL}/api/me`,options);
+    if(response.status===401||response.status===403)throw new SignInNeeded();
+    if(!response.ok)throw new Error('identity_unavailable');
+    const identity=(await response.json()).account;
+    if(identity?.id!==data.owner||typeof identity.email!=='string')throw new Error('identity_mismatch');
+    write('filword-account-identity',{owner:identity.id,email:identity.email});
+    return {email:identity.email,state:read(OWNER_KEY)!==data.owner?'changed':read(DIRTY_KEY)===1||!data.save?'pending':read(VERSION_KEY)!==data.save.version?'newer':'synced'};
+  }catch(err){
+    if(err instanceof SignInNeeded){showSignInNotice();return {state:'signed-out'}};
+    return {email:prior?.email,state:'unavailable'};
+  }
 }

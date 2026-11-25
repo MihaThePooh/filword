@@ -1,3 +1,4 @@
+import { setupAccount } from './account.js';
 import { setupHeaderContrast } from './header-contrast.js';
 import { syncCats, revealCat } from './cat-collection.js';
 import { CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
@@ -48,7 +49,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 73;
+export const VERSION = 75;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -87,6 +88,7 @@ let used = new Set(); // every word ever found - never shown again
 async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
+  setupAccount();
   setupModeSwitch();
   setupShop();
   setupTryOn();
