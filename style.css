@@ -895,11 +895,15 @@ body header .count,body header .solved{max-width:100%;width:100%}
 /* Keep fields and shuffle together, separated by a spaced middle dot. */
 body .coins{flex-direction:row;padding:3px 6px}
 .coin-total{font-size:14px;gap:3px}.coin-total>.coin{width:14px;height:14px}
-@media(max-width:369px){
- body header{grid-template-columns:40px minmax(0,1fr) 40px 44px}
- body header>.progress-card{grid-column:1/-1;grid-row:2;height:44px}
- body header>.coins{grid-column:2;grid-row:1;justify-self:end}
- body header>.burger{grid-column:1;grid-row:1}
- body header>.shop{grid-column:3;grid-row:1}
- body header>.action{grid-column:4;grid-row:1}
-}
+/* A larger balance keeps its natural width; only the wallet moves below. */
+body header .coin-total{font-size:22px;line-height:28px;gap:4px}
+body header .coin-total>.coin{width:18px;height:18px}
+body header>.progress-card{grid-column:2;grid-row:1;height:44px}
+body header>.burger{grid-column:1;grid-row:1}
+body header>.shop{grid-column:4;grid-row:1}
+body header>.action{grid-column:5;grid-row:1}
+body header>.coins{grid-column:3;grid-row:1;justify-self:stretch}
+body header.wallet-below{grid-template-columns:40px minmax(0,1fr) 40px 44px}
+body header.wallet-below>.shop{grid-column:3}
+body header.wallet-below>.action{grid-column:4}
+body header.wallet-below>.coins{grid-column:2/-1;grid-row:2;justify-self:end;border-radius:12px 0 0 12px}

@@ -9,5 +9,5 @@ test('top five, neighbours and self deduplicate and show gaps only where needed'
 });
 test('age never turns the first observed legacy save into a fabricated start date',()=>{
  assert.equal(ageLabel({start_known:false,tracked_since:'2026-11-24T00:00:00Z'}),'Начало игры неизвестно');
- assert.equal(ageLabel({start_known:true,tracked_since:'2026-11-23T00:00:00Z'},Date.parse('2026-11-24T00:00:00Z')),'В игре 2 дня');
+ assert.equal(ageLabel({start_known:true,tracked_since:'2026-11-23T00:00:00Z'},Date.parse('2026-11-24T00:00:00Z')),'В игре 2 дня · с 23 ноября 2026 года');
 });

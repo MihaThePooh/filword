@@ -6,7 +6,7 @@
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v77';
+const CACHE = 'filword-v78';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
 const CORE = ['src/account.js', 'src/champions.js', 'src/leaderboard.js', 'data/skins/champions/bronze.webp', 'data/skins/champions/bronze-large.webp', 'data/skins/champions/silver.webp', 'data/skins/champions/silver-large.webp', 'data/skins/champions/gold.webp', 'data/skins/champions/gold-large.webp', 'src/swipe-sheet.js', 'src/header-contrast.js', 'src/offline.js', 'data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',

@@ -51,7 +51,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 77;
+export const VERSION = 78;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -91,8 +91,8 @@ async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
   setupAccount();
-  new ResizeObserver(fitProgressHeader).observe(solvedEl.parentElement);
-  const fitWallet=()=>document.getElementById('coins').classList.toggle('large-wallet',coinEl.textContent.replace(/\D/g,'').length>5);
+  new ResizeObserver(()=>{fitWalletHeader();fitProgressHeader()}).observe(document.querySelector('header'));
+  const fitWallet=fitWalletHeader;
   new MutationObserver(fitWallet).observe(coinEl,{childList:true,characterData:true,subtree:true});fitWallet();
   setupModeSwitch();
   setupShop();
@@ -163,7 +163,7 @@ async function init() {
   // from that floor instead of zero.
   const earnedFloor = (stats.coins || 0) + (stats.coinsSpent || 0);
   if ((stats.coinsEarned || 0) < earnedFloor) stats.coinsEarned = earnedFloor;
-  coinFx = createCoinFx({ counter: document.getElementById('coins'), number: coinEl, total: () => stats.coins });
+  coinFx = createCoinFx({ counter: document.getElementById('coins'), number: coinEl, total: () => stats.coins, layout: fitWalletHeader });
   coinFx.reset();
   applyTheme(stats);
   applySkin(stats);
@@ -948,6 +948,18 @@ function cellPainter() {
   };
 }
 
+// Reserve the final balance before a flight so counting up cannot move its target.
+function fitWalletHeader(){
+  const header=document.querySelector('header'), wallet=document.getElementById('coins');
+  const ctx=document.createElement('canvas').getContext('2d');
+  ctx.font=`600 22px ${getComputedStyle(coinEl).fontFamily}`;
+  const digits=Math.max(String(stats?.coins||0).length,coinEl.textContent.length,3);
+  const width=Math.ceil(ctx.measureText('8'.repeat(digits)).width)+38;
+  wallet.style.minWidth=width+'px';
+  ctx.font=`12px ${getComputedStyle(solvedEl).fontFamily}`;
+  const progress=Math.max(105,Math.ceil(ctx.measureText(solvedEl.textContent).width)+14);
+  header.classList.toggle('wallet-below',40+progress+width+40+44+16>header.clientWidth);
+}
 function fitProgressHeader(){
   let size=12;solvedEl.style.fontSize=size+'px';
   while(solvedEl.scrollWidth>solvedEl.clientWidth && size>10){size-=.25;solvedEl.style.fontSize=size+'px';}
@@ -968,6 +980,7 @@ function renderHeader() {
   }
   solvedEl.textContent = `Поля ${stats.solved}/${CFG.cycle} · Шафл ${stats.shuffles||0}`;
   actionEl.classList.toggle('new-board',found.size===total);
+  fitWalletHeader();
   fitProgressHeader();
 }
 

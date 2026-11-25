@@ -31,14 +31,14 @@ const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 // counter: the .coins box; number: the span with the digits;
 // total: () => coins the player really has (stats.coins).
-export function createCoinFx({ counter, number, total }) {
+export function createCoinFx({ counter, number, total, layout = () => {} }) {
   let shown = total();
   let held = 0;
   let frame = 0;
   let carry = 0;
   let last = 0;
 
-  const paint = () => { number.textContent = shown; };
+  const paint = () => { number.textContent = shown; layout(); };
   const target = () => Math.max(0, total() - held);
 
   function tick(now) {
@@ -86,12 +86,13 @@ export function createCoinFx({ counter, number, total }) {
       land(left);
       return;
     }
-    const goal = counter.getBoundingClientRect();
+    layout();
+    const goal = (counter.querySelector('.coin') || counter).getBoundingClientRect();
     const flights = Math.min(amount, 8);
     const parts = shares(amount, flights);
     const x0 = box.left + box.width / 2;
     const y0 = box.top + box.height / 2;
-    const x1 = goal.left + 10;
+    const x1 = goal.left + goal.width / 2;
     const y1 = goal.top + goal.height / 2;
     parts.forEach((part, k) => {
       const coin = document.createElement('span');

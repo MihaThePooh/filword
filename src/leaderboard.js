@@ -18,7 +18,8 @@ export function rankingRows(rows,total) {
 export function ageLabel(row,now=Date.now()) {
   if(!row.start_known)return 'Начало игры неизвестно';
   const days=Math.max(1,Math.floor((now-Date.parse(row.tracked_since))/86400000)+1);
-  return `В игре ${days} ${plural(days,'день','дня','дней')}`;
+  const date=new Date(row.tracked_since).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Moscow'}).replace(' г.',' года');
+  return `В игре ${days} ${plural(days,'день','дня','дней')} · с ${date}`;
 }
 function portrait(cat) {
   const button=node('button',undefined,'champion-portrait');button.type='button';
@@ -60,6 +61,7 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
       await syncNow();const response=await accountApi('/api/leaderboard');
       if(!response.ok)throw Error(response.status===401?'Войди в аккаунт, чтобы увидеть рейтинг.':'Рейтинг пока недоступен. Попробуй ещё раз.');
       const data=await response.json();status.textContent='Места определяются по общему числу закрытых полей взрослой и детской версии. При равенстве выше более ранний результат. Рейтинг появляется после первого закрытого поля. Если ты не задавал свой ник, возьмётся небольшая часть твоей почты. Остальная часть будет закрыта звёздочками и не видна другим игрокам.';
+      if(data.rows.some(r=>r.start_source==='registration'))status.textContent+=' Для старых аккаунтов отсчёт ведётся с даты регистрации.';
       const form=node('form',undefined,'leader-nick');const input=node('input');input.maxLength=24;input.setAttribute('aria-label','Твой ник');
       const currentNick=data.rows.find(r=>r.self)?.nickname||'не задан';
       input.placeholder=`Твой ник сейчас: ${currentNick}`;input.title=input.placeholder;
@@ -81,7 +83,9 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
         if(row.gap){tr.classList.add('leader-gap-row');const td=node('td','•••','leader-gap');td.colSpan=3;td.setAttribute('aria-label','Пропущенные места');tr.append(td)}else{
           if(row.rank<=3)tr.classList.add('leader-medal');
           const rank=node('td');const medal=PRIZE_CATS.find(c=>c.rank===row.rank);rank.append(medal?portrait(medal):node('span',String(row.rank)));
-          const name=node('td',row.nickname);name.append(node('small',(row.self?'Это ты · ':'')+ageLabel(row)));
+          const name=node('td',row.nickname);const age=node('small',(row.self?'Это ты · ':'')+ageLabel(row));
+          if(row.start_source==='registration')age.title='Для этого старого аккаунта отсчёт ведётся с даты регистрации.';
+          name.append(age);
           const score=node('td',`${amount(row.shuffles)} ${plural(row.shuffles,'шафл','шафла','шафлов')}`);
           score.append(node('small',`всего ${amount(row.fields)} ${plural(row.fields,'поле','поля','полей')}`));tr.append(rank,name,score);
         }body.append(tr);
