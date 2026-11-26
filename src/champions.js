@@ -2,7 +2,7 @@
 export const PRIZE_CATS = ['bronze','silver','gold'].map((metal,i) => ({
   id:'prize-'+metal, name:['Бронзовый чемпион','Серебряный чемпион','Золотой чемпион'][i],
   rank:3-i, coins:[10000,15000,30000][i],
-  src:`data/skins/champions/${metal}.webp`, large:`data/skins/champions/${metal}-large.webp`,
+  src:`data/skins/champions/${metal}.svg`, large:`data/skins/champions/${metal}-large.svg`,
   disc:{x:50,y:50},
 }));
 export function championsOf(stats) {

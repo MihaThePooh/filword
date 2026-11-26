@@ -51,7 +51,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 79;
+export const VERSION = 82;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -952,7 +952,8 @@ function cellPainter() {
 function fitWalletHeader(){
   const header=document.querySelector('header'), wallet=document.getElementById('coins');
   const ctx=document.createElement('canvas').getContext('2d');
-  ctx.font=`600 22px ${getComputedStyle(coinEl).fontFamily}`;
+  const coinStyle=getComputedStyle(coinEl);
+  ctx.font=`${coinStyle.fontWeight} ${coinStyle.fontSize} ${coinStyle.fontFamily}`;
   const digits=Math.max(String(stats?.coins||0).length,coinEl.textContent.length,3);
   const width=Math.ceil(ctx.measureText('8'.repeat(digits)).width)+38;
   wallet.style.minWidth=width+'px';

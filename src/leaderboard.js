@@ -30,10 +30,9 @@ function portrait(cat) {
   const zoom=()=>{
     viewer=node('div',undefined,'cat-viewer champion-viewer');const large=node('img');large.src=cat.src;large.alt=cat.name;
     const full=new Image();full.src=cat.large||cat.src;full.decode().then(()=>{if(large.isConnected)large.src=full.src}).catch(()=>{});
-    // Enlarge the actual subject up to twice its old size, keeping every paw visible.
-    const bounds={'prize-gold':[.61,.59,.52,.485],'prize-silver':[.54,.59,.534,.486],'prize-bronze':[.68,.38,.498,.533]}[cat.id]||[1,1];
-    const size=Math.min(Math.min(innerWidth*.92,innerHeight*.85)*2,(innerWidth-24)/bounds[0],(innerHeight-32)/bounds[1]);
-    large.style.width=large.style.height=size+'px';large.style.transform=`translate(${(.5-(bounds[2]??.5))*size}px,${(.5-(bounds[3]??.5))*size}px)`;viewer.append(large);document.body.append(viewer);
+    // Assets already have tight viewports; contain the whole cat inside the screen.
+    large.style.width='calc(100vw - 24px)';large.style.height='calc(100dvh - 32px)';
+    viewer.append(large);document.body.append(viewer);
   };
   button.onpointerdown=e=>{start=[e.clientX,e.clientY];timer=setTimeout(zoom,500);button.setPointerCapture(e.pointerId)};
   button.addEventListener('touchmove',e=>{if(viewer){e.preventDefault();e.stopPropagation()}},{passive:false});
