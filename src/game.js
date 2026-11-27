@@ -51,7 +51,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 82;
+export const VERSION = 85;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -149,7 +149,7 @@ async function init() {
     report();
   } catch (err) {
     await loader.done();
-    countEl.textContent = 'Не удалось загрузить словарь';
+    slotEl.textContent = 'Не удалось загрузить словарь. Попробуй обновить страницу.';
     console.error(err);
     return;
   }
@@ -188,6 +188,18 @@ async function init() {
   gridEl.addEventListener('pointermove', onMove);
   gridEl.addEventListener('pointerup', onUp);
   gridEl.addEventListener('pointercancel', onUp);
+  // Reveal only the final content and layout, without collapsing its space.
+  await document.fonts.ready;
+  fitWalletHeader();
+  fitProgressHeader();
+  await new Promise(requestAnimationFrame);
+  await new Promise(requestAnimationFrame);
+  const header = document.querySelector('header');
+  header.inert = false;
+  header.removeAttribute('aria-hidden');
+  header.style.removeProperty('visibility');
+  header.style.removeProperty('opacity');
+  header.classList.add('is-ready');
 }
 
 // Menu item: the other version. Each keeps its own board, coins and progress.

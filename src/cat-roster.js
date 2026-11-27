@@ -526,7 +526,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v01.webp"
+    "src": "data/skins/collection-v1/v01.webp",
+    "large": "data/skins/collection-v1/v01-full-v83.svg"
   },
   {
     "id": "v03",
@@ -537,7 +538,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v03.webp"
+    "src": "data/skins/collection-v1/v03.webp",
+    "large": "data/skins/collection-v1/v03-full-v83.svg"
   },
   {
     "id": "v04",
@@ -548,7 +550,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v04.webp"
+    "src": "data/skins/collection-v1/v04-redesign-v85.svg",
+    "large": "data/skins/collection-v1/v04-redesign-v85.svg"
   },
   {
     "id": "v09",
@@ -559,7 +562,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v09.webp"
+    "src": "data/skins/collection-v1/v09.webp",
+    "large": "data/skins/collection-v1/v09-full-v83.svg"
   },
   {
     "id": "v10",
@@ -570,7 +574,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v10.webp"
+    "src": "data/skins/collection-v1/v10.webp",
+    "large": "data/skins/collection-v1/v10-full-v83.svg"
   },
   {
     "id": "v11",
@@ -581,7 +586,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v11.webp"
+    "src": "data/skins/collection-v1/v11.webp",
+    "large": "data/skins/collection-v1/v11-full-v83.svg"
   },
   {
     "id": "v12",
@@ -592,7 +598,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v12.webp"
+    "src": "data/skins/collection-v1/v12-redesign-v84.svg",
+    "large": "data/skins/collection-v1/v12-redesign-v84.svg"
   },
   {
     "id": "v14",
@@ -680,7 +687,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v27.webp"
+    "src": "data/skins/collection-v1/v27.webp",
+    "large": "data/skins/collection-v1/v27-full-v83.svg"
   },
   {
     "id": "v32",

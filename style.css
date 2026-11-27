@@ -30,6 +30,9 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 header {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 240ms ease-out;
   width: 100%;
   max-width: 480px;
   display: flex;
@@ -38,6 +41,8 @@ header {
   gap: 8px;
   padding: 18px 12px 8px;
 }
+header.is-ready { opacity: 1; visibility: visible; }
+@media (prefers-reduced-motion: reduce) { header { transition: none; } }
 /* The header holds the burger, progress, coins and hint on a 360px phone:
    the progress block gives way first rather than pushing the hint off screen. */
 header > div:not(.coins) { min-width: 0; }

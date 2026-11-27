@@ -6,10 +6,10 @@
 // new CACHE version, which downloads them again on install. So the game starts
 // without re-downloading megabytes, online or not.
 
-const CACHE = 'filword-v82';
+const CACHE = 'filword-v85';
 // Every file the game needs. On the very first visit modules load before the
 // worker starts, so they must be listed here to work offline (a test checks it).
-const CORE = ['src/account.js', 'src/champions.js', 'src/leaderboard.js', 'data/skins/champions/bronze.svg', 'data/skins/champions/bronze-large.svg', 'data/skins/champions/silver.svg', 'data/skins/champions/silver-large.svg', 'data/skins/champions/gold.svg', 'data/skins/champions/gold-large.svg', 'src/swipe-sheet.js', 'src/header-contrast.js', 'src/offline.js', 'data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
+const CORE = ['data/skins/collection-v1/v04-redesign-v85.svg', 'data/skins/collection-v1/v12-redesign-v84.svg', 'data/skins/collection-v1/v01-full-v83.svg', 'data/skins/collection-v1/v03-full-v83.svg', 'data/skins/collection-v1/v09-full-v83.svg', 'data/skins/collection-v1/v10-full-v83.svg', 'data/skins/collection-v1/v11-full-v83.svg', 'data/skins/collection-v1/v12-full-v83.svg', 'data/skins/collection-v1/v27-full-v83.svg', 'src/account.js', 'src/champions.js', 'src/leaderboard.js', 'data/skins/champions/bronze.svg', 'data/skins/champions/bronze-large.svg', 'data/skins/champions/silver.svg', 'data/skins/champions/silver-large.svg', 'data/skins/champions/gold.svg', 'data/skins/champions/gold-large.svg', 'src/swipe-sheet.js', 'src/header-contrast.js', 'src/offline.js', 'data/words.json', 'data/kids.json', 'data/bonus.json', 'data/bonus-defs.json', './', 'index.html', 'style.css', 'manifest.webmanifest', 'data/words.json.gz',
   'icons/icon-192.png', 'icons/icon-512.png',
   'src/game.js', 'src/board.js', 'src/rng.js', 'src/path.js', 'src/split.js',
   'src/selection.js', 'src/hint.js', 'src/sheet.js', 'src/dict-loader.js', 'src/celebrate.js', 'src/rewards.js', 'src/progress.js', 'src/loader.js', 'src/install.js', 'src/cloud.js', 'src/mode.js', 'src/shop.js', 'src/skins.js', 'src/cat-roster.js', 'src/cat-collection.js', 'src/stats.js', 'src/achievements.js', 'src/sheets.js',
