@@ -3,519 +3,566 @@ export const CAT_ROSTER = [
   {
     "id": "c21",
     "name": "Пилот",
-    "src": "data/skins/collection-v1/c21.webp",
+    "src": "data/skins/normalized-v86/c21.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c21.svg"
   },
   {
     "id": "c22",
     "name": "Морячок",
-    "src": "data/skins/collection-v1/c22.webp",
+    "src": "data/skins/normalized-v86/c22.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c22.svg"
   },
   {
     "id": "c23",
     "name": "Водолаз",
-    "src": "data/skins/collection-v1/c23.webp",
+    "src": "data/skins/normalized-v86/c23.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c23.svg"
   },
   {
     "id": "c24",
     "name": "Пожарный",
-    "src": "data/skins/collection-v1/c24.webp",
+    "src": "data/skins/normalized-v86/c24.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c24.svg"
   },
   {
     "id": "c25",
     "name": "Доктор",
-    "src": "data/skins/collection-v1/c25.webp",
+    "src": "data/skins/normalized-v86/c25.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c25.svg"
   },
   {
     "id": "c26",
     "name": "Учитель",
-    "src": "data/skins/collection-v1/c26.webp",
+    "src": "data/skins/normalized-v86/c26.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c26.svg"
   },
   {
     "id": "c27",
     "name": "Астроном",
-    "src": "data/skins/collection-v1/c27.webp",
+    "src": "data/skins/normalized-v86/c27.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c27.svg"
   },
   {
     "id": "c28",
     "name": "Шахматист",
-    "src": "data/skins/collection-v1/c28.webp",
+    "src": "data/skins/normalized-v86/c28.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c28.svg"
   },
   {
     "id": "c29",
     "name": "За чаем",
-    "src": "data/skins/collection-v1/c29.webp",
+    "src": "data/skins/normalized-v86/c29.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c29.svg"
   },
   {
     "id": "c30",
     "name": "Мастер оригами",
-    "src": "data/skins/collection-v1/c30.webp",
+    "src": "data/skins/normalized-v86/c30.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c30.svg"
   },
   {
     "id": "c31",
     "name": "Пчеловод",
-    "src": "data/skins/collection-v1/c31.webp",
+    "src": "data/skins/normalized-v86/c31.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c31.svg"
   },
   {
     "id": "c32",
     "name": "С вязанием",
-    "src": "data/skins/collection-v1/c32.webp",
+    "src": "data/skins/normalized-v86/c32.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c32.svg"
   },
   {
     "id": "c33",
     "name": "Портной",
-    "src": "data/skins/collection-v1/c33.webp",
+    "src": "data/skins/normalized-v86/c33.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c33.svg"
   },
   {
     "id": "c34",
     "name": "Механик",
-    "src": "data/skins/collection-v1/c34.webp",
+    "src": "data/skins/normalized-v86/c34.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c34.svg"
   },
   {
     "id": "c35",
     "name": "Скейтбордист",
-    "src": "data/skins/collection-v1/c35.webp",
+    "src": "data/skins/normalized-v86/c35.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c35.svg"
   },
   {
     "id": "c36",
     "name": "Балерина",
-    "src": "data/skins/collection-v1/c36.webp",
+    "src": "data/skins/normalized-v86/c36.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c36.svg"
   },
   {
     "id": "c37",
     "name": "В драконьей пижаме",
-    "src": "data/skins/collection-v1/c37.webp",
+    "src": "data/skins/normalized-v86/c37.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c37.svg"
   },
   {
     "id": "c38",
     "name": "Под дождиком",
-    "src": "data/skins/collection-v1/c38.webp",
+    "src": "data/skins/normalized-v86/c38.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c38.svg"
   },
   {
     "id": "c39",
     "name": "Грибник",
-    "src": "data/skins/collection-v1/c39.webp",
+    "src": "data/skins/normalized-v86/c39.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c39.svg"
   },
   {
     "id": "c40",
     "name": "За ягодами",
-    "src": "data/skins/collection-v1/c40.webp",
+    "src": "data/skins/normalized-v86/c40.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c40.svg"
   },
   {
     "id": "c41",
     "name": "Почтальон",
-    "src": "data/skins/collection-v1/c41.webp",
+    "src": "data/skins/normalized-v86/c41.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c41.svg"
   },
   {
     "id": "c42",
     "name": "Фокусник",
-    "src": "data/skins/collection-v1/c42.webp",
+    "src": "data/skins/normalized-v86/c42.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c42.svg"
   },
   {
     "id": "c43",
     "name": "Жонглёр",
-    "src": "data/skins/collection-v1/c43.webp",
+    "src": "data/skins/normalized-v86/c43.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c43.svg"
   },
   {
     "id": "c44",
     "name": "Король",
-    "src": "data/skins/collection-v1/c44.webp",
+    "src": "data/skins/normalized-v86/c44.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c44.svg"
   },
   {
     "id": "c45",
     "name": "Ковбой",
-    "src": "data/skins/collection-v1/c45.webp",
+    "src": "data/skins/normalized-v86/c45.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c45.svg"
   },
   {
     "id": "c46",
     "name": "С веером",
-    "src": "data/skins/collection-v1/c46.webp",
+    "src": "data/skins/normalized-v86/c46.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c46.svg"
   },
   {
     "id": "c47",
     "name": "С любимой игрушкой",
-    "src": "data/skins/collection-v1/c47.webp",
+    "src": "data/skins/normalized-v86/c47.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c47.svg"
   },
   {
     "id": "c01",
     "name": "Книголюб",
-    "src": "data/skins/collection-v1/c01.webp",
+    "src": "data/skins/normalized-v86/c01.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c01.svg"
   },
   {
     "id": "c02",
     "name": "Космонавт",
-    "src": "data/skins/collection-v1/c02.webp",
+    "src": "data/skins/normalized-v86/c02.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c02.svg"
   },
   {
     "id": "c03",
     "name": "Садовник",
-    "src": "data/skins/collection-v1/c03.webp",
+    "src": "data/skins/normalized-v86/c03.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c03.svg"
   },
   {
     "id": "c04",
     "name": "Повар",
-    "src": "data/skins/collection-v1/c04.webp",
+    "src": "data/skins/normalized-v86/c04.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c04.svg"
   },
   {
     "id": "c05",
     "name": "Пират",
-    "src": "data/skins/collection-v1/c05.webp",
+    "src": "data/skins/normalized-v86/c05.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c05.svg"
   },
   {
     "id": "c06",
     "name": "Художник",
-    "src": "data/skins/collection-v1/c06.webp",
+    "src": "data/skins/normalized-v86/c06.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c06.svg"
   },
   {
     "id": "c07",
     "name": "Музыкант",
-    "src": "data/skins/collection-v1/c07.webp",
+    "src": "data/skins/normalized-v86/c07.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c07.svg"
   },
   {
     "id": "c08",
     "name": "Волшебник",
-    "src": "data/skins/collection-v1/c08.webp",
+    "src": "data/skins/normalized-v86/c08.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c08.svg"
   },
   {
     "id": "c09",
     "name": "Зимний",
-    "src": "data/skins/collection-v1/c09.webp",
+    "src": "data/skins/normalized-v86/c09.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c09.svg"
   },
   {
     "id": "c10",
     "name": "Осенний",
-    "src": "data/skins/collection-v1/c10.webp",
+    "src": "data/skins/normalized-v86/c10.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c10.svg"
   },
   {
     "id": "c11",
     "name": "Пляжный",
-    "src": "data/skins/collection-v1/c11.webp",
+    "src": "data/skins/normalized-v86/c11.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c11.svg"
   },
   {
     "id": "c12",
     "name": "Соня",
-    "src": "data/skins/collection-v1/c12.webp",
+    "src": "data/skins/normalized-v86/c12.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c12-large.svg"
   },
   {
     "id": "c13",
     "name": "Сыщик",
-    "src": "data/skins/collection-v1/c13.webp",
+    "src": "data/skins/normalized-v86/c13.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c13.svg"
   },
   {
     "id": "c14",
     "name": "Геймер",
-    "src": "data/skins/collection-v1/c14.webp",
+    "src": "data/skins/normalized-v86/c14.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c14.svg"
   },
   {
     "id": "c15",
     "name": "Путешественник",
-    "src": "data/skins/collection-v1/c15.webp",
+    "src": "data/skins/normalized-v86/c15.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c15.svg"
   },
   {
     "id": "c16",
     "name": "Рыболов",
-    "src": "data/skins/collection-v1/c16.webp",
+    "src": "data/skins/normalized-v86/c16.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c16.svg"
   },
   {
     "id": "c17",
     "name": "Пекарь",
-    "src": "data/skins/collection-v1/c17.webp",
+    "src": "data/skins/normalized-v86/c17.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c17.svg"
   },
   {
     "id": "c18",
     "name": "Фотограф",
-    "src": "data/skins/collection-v1/c18.webp",
+    "src": "data/skins/normalized-v86/c18.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c18.svg"
   },
   {
     "id": "c19",
     "name": "Спортсмен",
-    "src": "data/skins/collection-v1/c19.webp",
+    "src": "data/skins/normalized-v86/c19.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c19.svg"
   },
   {
     "id": "c20",
     "name": "В гамаке",
-    "src": "data/skins/collection-v1/c20.webp",
+    "src": "data/skins/normalized-v86/c20.svg",
     "disc": {
       "x": 50,
       "y": 50,
       "w": 40,
       "h": 40
-    }
+    },
+    "large": "data/skins/normalized-v86/c20.svg"
   },
   {
     "id": "v01",
@@ -526,8 +573,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v01.webp",
-    "large": "data/skins/collection-v1/v01-full-v83.svg"
+    "src": "data/skins/normalized-v86/v01.svg",
+    "large": "data/skins/normalized-v86/v01-large.svg"
   },
   {
     "id": "v03",
@@ -538,8 +585,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v03.webp",
-    "large": "data/skins/collection-v1/v03-full-v83.svg"
+    "src": "data/skins/normalized-v86/v03.svg",
+    "large": "data/skins/normalized-v86/v03-large.svg"
   },
   {
     "id": "v04",
@@ -550,8 +597,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v04-redesign-v85.svg",
-    "large": "data/skins/collection-v1/v04-redesign-v85.svg"
+    "src": "data/skins/normalized-v86/v04.svg",
+    "large": "data/skins/normalized-v86/v04.svg"
   },
   {
     "id": "v09",
@@ -562,8 +609,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v09.webp",
-    "large": "data/skins/collection-v1/v09-full-v83.svg"
+    "src": "data/skins/normalized-v86/v09.svg",
+    "large": "data/skins/normalized-v86/v09-large.svg"
   },
   {
     "id": "v10",
@@ -574,8 +621,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v10.webp",
-    "large": "data/skins/collection-v1/v10-full-v83.svg"
+    "src": "data/skins/normalized-v86/v10.svg",
+    "large": "data/skins/normalized-v86/v10-large.svg"
   },
   {
     "id": "v11",
@@ -586,8 +633,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v11.webp",
-    "large": "data/skins/collection-v1/v11-full-v83.svg"
+    "src": "data/skins/normalized-v86/v11.svg",
+    "large": "data/skins/normalized-v86/v11-large.svg"
   },
   {
     "id": "v12",
@@ -598,8 +645,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v12-redesign-v84.svg",
-    "large": "data/skins/collection-v1/v12-redesign-v84.svg"
+    "src": "data/skins/normalized-v86/v12.svg",
+    "large": "data/skins/normalized-v86/v12.svg"
   },
   {
     "id": "v14",
@@ -610,7 +657,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v14.webp"
+    "src": "data/skins/normalized-v86/v14.svg",
+    "large": "data/skins/normalized-v86/v14.svg"
   },
   {
     "id": "v16",
@@ -621,7 +669,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v16.webp"
+    "src": "data/skins/normalized-v86/v16.svg",
+    "large": "data/skins/normalized-v86/v16.svg"
   },
   {
     "id": "v17",
@@ -632,7 +681,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v17.webp"
+    "src": "data/skins/normalized-v86/v17.svg",
+    "large": "data/skins/normalized-v86/v17.svg"
   },
   {
     "id": "v19",
@@ -643,7 +693,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v19.webp"
+    "src": "data/skins/normalized-v86/v19.svg",
+    "large": "data/skins/normalized-v86/v19.svg"
   },
   {
     "id": "v22",
@@ -654,7 +705,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v22.webp"
+    "src": "data/skins/normalized-v86/v22.svg",
+    "large": "data/skins/normalized-v86/v22.svg"
   },
   {
     "id": "v24",
@@ -665,7 +717,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v24.webp"
+    "src": "data/skins/normalized-v86/v24.svg",
+    "large": "data/skins/normalized-v86/v24.svg"
   },
   {
     "id": "v26",
@@ -676,7 +729,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v26.webp"
+    "src": "data/skins/normalized-v86/v26.svg",
+    "large": "data/skins/normalized-v86/v26.svg"
   },
   {
     "id": "v27",
@@ -687,8 +741,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v27.webp",
-    "large": "data/skins/collection-v1/v27-full-v83.svg"
+    "src": "data/skins/normalized-v86/v27.svg",
+    "large": "data/skins/normalized-v86/v27-large.svg"
   },
   {
     "id": "v32",
@@ -699,7 +753,8 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v32.webp"
+    "src": "data/skins/normalized-v86/v32.svg",
+    "large": "data/skins/normalized-v86/v32.svg"
   },
   {
     "id": "v40",
@@ -710,6 +765,7 @@ export const CAT_ROSTER = [
       "w": 40,
       "h": 40
     },
-    "src": "data/skins/collection-v1/v40.webp"
+    "src": "data/skins/normalized-v86/v40.svg",
+    "large": "data/skins/normalized-v86/v40.svg"
   }
 ];

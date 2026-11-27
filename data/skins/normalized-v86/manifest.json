@@ -1,0 +1,1311 @@
+{
+  "data/skins/normalized-v86/c21.svg": {
+    "source": "data/skins/collection-v1/c21.webp",
+    "source_sha256": "2be6113afd78901d400a17177167d314901fd27a79d888fd2e49c1a254b10bf5",
+    "visible_bbox": [
+      25,
+      1,
+      287,
+      317
+    ],
+    "viewbox": [
+      -8.583333333333343,
+      -5.583333333333343,
+      329.1666666666667,
+      329.1666666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c22.svg": {
+    "source": "data/skins/collection-v1/c22.webp",
+    "source_sha256": "f76f767913de9dc6c14d382307097703866af44d66403407add052dee96e7664",
+    "visible_bbox": [
+      15,
+      3,
+      302,
+      317
+    ],
+    "viewbox": [
+      -5.041666666666686,
+      -3.5416666666666856,
+      327.08333333333337,
+      327.08333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c23.svg": {
+    "source": "data/skins/collection-v1/c23.webp",
+    "source_sha256": "fc972da3c39466206409644e335fc61a1d73ed9bb58e6e02a6a0c2ef541bc736",
+    "visible_bbox": [
+      29,
+      0,
+      282,
+      319
+    ],
+    "viewbox": [
+      -10.645833333333343,
+      -6.645833333333343,
+      332.2916666666667,
+      332.2916666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c24.svg": {
+    "source": "data/skins/collection-v1/c24.webp",
+    "source_sha256": "cfa12db7e806c29fce053797c482e35c078893fa4c7b0f0e97c0ee8b901a6e31",
+    "visible_bbox": [
+      18,
+      0,
+      268,
+      314
+    ],
+    "viewbox": [
+      -20.541666666666686,
+      -6.541666666666686,
+      327.08333333333337,
+      327.08333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c25.svg": {
+    "source": "data/skins/collection-v1/c25.webp",
+    "source_sha256": "e7aecdf48d06b5316414584f02db26440bbd14813266d04ee387b6d59370de4e",
+    "visible_bbox": [
+      42,
+      1,
+      265,
+      318
+    ],
+    "viewbox": [
+      -11.604166666666686,
+      -5.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c26.svg": {
+    "source": "data/skins/collection-v1/c26.webp",
+    "source_sha256": "3ad57a0591ed844a064ea07a55a0b514b8ac7e8b03ba52841225154d1bd823d8",
+    "visible_bbox": [
+      14,
+      1,
+      268,
+      317
+    ],
+    "viewbox": [
+      -23.583333333333343,
+      -5.583333333333343,
+      329.1666666666667,
+      329.1666666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c27.svg": {
+    "source": "data/skins/collection-v1/c27.webp",
+    "source_sha256": "4150a5d0939cd8eabb76b600efe469585dc8190fbf4655ecf8795bc6bb72a0bf",
+    "visible_bbox": [
+      7,
+      2,
+      316,
+      309
+    ],
+    "viewbox": [
+      0.5625,
+      -5.4375,
+      321.875,
+      321.875
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c28.svg": {
+    "source": "data/skins/collection-v1/c28.webp",
+    "source_sha256": "aa865a450237bd6af45eb81d063af264c6e3cd091abc52f35a474ac0e8338635",
+    "visible_bbox": [
+      19,
+      3,
+      303,
+      314
+    ],
+    "viewbox": [
+      -0.9791666666666856,
+      -3.4791666666666856,
+      323.95833333333337,
+      323.95833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c29.svg": {
+    "source": "data/skins/collection-v1/c29.webp",
+    "source_sha256": "efca66461ca6ac3d21a0919eb2ead74c24d2df79594ce6cee84906dbeedd1c76",
+    "visible_bbox": [
+      5,
+      2,
+      314,
+      314
+    ],
+    "viewbox": [
+      -3.0,
+      -4.5,
+      325.0,
+      325.0
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c30.svg": {
+    "source": "data/skins/collection-v1/c30.webp",
+    "source_sha256": "2ab1ac5793664e649ade6aae66bd1b97e0e0bfb8d338ccf3472e7e7a7a241d19",
+    "visible_bbox": [
+      15,
+      4,
+      270,
+      310
+    ],
+    "viewbox": [
+      -16.875,
+      -2.375,
+      318.75,
+      318.75
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c31.svg": {
+    "source": "data/skins/collection-v1/c31.webp",
+    "source_sha256": "7a9439dce90f0090272ca24932ae26e31bc98f01b4b9a9b92a5f7b1a85896b6c",
+    "visible_bbox": [
+      20,
+      4,
+      293,
+      315
+    ],
+    "viewbox": [
+      -5.479166666666686,
+      -2.4791666666666856,
+      323.95833333333337,
+      323.95833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c32.svg": {
+    "source": "data/skins/collection-v1/c32.webp",
+    "source_sha256": "173347feaea83c091952a92ce4a1f8174c45e0036c3941dd479afa92779493df",
+    "visible_bbox": [
+      15,
+      2,
+      305,
+      319
+    ],
+    "viewbox": [
+      -5.104166666666686,
+      -4.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c33.svg": {
+    "source": "data/skins/collection-v1/c33.webp",
+    "source_sha256": "04f3bb72cc3c4f4509f46cfa12da1925d2789cde13481243d354745c0e42c740",
+    "visible_bbox": [
+      20,
+      2,
+      299,
+      316
+    ],
+    "viewbox": [
+      -4.041666666666686,
+      -4.541666666666686,
+      327.08333333333337,
+      327.08333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c34.svg": {
+    "source": "data/skins/collection-v1/c34.webp",
+    "source_sha256": "920497c503ac73e45ed94673f340997bccad7259507898a1ba58e54140abb899",
+    "visible_bbox": [
+      36,
+      1,
+      259,
+      318
+    ],
+    "viewbox": [
+      -17.604166666666686,
+      -5.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c35.svg": {
+    "source": "data/skins/collection-v1/c35.webp",
+    "source_sha256": "704819a81783126df98b409e4abd210df29b96f243f12e00c5c76694212a08f7",
+    "visible_bbox": [
+      30,
+      4,
+      255,
+      319
+    ],
+    "viewbox": [
+      -21.5625,
+      -2.5625,
+      328.125,
+      328.125
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c36.svg": {
+    "source": "data/skins/collection-v1/c36.webp",
+    "source_sha256": "38b4119db896d57b9d46781eac3ba90050d0e6166375efe924b9b5593eadc6e3",
+    "visible_bbox": [
+      16,
+      2,
+      289,
+      318
+    ],
+    "viewbox": [
+      -12.083333333333343,
+      -4.583333333333343,
+      329.1666666666667,
+      329.1666666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c37.svg": {
+    "source": "data/skins/collection-v1/c37.webp",
+    "source_sha256": "6b3dc60a0a49a5a2597732844ccd52c2cb95fe51798a908ea80965b929ce01b2",
+    "visible_bbox": [
+      13,
+      1,
+      302,
+      316
+    ],
+    "viewbox": [
+      -6.5625,
+      -5.5625,
+      328.125,
+      328.125
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c38.svg": {
+    "source": "data/skins/collection-v1/c38.webp",
+    "source_sha256": "357a550be2c75f7687027ab808c2b38add01dbb22d75633f2887c6734e052d88",
+    "visible_bbox": [
+      18,
+      1,
+      274,
+      318
+    ],
+    "viewbox": [
+      -19.104166666666686,
+      -5.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c39.svg": {
+    "source": "data/skins/collection-v1/c39.webp",
+    "source_sha256": "fe8642a6d2117029c7d49a72dfa9b3acd2c1fb654a5d6a4468fee33006abf64c",
+    "visible_bbox": [
+      9,
+      5,
+      307,
+      313
+    ],
+    "viewbox": [
+      -2.4166666666666856,
+      -1.4166666666666856,
+      320.83333333333337,
+      320.83333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c40.svg": {
+    "source": "data/skins/collection-v1/c40.webp",
+    "source_sha256": "94fd0aacca89b9e4b9241e3749c8ec605c865c6139d4da48630913250cf114b4",
+    "visible_bbox": [
+      8,
+      2,
+      313,
+      317
+    ],
+    "viewbox": [
+      -3.5625,
+      -4.5625,
+      328.125,
+      328.125
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c41.svg": {
+    "source": "data/skins/collection-v1/c41.webp",
+    "source_sha256": "6c6c6e36a52dfddb9950bb16b74d8d5c195eb338ca95d7cb03a6750fad3cab39",
+    "visible_bbox": [
+      13,
+      1,
+      302,
+      318
+    ],
+    "viewbox": [
+      -7.604166666666686,
+      -5.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c42.svg": {
+    "source": "data/skins/collection-v1/c42.webp",
+    "source_sha256": "e05d20fd60dea02bbedce4806acd99a7db99ab45c5875624ed5c295f5e5c385a",
+    "visible_bbox": [
+      16,
+      1,
+      300,
+      317
+    ],
+    "viewbox": [
+      -6.583333333333343,
+      -5.583333333333343,
+      329.1666666666667,
+      329.1666666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c43.svg": {
+    "source": "data/skins/collection-v1/c43.webp",
+    "source_sha256": "95aef06a9dd79a0335bc4e69562081bfa5405ebfae916aeb37841e0ab97bfc5f",
+    "visible_bbox": [
+      27,
+      0,
+      264,
+      317
+    ],
+    "viewbox": [
+      -19.604166666666686,
+      -6.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c44.svg": {
+    "source": "data/skins/collection-v1/c44.webp",
+    "source_sha256": "154b785b4f45691f8c0e92590d42710fea42204a01ec9d7be38d41b238b01bfb",
+    "visible_bbox": [
+      9,
+      1,
+      313,
+      315
+    ],
+    "viewbox": [
+      -2.5416666666666856,
+      -5.541666666666686,
+      327.08333333333337,
+      327.08333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c45.svg": {
+    "source": "data/skins/collection-v1/c45.webp",
+    "source_sha256": "83a5cdb42cfbe4d61b1a8a4f6c79959d69b701178ddcbf3e055e44db2c691d87",
+    "visible_bbox": [
+      23,
+      1,
+      290,
+      318
+    ],
+    "viewbox": [
+      -8.604166666666686,
+      -5.604166666666686,
+      330.20833333333337,
+      330.20833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c46.svg": {
+    "source": "data/skins/collection-v1/c46.webp",
+    "source_sha256": "e7bdd70ebbc86f16db0fdc83b1b875da5a86d238f3261fd31710eeb8ab2616ea",
+    "visible_bbox": [
+      17,
+      1,
+      296,
+      319
+    ],
+    "viewbox": [
+      -9.125,
+      -5.625,
+      331.25,
+      331.25
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c47.svg": {
+    "source": "data/skins/collection-v1/c47.webp",
+    "source_sha256": "dedd3d60095ba9f9bc68152412e048f2a8549e2b4f80225a724065a55b18e9bf",
+    "visible_bbox": [
+      6,
+      15,
+      317,
+      300
+    ],
+    "viewbox": [
+      -0.4791666666666856,
+      -4.479166666666686,
+      323.95833333333337,
+      323.95833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c01.svg": {
+    "source": "data/skins/collection-v1/c01.webp",
+    "source_sha256": "835373aa9c60afd6f7c0ed66004e15bbd973bd47f997d8c77b300bd53f0f34df",
+    "visible_bbox": [
+      38,
+      5,
+      256,
+      314
+    ],
+    "viewbox": [
+      -13.9375,
+      -1.4375,
+      321.875,
+      321.875
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c02.svg": {
+    "source": "data/skins/collection-v1/c02.webp",
+    "source_sha256": "cea0cbb0bce5ea34cfc7d4928d0b557ab62f17be86e3bdfe685287fdb823f981",
+    "visible_bbox": [
+      38,
+      6,
+      258,
+      314
+    ],
+    "viewbox": [
+      -12.416666666666686,
+      -0.4166666666666856,
+      320.83333333333337,
+      320.83333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c03.svg": {
+    "source": "data/skins/collection-v1/c03.webp",
+    "source_sha256": "b6f4c8c56c604bfe953f0461a07b7c12d61ac2a60e7c97267a539e86bfd921a7",
+    "visible_bbox": [
+      19,
+      10,
+      299,
+      309
+    ],
+    "viewbox": [
+      3.2708333333333144,
+      3.7708333333333144,
+      311.45833333333337,
+      311.45833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c04.svg": {
+    "source": "data/skins/collection-v1/c04.webp",
+    "source_sha256": "d8e4f855770499732addb1e98b075acd0d17d5ae753411837280d8d4f35a70a4",
+    "visible_bbox": [
+      52,
+      1,
+      244,
+      315
+    ],
+    "viewbox": [
+      -15.541666666666686,
+      -5.541666666666686,
+      327.08333333333337,
+      327.08333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c05.svg": {
+    "source": "data/skins/collection-v1/c05.webp",
+    "source_sha256": "275ed2f15c45506a06f30c47b455fd41c9a72941b87ad053468a6d8b8f2d9c74",
+    "visible_bbox": [
+      30,
+      4,
+      261,
+      313
+    ],
+    "viewbox": [
+      -15.4375,
+      -2.4375,
+      321.875,
+      321.875
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c06.svg": {
+    "source": "data/skins/collection-v1/c06.webp",
+    "source_sha256": "ce355578b11703d448fecd8e04fe851b9f8a9820b95b4585b2bd2d4e9dcf155e",
+    "visible_bbox": [
+      37,
+      3,
+      253,
+      316
+    ],
+    "viewbox": [
+      -18.020833333333343,
+      -3.520833333333343,
+      326.0416666666667,
+      326.0416666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c07.svg": {
+    "source": "data/skins/collection-v1/c07.webp",
+    "source_sha256": "77528ba519ca08f89a0060f048c4f93bf10b651598df6f2162fcc4f152b52f5f",
+    "visible_bbox": [
+      36,
+      3,
+      273,
+      312
+    ],
+    "viewbox": [
+      -6.4375,
+      -3.4375,
+      321.875,
+      321.875
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c08.svg": {
+    "source": "data/skins/collection-v1/c08.webp",
+    "source_sha256": "4a889e32002fbb1542c8d3016b661c8eb88a16a7e204cc62791e3deda956e5c2",
+    "visible_bbox": [
+      26,
+      5,
+      272,
+      314
+    ],
+    "viewbox": [
+      -11.9375,
+      -1.4375,
+      321.875,
+      321.875
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c09.svg": {
+    "source": "data/skins/collection-v1/c09.webp",
+    "source_sha256": "406a2584d05ffe78d984a984844d352799442231bf2ae2ca5d8ec9ce272ca0c7",
+    "visible_bbox": [
+      25,
+      4,
+      269,
+      315
+    ],
+    "viewbox": [
+      -14.979166666666686,
+      -2.4791666666666856,
+      323.95833333333337,
+      323.95833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c10.svg": {
+    "source": "data/skins/collection-v1/c10.webp",
+    "source_sha256": "abb7d04bd653c0bc6998492bb51905069456b6f3db859c827a05fb684c4c2add",
+    "visible_bbox": [
+      26,
+      11,
+      265,
+      316
+    ],
+    "viewbox": [
+      -13.354166666666686,
+      4.645833333333314,
+      317.70833333333337,
+      317.70833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c11.svg": {
+    "source": "data/skins/collection-v1/c11.webp",
+    "source_sha256": "781a49a02013294327a8261befc8ec51938bbf53a1bd232b68ac56c39d5f8cbe",
+    "visible_bbox": [
+      26,
+      12,
+      309,
+      301
+    ],
+    "viewbox": [
+      16.979166666666657,
+      5.979166666666657,
+      301.0416666666667,
+      301.0416666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c12.svg": {
+    "source": "data/skins/collection-v1/c12.webp",
+    "source_sha256": "0a2881ca07ab0a5625c24142d90edf26e209f96333a7e958eed6143626176e7a",
+    "visible_bbox": [
+      69,
+      2,
+      280,
+      314
+    ],
+    "viewbox": [
+      12.0,
+      -4.5,
+      325.0,
+      325.0
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c12-large.svg": {
+    "source": "data/skins/collection-v1/c12-large.webp",
+    "source_sha256": "a2b297a82349f1359f4e6a43afc977d4e82335beb19084c83c5ff8b10ab93c01",
+    "visible_bbox": [
+      138,
+      5,
+      559,
+      628
+    ],
+    "viewbox": [
+      24.020833333333314,
+      -7.979166666666686,
+      648.9583333333334,
+      648.9583333333334
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c13.svg": {
+    "source": "data/skins/collection-v1/c13.webp",
+    "source_sha256": "9948e5827cd7c47b41a24daa510dbb7a75d9b1c648034bbf78befeacbeaf10c6",
+    "visible_bbox": [
+      36,
+      5,
+      256,
+      311
+    ],
+    "viewbox": [
+      -13.375,
+      -1.375,
+      318.75,
+      318.75
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c14.svg": {
+    "source": "data/skins/collection-v1/c14.webp",
+    "source_sha256": "824f69b3369f16e8f8a9f8548742055a0e9372d5defe12aa34d45b83e0d6a813",
+    "visible_bbox": [
+      23,
+      4,
+      265,
+      314
+    ],
+    "viewbox": [
+      -17.458333333333343,
+      -2.458333333333343,
+      322.9166666666667,
+      322.9166666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c15.svg": {
+    "source": "data/skins/collection-v1/c15.webp",
+    "source_sha256": "4fe4d7909d25401ff0444d4d0702a5192313901efb003fff51dfb489e9f4effa",
+    "visible_bbox": [
+      30,
+      5,
+      267,
+      315
+    ],
+    "viewbox": [
+      -12.958333333333343,
+      -1.4583333333333428,
+      322.9166666666667,
+      322.9166666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c16.svg": {
+    "source": "data/skins/collection-v1/c16.webp",
+    "source_sha256": "9063cecfe88de03680fd24fc0e1aac4426c0895bfe4c51ff4e429f13c3df7261",
+    "visible_bbox": [
+      12,
+      6,
+      308,
+      313
+    ],
+    "viewbox": [
+      0.10416666666665719,
+      -0.3958333333333428,
+      319.7916666666667,
+      319.7916666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c17.svg": {
+    "source": "data/skins/collection-v1/c17.webp",
+    "source_sha256": "405caa5264aaa282b57c0a2b4899c33e7d5e0294448f05bb1e66ebe3b2be39be",
+    "visible_bbox": [
+      31,
+      2,
+      271,
+      314
+    ],
+    "viewbox": [
+      -11.5,
+      -4.5,
+      325.0,
+      325.0
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c18.svg": {
+    "source": "data/skins/collection-v1/c18.webp",
+    "source_sha256": "fbf325cae012ddcafc5a1f900a45afae0468e1ddfb1238d904f7cfadb74967a1",
+    "visible_bbox": [
+      30,
+      8,
+      280,
+      313
+    ],
+    "viewbox": [
+      -3.8541666666666856,
+      1.6458333333333144,
+      317.70833333333337,
+      317.70833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c19.svg": {
+    "source": "data/skins/collection-v1/c19.webp",
+    "source_sha256": "85f8b74eeecf6a3eed9372c9c4245b7d13bcc182f778aac9f6fd1b1b1b11694b",
+    "visible_bbox": [
+      40,
+      7,
+      271,
+      313
+    ],
+    "viewbox": [
+      -3.875,
+      0.625,
+      318.75,
+      318.75
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/c20.svg": {
+    "source": "data/skins/collection-v1/c20.webp",
+    "source_sha256": "ae95e187cd71f38906b18df8a691b7832d9132188d48f7abccc3473157b3448e",
+    "visible_bbox": [
+      8,
+      12,
+      312,
+      315
+    ],
+    "viewbox": [
+      1.6666666666666572,
+      5.166666666666657,
+      316.6666666666667,
+      316.6666666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v01.svg": {
+    "source": "data/skins/collection-v1/v01.webp",
+    "source_sha256": "d1573d7304e9a4947303faea52e2c5044dace45025854b54044b5b549e33fa9b",
+    "visible_bbox": [
+      29,
+      0,
+      283,
+      320
+    ],
+    "viewbox": [
+      -10.666666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v01-large.svg": {
+    "source": "data/skins/collection-v1/v01-full-v83.svg",
+    "source_sha256": "2f66841eba4edd555d1bb9b382e68007707b1d9bdd3eafeaddb4a231e4d3c790",
+    "visible_bbox": [
+      60,
+      9,
+      559,
+      632
+    ],
+    "viewbox": [
+      -14.979166666666686,
+      -3.9791666666666856,
+      648.9583333333334,
+      648.9583333333334
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v03.svg": {
+    "source": "data/skins/collection-v1/v03.webp",
+    "source_sha256": "1651ad156191b179fc77a6d5f5b40969fe07001d7eaf230d0343ecea678c2e82",
+    "visible_bbox": [
+      34,
+      0,
+      289,
+      320
+    ],
+    "viewbox": [
+      -5.166666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v03-large.svg": {
+    "source": "data/skins/collection-v1/v03-full-v83.svg",
+    "source_sha256": "afd517424914cf35ee7f7ed5972ab118ca53409f46212ca46453b705e6b49d66",
+    "visible_bbox": [
+      68,
+      10,
+      565,
+      634
+    ],
+    "viewbox": [
+      -8.5,
+      -3.0,
+      650.0,
+      650.0
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v04.svg": {
+    "source": "data/skins/collection-v1/v04-redesign-v85.svg",
+    "source_sha256": "b68d693e26a7dc42a88bb60fe953abe3dd456e6d9aa6e08e7f6f932d495ce8ba",
+    "visible_bbox": [
+      127,
+      103,
+      482,
+      552
+    ],
+    "viewbox": [
+      70.64583333333331,
+      93.64583333333331,
+      467.70833333333337,
+      467.70833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v09.svg": {
+    "source": "data/skins/collection-v1/v09.webp",
+    "source_sha256": "a40ff9d78932b0ca04dca82400bf6090165e264e25b2b7c13176c5a5fe396469",
+    "visible_bbox": [
+      31,
+      0,
+      288,
+      320
+    ],
+    "viewbox": [
+      -7.166666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v09-large.svg": {
+    "source": "data/skins/collection-v1/v09-full-v83.svg",
+    "source_sha256": "6806423de9ca5daf00a71b8b9ae5cf13ce875396b1be3311e8445ab6e2316f60",
+    "visible_bbox": [
+      70,
+      17,
+      557,
+      625
+    ],
+    "viewbox": [
+      -3.1666666666666856,
+      4.333333333333314,
+      633.3333333333334,
+      633.3333333333334
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v10.svg": {
+    "source": "data/skins/collection-v1/v10.webp",
+    "source_sha256": "40eacdade3937f0cf07ed8f467a02fe469acf0febc3cabe39f838836fb591bea",
+    "visible_bbox": [
+      13,
+      0,
+      280,
+      320
+    ],
+    "viewbox": [
+      -20.166666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v10-large.svg": {
+    "source": "data/skins/collection-v1/v10-full-v83.svg",
+    "source_sha256": "6a3e5ca04ef60500ea18a320598101e12ffccb8e696261f323ad255be88e561b",
+    "visible_bbox": [
+      37,
+      5,
+      557,
+      635
+    ],
+    "viewbox": [
+      -31.125,
+      -8.125,
+      656.25,
+      656.25
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v11.svg": {
+    "source": "data/skins/collection-v1/v11.webp",
+    "source_sha256": "4c1c14285515098c9f7ea5ae75900c400b791b59fefa2785de74ccac9ca96003",
+    "visible_bbox": [
+      29,
+      0,
+      292,
+      320
+    ],
+    "viewbox": [
+      -6.166666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v11-large.svg": {
+    "source": "data/skins/collection-v1/v11-full-v83.svg",
+    "source_sha256": "156ca7454f0f6cf24a2ef3fe8e6050af246ac3c988987b69719d315e44e8986a",
+    "visible_bbox": [
+      69,
+      15,
+      560,
+      627
+    ],
+    "viewbox": [
+      -4.25,
+      2.25,
+      637.5,
+      637.5
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v12.svg": {
+    "source": "data/skins/collection-v1/v12-redesign-v84.svg",
+    "source_sha256": "8f368d277cd9c5b5d85e85dcf5176bea37cdeb73a2294b7a2e91a186b4302193",
+    "visible_bbox": [
+      46,
+      4,
+      566,
+      635
+    ],
+    "viewbox": [
+      -22.64583333333337,
+      -9.145833333333371,
+      657.2916666666667,
+      657.2916666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v14.svg": {
+    "source": "data/skins/collection-v1/v14.webp",
+    "source_sha256": "e803feee099e0491058927ba4a6f145ace14ec9e6b0abb14cdfe9d1c40401844",
+    "visible_bbox": [
+      5,
+      16,
+      316,
+      285
+    ],
+    "viewbox": [
+      -1.4791666666666856,
+      -11.479166666666686,
+      323.95833333333337,
+      323.95833333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v16.svg": {
+    "source": "data/skins/collection-v1/v16.webp",
+    "source_sha256": "06df7b927a7ce8aaf3e668b2440957201c449d1f8c02001a5eeaeaab360a293a",
+    "visible_bbox": [
+      34,
+      5,
+      267,
+      299
+    ],
+    "viewbox": [
+      -2.625,
+      -1.125,
+      306.25,
+      306.25
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v17.svg": {
+    "source": "data/skins/collection-v1/v17.webp",
+    "source_sha256": "e5ab5dcf1e50d430cf0ee2051fda44fafca206d523a2104fe8ed660afb5f2434",
+    "visible_bbox": [
+      33,
+      0,
+      284,
+      320
+    ],
+    "viewbox": [
+      -8.166666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v19.svg": {
+    "source": "data/skins/collection-v1/v19.webp",
+    "source_sha256": "4fe67a2bc59f8df47a8f6461384f6b69a587364efac5ef80eb153a5dd030d935",
+    "visible_bbox": [
+      29,
+      0,
+      292,
+      320
+    ],
+    "viewbox": [
+      -6.166666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v22.svg": {
+    "source": "data/skins/collection-v1/v22.webp",
+    "source_sha256": "e6b962852935f098c30e323c9223fcd7cac61afc80b1d3978e669e108c0d0508",
+    "visible_bbox": [
+      5,
+      16,
+      315,
+      285
+    ],
+    "viewbox": [
+      -1.4583333333333428,
+      -10.958333333333343,
+      322.9166666666667,
+      322.9166666666667
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v24.svg": {
+    "source": "data/skins/collection-v1/v24.webp",
+    "source_sha256": "37412e3a54080a44df2198812a0875e683bbf836668afbd93583f56b3eb09f90",
+    "visible_bbox": [
+      34,
+      5,
+      267,
+      299
+    ],
+    "viewbox": [
+      -2.625,
+      -1.125,
+      306.25,
+      306.25
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v26.svg": {
+    "source": "data/skins/collection-v1/v26.webp",
+    "source_sha256": "e41e81e5a6d3ed97828eaae004a715bff7f57498e09b8f992135663222507cc6",
+    "visible_bbox": [
+      15,
+      0,
+      285,
+      320
+    ],
+    "viewbox": [
+      -16.666666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v27.svg": {
+    "source": "data/skins/collection-v1/v27.webp",
+    "source_sha256": "a380b8d573134a7a9b85d00f5e7e4455c3794bd6cbb28bd08b5378299a149267",
+    "visible_bbox": [
+      31,
+      0,
+      291,
+      320
+    ],
+    "viewbox": [
+      -5.666666666666686,
+      -6.666666666666686,
+      333.33333333333337,
+      333.33333333333337
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v27-large.svg": {
+    "source": "data/skins/collection-v1/v27-full-v83.svg",
+    "source_sha256": "8a7e6e462b9596b779a24a4478c2c6c52168146aec85b9be83a57b395f889381",
+    "visible_bbox": [
+      63,
+      7,
+      568,
+      633
+    ],
+    "viewbox": [
+      -10.541666666666686,
+      -6.041666666666686,
+      652.0833333333334,
+      652.0833333333334
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v32.svg": {
+    "source": "data/skins/collection-v1/v32.webp",
+    "source_sha256": "7e38cca3a36a8977a0b327e504b4eede38f3f6d13f62cfd38e1dd2e96a867d05",
+    "visible_bbox": [
+      35,
+      5,
+      267,
+      299
+    ],
+    "viewbox": [
+      -2.125,
+      -1.125,
+      306.25,
+      306.25
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/v40.svg": {
+    "source": "data/skins/collection-v1/v40.webp",
+    "source_sha256": "2ec210d349ca1bd24e37a011db0118610f54a4d54411fab1e7741fb6bbe0aca5",
+    "visible_bbox": [
+      34,
+      5,
+      267,
+      299
+    ],
+    "viewbox": [
+      -2.625,
+      -1.125,
+      306.25,
+      306.25
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/prize-bronze.svg": {
+    "source": "data/skins/champions/bronze.svg",
+    "source_sha256": "211acea224accb0cc2832289ef2c944e17825b42397ece81a1539c4c545b6811",
+    "visible_bbox": [
+      51,
+      111,
+      272,
+      230
+    ],
+    "viewbox": [
+      46.39583333333333,
+      55.39583333333333,
+      230.20833333333334,
+      230.20833333333334
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/prize-bronze-large.svg": {
+    "source": "data/skins/champions/bronze-large.svg",
+    "source_sha256": "2dfe29a0053523df139d0e762227ca2ee04e544b2d75c960ac0ed2a74836a40e",
+    "visible_bbox": [
+      164,
+      357,
+      872,
+      735
+    ],
+    "viewbox": [
+      149.25,
+      177.25,
+      737.5,
+      737.5
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/prize-silver.svg": {
+    "source": "data/skins/champions/silver.svg",
+    "source_sha256": "081d59f8a4771b41ba2b940f39e3f04aa8f6330e76af4d3908536b536783da53",
+    "visible_bbox": [
+      84,
+      61,
+      257,
+      249
+    ],
+    "viewbox": [
+      72.58333333333333,
+      57.08333333333333,
+      195.83333333333334,
+      195.83333333333334
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/prize-silver-large.svg": {
+    "source": "data/skins/champions/silver-large.svg",
+    "source_sha256": "2fc3252751e581a7f6a2f8f6a9d884aaaa3e14c521ef8b0469417b6e60f87e34",
+    "visible_bbox": [
+      271,
+      197,
+      823,
+      797
+    ],
+    "viewbox": [
+      234.5,
+      184.5,
+      625.0,
+      625.0
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/prize-gold.svg": {
+    "source": "data/skins/champions/gold.svg",
+    "source_sha256": "2e8ebd005d4dc4578e3cdaa3cf74634e394a08a7a24f59f6c56a73449c19b19b",
+    "visible_bbox": [
+      69,
+      61,
+      264,
+      250
+    ],
+    "viewbox": [
+      64.9375,
+      53.9375,
+      203.125,
+      203.125
+    ],
+    "visible_fraction": 0.96
+  },
+  "data/skins/normalized-v86/prize-gold-large.svg": {
+    "source": "data/skins/champions/gold-large.svg",
+    "source_sha256": "d6cf415d5ede32f78d8fc95de3838ef8979af7b5b69008405500f9a2151d6cdc",
+    "visible_bbox": [
+      222,
+      196,
+      843,
+      800
+    ],
+    "viewbox": [
+      209.0625,
+      174.5625,
+      646.875,
+      646.875
+    ],
+    "visible_fraction": 0.96
+  }
+}
