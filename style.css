@@ -938,7 +938,7 @@ body header #coin-count{transform:none}
 .feedback-panel label{display:block;font-size:14px;font-weight:600;margin:0 0 8px}
 .feedback-panel label span{font-weight:400;color:#7d8176;font-size:12px;margin-left:4px}
 .feedback-panel textarea,.feedback-panel input[type=email]{box-sizing:border-box;width:100%;min-width:0;border:1px solid #d9ddd1;border-radius:14px;background:#fff;color:#30352c;font-family:inherit;font-size:16px;line-height:1.5;padding:13px 14px;outline-offset:3px}
-.feedback-panel textarea{resize:vertical;min-height:140px;max-height:260px;font-family:inherit;font-size:16px;line-height:1.5}
+.feedback-panel textarea{display:block;resize:none;min-height:52px;max-height:none;overflow:hidden;font-family:inherit;font-size:16px;line-height:1.5}
 .feedback-panel input[type=email]{font-family:inherit;font-size:16px;line-height:1.5}
 .feedback-panel :focus-visible{outline:2px solid #739352;outline-offset:3px}
 .feedback-under{display:flex;justify-content:space-between;gap:10px;margin:6px 0 22px;color:#7d8176;font-size:11px;line-height:1.4}
