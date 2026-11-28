@@ -12,12 +12,12 @@ test('each of 64 cats costs 500; buying one preserves wallpaper and does not gra
 });
 test('classic cells are free and do not remove purchased cats',()=>{
  const a=buySkin({coins:500},'c01'),classic=wearSkin(a,null);
- assert.equal(classic.coins,0);assert.deepEqual(skinsOf(classic),{owned:['c01'],active:null});
+ assert.equal(classic.coins,0);assert.deepEqual(skinsOf(classic),{owned:['c01'],equipped:['c01'],active:null});
  assert.equal(wearSkin(classic,'c01').skins.active,'cats');assert.equal(wearSkin(classic,'c02'),classic);
 });
 test('sync keeps purchased cats; legacy preview bundle remains compatible',()=>{
  const a=buySkin({coins:500},'c01'),remote={coins:50,solved:10};
- assert.deepEqual(keepSkins(remote,a).skins,{owned:['c01'],active:null});
+ assert.deepEqual(keepSkins(remote,a).skins,{owned:['c01'],equipped:['c01'],active:null});
  assert.equal(skinsOf({skins:{owned:['ginger-cats'],active:'ginger-cats'}}).owned.length,64);
 });
 test('full roster shuffles uniquely; owned subset repeats only bought cats',()=>{

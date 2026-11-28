@@ -34,10 +34,38 @@ function standalone() {
   try { return app && sessionStorage.getItem(LAUNCH) === '1'; } catch { return false; }
 }
 
+// Dynamic items precede sign-out; the version always closes the scroll area.
+function setupMenuScroll(menu) {
+  const panel=menu.querySelector('.menu-sheet'),version=document.getElementById('version'),logout=document.getElementById('logout');
+  let scroller=null,frame=0;
+  const schedule=()=>{if(!frame)frame=requestAnimationFrame(update)};
+  function update(){
+    frame=0;
+    const content=panel.querySelector(':scope > .sheet-content')||panel;
+    if(content!==panel){
+      const children=[...panel.children],at=children.indexOf(content),head=content.firstChild;
+      for(const child of children)if(child!==content&&!child.classList.contains('sheet-grip')){if(children.indexOf(child)<at)content.insertBefore(child,head);else content.append(child)}
+    }
+    if(version.parentElement!==content||content.lastElementChild!==version)content.append(version);
+    if(logout&&(logout.parentElement!==content||logout.nextElementSibling!==version))content.insertBefore(logout,version);
+    if(scroller!==content){scroller?.removeEventListener('scroll',schedule);scroller=content;scroller.addEventListener('scroll',schedule,{passive:true})}
+    if(menu.hidden)return;
+    const below=content.scrollHeight-content.clientHeight-content.scrollTop>2;
+    panel.classList.toggle('menu-more-below',below);
+    panel.classList.toggle('menu-more-above',content.scrollTop>2);
+  }
+  new MutationObserver(schedule).observe(panel,{childList:true,subtree:true,characterData:true});
+  new MutationObserver(schedule).observe(menu,{attributes:true,attributeFilter:['hidden']});
+  new ResizeObserver(schedule).observe(panel);
+  window.addEventListener('resize',schedule);
+  update();
+}
+
 export function setupMenu() {
   const menu = document.getElementById('menu');
   const item = document.getElementById('install');
   const close = () => hide(menu);
+  setupMenuScroll(menu);
   let offer = null;
 
   document.getElementById('burger').addEventListener('click', () => toggle(menu));

@@ -12,6 +12,8 @@ import { createReadStream, readFileSync, writeFileSync } from 'node:fs';
 import { createGunzip } from 'node:zlib';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
+import { isExcludedWord, containsExcludedText } from '../src/word-policy.js';
+import { REVIEWED_PAIRS } from './reviewed-pairs.mjs';
 
 export const MIN_LEN = 3;
 export const MAX_LEN = 10;
@@ -54,6 +56,7 @@ export function splitLabels(gloss) {
 // Returns a clean definition, or null if the sense should not be shown.
 export function cleanSense(gloss) {
   if (typeof gloss !== 'string') return null;
+  if (containsExcludedText(gloss)) return null;
   // Grammar notes and labels may alternate: "преимущ. мн., ед. в том же знач.,
   // что мн. ...", "чего, книжн. ...". Peel them off until the text itself.
   // Soft hyphens hide inside labels too ("архео\u00adл."), so they go first.
@@ -109,7 +112,7 @@ const OTHER_POS = new Set(['particle', 'adv', 'verb', 'pron', 'conj', 'prep', 'i
 
 export function isGoodWord(word) {
   const re = new RegExp(`^[а-яё]{${MIN_LEN},${MAX_LEN}}$`);
-  return re.test(word);
+  return re.test(word) && !isExcludedWord(word);
 }
 
 export function isBadEntry(categories = []) {
@@ -360,6 +363,11 @@ async function main() {
     ...(stress.has(w) ? { s: [...stress.get(w)].join(' · ') } : {}),
   }));
   const homographs = words.filter(isHomograph).length;
+  // Reviewed lexical plurals are bonus words, not arbitrary inflected forms.
+  for (const entry of REVIEWED_PAIRS) {
+    if (!isGoodWord(entry.w)) continue;
+    bonus.add(entry.w); senses.set(entry.w, entry.d); stress.set(entry.w, new Set([entry.s]));
+  }
   writeFileSync(`${root}data/words.json`, JSON.stringify(out));
   writeFileSync(`${root}data/bonus.json`, JSON.stringify([...bonus].sort()));
   // Definitions of bonus words that are not in the main list: a separate file,

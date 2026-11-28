@@ -3,20 +3,22 @@
 // Old browsers without it get the plain JSON.
 
 // onProgress(fraction) is called as the gzip file arrives; null = size unknown.
+import { isExcludedWord, cleanDictionaryEntry } from './word-policy.js';
+
 export async function loadDictionary(onProgress, base = 'data/words.json') {
-  return loadJson(base, onProgress);
+  return (await loadJson(base, onProgress)).map(cleanDictionaryEntry).filter(Boolean);
 }
 
 // Every noun, frequent or not: used to recognise bonus words.
 export async function loadBonusWords() {
-  return new Set(await loadJson('data/bonus.json'));
+  return new Set((await loadJson('data/bonus.json')).filter(word => !isExcludedWord(word)));
 }
 
 // Definitions of bonus words outside the main list (~2 MB packed): fetched
 // only when the player first opens such a word, then kept for the session.
 let bonusDefs;
 export function loadBonusDefs() {
-  bonusDefs ??= loadJson('data/bonus-defs.json').catch((err) => {
+  bonusDefs ??= loadJson('data/bonus-defs.json').then(defs => Object.fromEntries(Object.entries(defs).map(([word, entry]) => [word, cleanDictionaryEntry({...entry,w:word})]).filter(([,entry]) => entry))).catch((err) => {
     bonusDefs = undefined; // let the next tap try again
     throw err;
   });

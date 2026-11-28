@@ -15,6 +15,7 @@
 import { createRng, pick } from './rng.js';
 import { randomPath } from './path.js';
 import { splitLengths, SplitError } from './split.js';
+import { isExcludedWord } from './word-policy.js';
 
 const TOP = 300; // pick among this many most frequent unused words of a length
 const SURPRISE_CHANCE = 0.1; // sometimes any unused word, e.g. an early "коромысло"
@@ -25,6 +26,7 @@ export class OutOfWordsError extends Error {}
 export function indexDictionary(dict) {
   const byLength = {};
   for (const entry of dict) {
+    if (isExcludedWord(entry.w)) continue;
     (byLength[[...entry.w].length] ??= []).push(entry);
   }
   for (const list of Object.values(byLength)) list.sort((a, b) => a.r - b.r);

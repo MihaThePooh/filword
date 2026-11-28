@@ -167,9 +167,9 @@ function showSignInNotice(networkProblem=false) {
 }
 
 // Several requests hitting an expired pass at once wait for one renewal.
-async function boundedFetch(url, options) {
+async function boundedFetch(url, options, timeoutMs = 10000) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
     const body = await response.arrayBuffer();
@@ -194,7 +194,7 @@ class SignInNeeded extends Error {}
 // page to the hub, the hub (session alive) sent it straight back, and round
 // it went until the old pass expired on its own (30.10.2026).
 // Still 401 or 403 after a renewal - a sign-in is needed.
-export async function accountApi(path, method='GET', body) {
+export async function accountApi(path, method='GET', body, timeoutMs = 10000) {
   const prefix=typeof document==='undefined'?'':document.querySelector('meta[name=filword-api-prefix]')?.content||'';
   path=prefix+path;
   const opts = { method, credentials: 'same-origin', cache: 'no-store', headers: {} };
@@ -203,8 +203,8 @@ export async function accountApi(path, method='GET', body) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(body);
   }
-  let r = await boundedFetch(path, opts);
-  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await boundedFetch(path, opts);
+  let r = await boundedFetch(path, opts, timeoutMs);
+  if ((r.status === 401 || r.status === 403) && await renewPass()) r = await boundedFetch(path, opts, timeoutMs);
   if (r.status === 401 || r.status === 403) throw new SignInNeeded();
   return r;
 }

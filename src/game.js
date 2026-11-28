@@ -1,6 +1,8 @@
 import { setupAccount } from './account.js';
+import {setupFeedback} from './feedback.js';
 import { setupLeaderboard } from './leaderboard.js';
-import { replacePlannedCat } from './champions.js';
+import { replacePlannedCat, equippedCats, equipCat } from './champions.js';
+import {openCatPicker} from './cat-picker.js';
 import { setupHeaderContrast } from './header-contrast.js';
 import { syncCats, revealCat } from './cat-collection.js';
 import { ALL_CATS, fieldCats, CAT_ROSTER, CELL_SKINS, ownsSkin, activeSkin, trySkin, buySkin, wearSkin, applySkin, paintLetter, catMarkup, shuffleCats, paintCatSample, catShopOrder, skinsOf } from './skins.js';
@@ -31,6 +33,7 @@ import { createCoinFx } from './coinfx.js';
 import { showAward } from './awardpop.js';
 import { show, hide } from './sheets.js';
 import { createClock } from './timer.js';
+import { isExcludedWord, repairSavedWords } from './word-policy.js';
 
 // Bright, so found words stand out from the grey cells still in play.
 // Dark letters stay readable on each of them (contrast 3.8+ for large text).
@@ -51,7 +54,7 @@ const STORAGE_KEY = CFG.stateKey;
 const BOARD_SIZE = CFG.size;
 // Shown in the menu, so it is easy to tell which version a phone runs.
 // Must match CACHE in sw.js (a test checks it).
-export const VERSION = 86;
+export const VERSION = 95;
 const STATS_KEY = CFG.statsKey;
 setupHeaderContrast();
 // Only the middle part of a cell reacts to the finger. Crossing a corner
@@ -70,6 +73,7 @@ const slotEl = document.getElementById('slot');
 const wordsEl = document.getElementById('words');
 
 let index;
+let dictionary = [];
 let board;
 let found = new Map(); // word index -> colour
 let selection = [];
@@ -91,6 +95,7 @@ async function init() {
   document.getElementById('version').textContent = `Версия ${VERSION}`;
   setupMenu();
   setupAccount();
+  setupFeedback({version:VERSION,context:()=>({mode:MODE,board:(stats.solved||0)+1}),notify:toast});
   new ResizeObserver(()=>{fitWalletHeader();fitProgressHeader()}).observe(document.querySelector('header'));
   const fitWallet=fitWalletHeader;
   new MutationObserver(fitWallet).observe(coinEl,{childList:true,characterData:true,subtree:true});fitWallet();
@@ -100,12 +105,9 @@ async function init() {
   document.addEventListener('visibilitychange', () => document.body.classList.toggle('cat-resting', document.hidden));
   setupStats();
   setupAchievements();
-  leaderboardUI=setupLeaderboard({getStats:()=>({...stats,champions:loadJson(cloud.STATS_KEY)?.champions}),capacity:BOARD_SIZE*BOARD_SIZE,setStats:(next,oldId,newId)=>{
-    stats=next;
-    if(oldId) boardCats=replacePlannedCat(boardCats,oldId,newId);
-    boardCats=syncCats(board.words,fieldCats(stats,BOARD_SIZE*BOARD_SIZE),boardCats,found.keys());
-    applySkin(stats);saveStats();saveState();render();
-  }});
+  leaderboardUI=setupLeaderboard({getStats:catStats,capacity:BOARD_SIZE*BOARD_SIZE,setStats:updateCats,chooseCat:(id,commit)=>openCatPicker({getStats:catStats,getLayout:catLayout,onChange:updateCats,capacity:BOARD_SIZE*BOARD_SIZE,incoming:id,onReplace:commit})});
+  const catMenu=document.createElement('button');catMenu.type='button';catMenu.id='catCollectionItem';catMenu.innerHTML='Котики на поле<small>Коллекция и выбор котиков</small>';document.querySelector('#menu .menu-sheet').append(catMenu);
+  catMenu.onclick=()=>{hide(document.querySelector('#menu'));manageCats()};
   window.addEventListener('champions-updated',()=>{
     if(MODE !== 'adult')return;
     stats={...stats,...loadJson(STATS_KEY)};
@@ -138,6 +140,7 @@ async function init() {
       parts.download = f ?? Math.max(parts.download, 0.5);
       report();
     }, CFG.dict);
+    dictionary = dict;
     parts.download = 1;
     parts.prepare = 0.5; // unpacked and parsed
     report();
@@ -173,7 +176,8 @@ async function init() {
   if (MODE === 'kids') bonusWords = new Set(dictByWord.keys());
   else loadBonusWords().then((set) => { bonusWords = set; }).catch((err) => console.warn('no bonus words', err));
   used = new Set(stats.used);
-  const saved = loadJson(STORAGE_KEY);
+  const saved = repairSavedWords(loadJson(STORAGE_KEY), dictionary, used);
+  if (isExcludedWord(stats.longestWord)) stats.longestWord = '';
   // The whole board is saved, not just its seed: the next board depends on
   // which words are used up, so a seed alone would not rebuild the same one.
   if (saved?.board?.letters) showBoard(saved.board, saved.found, saved.hint, saved.bonus, saved.log,
@@ -200,6 +204,22 @@ async function init() {
   header.style.removeProperty('visibility');
   header.style.removeProperty('opacity');
   header.classList.add('is-ready');
+}
+
+function catStats(){return {...stats,champions:loadJson(cloud.STATS_KEY)?.champions}}
+function catLayout(){return boardCats.plan.map(([,cell,id])=>[cell,id])}
+function updateCats(next,oldId,newId){
+  stats=next;
+  if(oldId)boardCats=replacePlannedCat(boardCats,oldId,newId);
+  boardCats=syncCats(board.words,fieldCats(stats,BOARD_SIZE*BOARD_SIZE),boardCats,found.keys());
+  applySkin(stats);saveStats();saveState();render();renderShop();
+}
+function manageCats(selectedId=null){if(typeof selectedId!=='string')selectedId=null;openCatPicker({getStats:catStats,getLayout:catLayout,onChange:updateCats,capacity:BOARD_SIZE*BOARD_SIZE,selectedId})}
+function selectOwnedCat(id){
+ const current=catStats(),capacity=BOARD_SIZE*BOARD_SIZE,equipped=equippedCats(current,skinsOf(current).owned,capacity);
+ if(equipped.includes(id)){manageCats(id);return}
+ if(equipped.length>=capacity){openCatPicker({getStats:catStats,getLayout:catLayout,onChange:updateCats,capacity,incoming:id});return}
+ updateCats(equipCat(current,skinsOf(current).owned,id,null,capacity),null,id);
 }
 
 // Menu item: the other version. Each keeps its own board, coins and progress.
@@ -421,16 +441,17 @@ function renderSkinShop(shelf) {
   const classic = document.createElement('button'); classic.type = 'button'; classic.className = 'classic-cells-button'; classic.dataset.skin = 'classic';
   classic.textContent = activeSkin(stats) ? 'Вернуть обычные клетки' : 'Сейчас обычные клетки';
   classic.addEventListener('click', () => { stats = wearSkin(stats,null); applySkin(stats); saveStats(); render(); renderShop(); }); shelf.appendChild(classic);
+  const manage=document.createElement('button');manage.type='button';manage.className='classic-cells-button';manage.id='manageFieldCats';manage.textContent=`Котики на поле · ${fieldCats(catStats(),BOARD_SIZE*BOARD_SIZE).length}/${BOARD_SIZE*BOARD_SIZE}`;manage.onclick=()=>manageCats();shelf.append(manage);
   for (const index of catShopOrder()) {
     const item = CELL_SKINS[index];
     const owned = ownsSkin(stats,item.id);
     const tile = document.createElement('button'); tile.type = 'button'; tile.dataset.skin = item.id;
-    tile.className = `sitem skin-item${owned ? ' owned' : ''}${owned && activeSkin(stats) ? ' on' : ''}`;
+    tile.className = `sitem skin-item${owned ? ' owned' : ''}${owned && fieldCats(catStats(),BOARD_SIZE*BOARD_SIZE).includes(item.id) ? ' on' : ''}`;
     tile.innerHTML = '<div class="sthumb cat-thumb"><div class="cell shop-cat-cell"></div></div>'
-      + `<div class="snm">${item.name}</div><div class="spr">` + (owned ? (activeSkin(stats) ? 'в коллекции' : 'выбрать') : '<span class="coin"></span>500') + '</div>';
+      + `<div class="snm">${item.name}</div><div class="spr">` + (owned ? (fieldCats(catStats(),BOARD_SIZE*BOARD_SIZE).includes(item.id) ? 'На поле' : 'Добавить на поле') : '<span class="coin"></span>500') + '</div>';
     tile.addEventListener('click', () => {
       if (!owned) { startTryOn(item.id,'skin'); return; }
-      stats = wearSkin(stats,item.id); applySkin(stats); saveStats(); render(); renderShop();
+      selectOwnedCat(item.id);
     });
     shelf.appendChild(tile); paintCatSample(tile.querySelector('.shop-cat-cell'),index);
   }
@@ -501,16 +522,19 @@ function endTryOn(bought) {
   document.querySelector('#shopwrap .shoppanel > .sheet-content').scrollTop = shopScroll;
 }
 
-function buyTried() {
+function buyTried(replacement = null) {
+  if(typeof replacement!=='string')replacement=null;
+  if(tryingKind==='skin'&&trying&&!replacement&&fieldCats(catStats(),BOARD_SIZE*BOARD_SIZE).length>=BOARD_SIZE*BOARD_SIZE){openCatPicker({getStats:catStats,getLayout:catLayout,onChange:updateCats,capacity:BOARD_SIZE*BOARD_SIZE,incoming:trying,price:500,onReplace:oldId=>buyTried(oldId)});return}
   const id = trying;
   const info = tryingKind === 'skin' ? trySkin(stats, id) : tryOn(stats, id);
-  const next = id && (tryingKind === 'skin' ? buySkin(stats, id) : buy(stats, id));
+  const next = id && (tryingKind === 'skin' ? buySkin(catStats(), id,{replace:replacement,capacity:BOARD_SIZE*BOARD_SIZE}) : buy(stats, id));
   if (!next) return;
   stats.coinsSpent = (stats.coinsSpent || 0) + (stats.coins - next.coins);
   next.coinsSpent = stats.coinsSpent;
   showSpend(stats.coins - next.coins);
   stats = next;
   if (tryingKind === 'skin') {
+    if(replacement)boardCats=replacePlannedCat(boardCats,replacement,id);
     boardCats = syncCats(board.words, fieldCats(stats,BOARD_SIZE*BOARD_SIZE), boardCats, found.keys());
     saveState();
   }

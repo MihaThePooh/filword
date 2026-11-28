@@ -1,6 +1,6 @@
 import {accountApi,syncNow} from './cloud.js';
 import {show,hide} from './sheets.js';
-import {PRIZE_CATS,championsOf,equippedCats,equipPrize} from './champions.js';
+import {PRIZE_CATS,championsOf,equippedCats,equipPrize,removeCat} from './champions.js';
 import {ALL_CATS,skinsOf} from './skins.js';
 import {plural} from './stats.js';
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el};
@@ -43,7 +43,7 @@ function portrait(cat) {
   button.onkeyup=close;
   return button;
 }
-export function setupLeaderboard({getStats,setStats,capacity}) {
+export function setupLeaderboard({getStats,setStats,capacity,chooseCat}) {
   const wrap=node('div',undefined,'shopwrap');wrap.id='leaderwrap';wrap.hidden=true;
   const panel=node('div',undefined,'shoppanel');wrap.append(panel);const content=node('div');panel.append(content);document.body.append(wrap);
   wrap.onclick=e=>{if(e.target===wrap)hide(wrap)};
@@ -89,29 +89,27 @@ export function setupLeaderboard({getStats,setStats,capacity}) {
           score.append(node('small',`всего ${amount(row.fields)} ${plural(row.fields,'поле','поля','полей')}`));tr.append(rank,name,score);
         }body.append(tr);
       }
-      content.append(table,node('p',`Всего игроков: ${amount(data.total)}`,'leader-total'));renderPrizes(content,getStats(),setStats,capacity);
+      content.append(table,node('p',`Всего игроков: ${amount(data.total)}`,'leader-total'));renderPrizes(content,getStats(),setStats,capacity,chooseCat,getStats);
     }catch(err){status.textContent=err.message;const retry=node('button','Попробовать снова');retry.onclick=open;content.append(retry)}
   }
   item.onclick=open;
-  return {open,renderAchievement(target){renderPrizes(target,getStats(),setStats,capacity)}};
+  return {open,renderAchievement(target){renderPrizes(target,getStats(),setStats,capacity,chooseCat,getStats)}};
 }
-function renderPrizes(target,stats,setStats,capacity) {
+function renderPrizes(target,stats,setStats,capacity,chooseCat,getCurrent=()=>stats) {
   const earned=championsOf(stats).owned;
   const box=node('section',undefined,'champions-section');const heading=node('h3','Чемпионы');
   const stars=node('span','★'.repeat(earned.length)+'☆'.repeat(3-earned.length),'astars');stars.setAttribute('aria-label',`Получено ${earned.length} из 3 звёзд`);heading.append(stars);box.append(heading);
   box.append(node('p','Призы выдаются навсегда за первое достижение места: бронза — третье, серебро — второе, золото — первое. Каждый этап даёт котика, звезду и монеты один раз. Первое место сразу открывает все три этапа: 55 000 монет.','sub'));
   if(capacity===25)box.append(node('p','Призовые монеты поступают во взрослую версию игры. Котиков можно добавить в обеих версиях.','sub'));
-  box.append(node('p','Любого из выигранных котиков можно поставить на поле. Нажми «Добавить на поле» и выбери обычного котика, которого хочешь заменить. Если есть свободное место, призовой котик добавится сразу. Прежний котик останется в коллекции. Удерживай котика, чтобы рассмотреть его на весь экран.','sub'));
+  box.append(node('p','Любого из выигранных котиков можно поставить на поле. Нажми «Добавить на поле» и выбери котика, которого хочешь заменить. Если есть свободное место, призовой котик добавится сразу. Прежний котик останется в коллекции. Удерживай котика, чтобы рассмотреть его на весь экран.','sub'));
   for(const cat of [...PRIZE_CATS].sort((a,b)=>a.rank-b.rank)){
     const row=node('div',undefined,'champion-card');row.append(portrait(cat));const description=node('div',cat.name);description.append(node('small',`Место ${cat.rank} · ${amount(cat.coins)} монет`));row.append(description);
     if(earned.includes(cat.id)){
       description.append(node('small','Получен навсегда'));
-      const equipped=equippedCats(stats,skinsOf(stats).owned,capacity);const button=node('button',equipped.includes(cat.id)?'На поле':'Добавить на поле');button.disabled=equipped.includes(cat.id);button.type='button';
+      const equipped=equippedCats(stats,skinsOf(stats).owned,capacity),onField=equipped.includes(cat.id);const button=node('button',onField?'Убрать с поля':'Добавить на поле');button.type='button';button.dataset.prizeAction=cat.id;
       button.onclick=()=>{
-        if(equipped.length<capacity){const next=equipPrize(stats,skinsOf(stats).owned,cat.id,null,capacity);setStats(next,null,cat.id);box.remove();renderPrizes(target,next,setStats,capacity);return}
-        let chooser=box.querySelector('.champion-replace');chooser?.remove();chooser=node('div',undefined,'champion-replace');chooser.append(node('h4','Кого заменить?'),node('p','Выбранный котик останется в коллекции. Остальные котики на поле сохранят свои места.','sub'));
-        const grid=node('div',undefined,'champion-choices');for(const id of equipped){const old=ALL_CATS.find(c=>c.id===id);const choice=node('button');choice.type='button';choice.dataset.cat=id;const img=node('img');img.src=old.src;img.alt=old.name;choice.append(img,node('small',old.name));choice.onclick=()=>{const next=equipPrize(stats,skinsOf(stats).owned,cat.id,id,capacity);setStats(next,id,cat.id);box.remove();renderPrizes(target,next,setStats,capacity)};grid.append(choice)}
-        const cancel=node('button','Отмена');cancel.type='button';cancel.onclick=()=>chooser.remove();chooser.append(grid,cancel);box.append(chooser);chooser.scrollIntoView({block:'nearest',behavior:'smooth'});
+        const commit=(oldId=null)=>{const current=getCurrent(),isOn=equippedCats(current,skinsOf(current).owned,capacity).includes(cat.id);const next=isOn?removeCat(current,skinsOf(current).owned,cat.id,capacity):equipPrize(current,skinsOf(current).owned,cat.id,oldId,capacity);if(!next)return;setStats(next,isOn?cat.id:oldId,isOn?null:cat.id);box.remove();renderPrizes(target,next,setStats,capacity,chooseCat,getCurrent)};
+        if(onField||equipped.length<capacity)commit();else chooseCat(cat.id,commit);
       };row.append(button);
     }else row.append(node('small','Ещё не получен'));
     box.append(row);

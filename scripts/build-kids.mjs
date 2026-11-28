@@ -10,6 +10,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { REVIEWED_PAIRS } from './reviewed-pairs.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 export const MIN_LEN = 3;
@@ -53,6 +54,7 @@ export function kidDefs(defs) {
 
 export function buildKids(list, main, extraDefs = {}) {
   const byWord = new Map(main.map((e) => [e.w, e]));
+  extraDefs = {...Object.fromEntries(REVIEWED_PAIRS.map(e=>[e.w,e])),...extraDefs};
   const kept = [];
   const missing = [];
   for (const w of list) {

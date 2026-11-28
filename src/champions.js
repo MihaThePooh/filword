@@ -14,16 +14,22 @@ export function equippedCats(stats, regular, capacity=64) {
   const requested=stats?.skins?.equipped;
   return [...new Set(Array.isArray(requested)?requested.filter(id=>owned.includes(id)):regular)].slice(0,capacity);
 }
-export function equipPrize(stats, regular, id, replace=null, capacity=64) {
-  if(!championsOf(stats).owned.includes(id)) return null;
+export function equipCat(stats, regular, id, replace=null, capacity=64) {
+  if(![...regular,...championsOf(stats).owned].includes(id)) return null;
   const equipped=equippedCats(stats,regular,capacity);
-  if(equipped.includes(id)) return stats;
+  if(equipped.includes(id)) return {...stats,skins:{...stats.skins,equipped,active:'cats'}};
   if(equipped.length>=capacity) {
     const index=equipped.indexOf(replace);
     if(index<0) return null;
     equipped[index]=id;
   } else equipped.push(id);
   return {...stats,skins:{...stats.skins,equipped,active:'cats'}};
+}
+export function removeCat(stats, regular, id, capacity=64) {
+  return {...stats,skins:{...stats.skins,equipped:equippedCats(stats,regular,capacity).filter(cat=>cat!==id)}};
+}
+export function equipPrize(stats, regular, id, replace=null, capacity=64) {
+  return championsOf(stats).owned.includes(id)?equipCat(stats,regular,id,replace,capacity):null;
 }
 export function replacePlannedCat(state,oldId,newId) {
   return {...state,plan:(state?.plan||[]).map(([word,cell,id])=>[word,cell,id===oldId?newId:id]),

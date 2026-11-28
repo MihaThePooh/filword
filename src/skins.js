@@ -1,4 +1,4 @@
-import { PRIZE_CATS, equippedCats } from './champions.js';
+import { PRIZE_CATS, equipCat, equippedCats } from './champions.js';
 import { CAT_ROSTER } from './cat-roster.js';
 export { CAT_ROSTER };
 export const ALL_CATS = [...CAT_ROSTER,...PRIZE_CATS];
@@ -31,10 +31,13 @@ export function trySkin(stats, id) {
   const item = catalog.get(id);
   return item && Number.isFinite(item.price) ? { ...item, owned: ownsSkin(stats, id), short: Math.max(0, item.price - (stats?.coins ?? 0)) } : null;
 }
-export function buySkin(stats, id) {
+export function buySkin(stats, id, {replace=null,capacity=64}={}) {
   const item = trySkin(stats, id);
   if (!item || item.owned || item.short) return null;
-  return { ...stats, coins: stats.coins - item.price, skins: { ...skinsOf(stats), owned: [...skinsOf(stats).owned, id], ...(Array.isArray(stats?.skins?.equipped) ? {equipped:[...new Set([...stats.skins.equipped,id])].slice(0,64)}:{}), active: 'cats' } };
+  const skins=skinsOf(stats),equipped=equippedCats(stats,skins.owned,capacity);
+  if(equipped.length>=capacity && !equipped.includes(replace)) return null;
+  const purchased={...stats,coins:stats.coins-item.price,skins:{...skins,owned:[...skins.owned,id],equipped}};
+  return equipCat(purchased,purchased.skins.owned,id,replace,capacity);
 }
 export function wearSkin(stats, id) {
   const skins = skinsOf(stats);
@@ -44,7 +47,7 @@ export function wearSkin(stats, id) {
 export function keepSkins(stats, previous) {
   const remote = skinsOf(stats), local = skinsOf(previous);
   if (!local.owned.length) return stats;
-  return { ...stats, skins: { ...remote, owned: [...new Set([...remote.owned, ...local.owned])] } };
+  return { ...stats, skins: { ...remote, owned: [...new Set([...remote.owned, ...local.owned])], ...(Array.isArray(remote.equipped)?{}:Array.isArray(local.equipped)?{equipped:local.equipped}:{}) } };
 }
 export function applySkin(stats, preview = undefined) {
   if (typeof document === 'undefined') return;
